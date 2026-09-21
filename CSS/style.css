@@ -432,6 +432,15 @@ h1, h2, h3, h4, h5, h6 {
 .top-bar-left {
     display: flex;
     align-items: center;
+    gap: 24px; /* ← отступ между логотипом и breadcrumb */
+}
+
+/* Вертикальный разделитель */
+.top-bar-divider {
+    width: 1px;
+    height: 28px;
+    background: var(--border);
+    flex-shrink: 0;
 }
 
 .logo-small {
