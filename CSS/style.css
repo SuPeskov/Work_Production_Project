@@ -324,11 +324,12 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* Login button */
+/* === Кнопка входа — ЗОЛОТИСТО-ЖЁЛТАЯ === */
 .btn-login {
     width: 100%;
     padding: 14px 24px;
     background: linear-gradient(135deg, var(--button-primary) 0%, #FFD040 100%);
-    color: var(--button-text); /* Тёмный текст на жёлтом фоне */
+    color: var(--button-text);
     border: none;
     border-radius: var(--radius-sm);
     font-family: 'Inter', sans-serif;
@@ -354,9 +355,16 @@ h1, h2, h3, h4, h5, h6 {
     transform: translateY(0);
 }
 
+/* === СОСТОЯНИЕ "ВХОД ВЫПОЛНЕН" — ТЁМНО-СЕРЫЙ === */
 .btn-login.success {
-    background: linear-gradient(135deg, var(--success) 0%, #22c55e 100%);
-    color: white;
+    background: linear-gradient(135deg, #2d3436 0%, #3a3f42 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(45, 52, 54, 0.35);
+}
+
+.btn-login.success:hover {
+    transform: none;
+    box-shadow: 0 4px 14px rgba(45, 52, 54, 0.35);
 }
 
 .btn-arrow {
