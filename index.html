@@ -3,27 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Вход — База знаний | Модульный дом</title>
+    <title>Вход — Скаут Хаус | Проект производства работ</title>
+    
+    <!-- Подключение шрифтов Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="login-page">
 
     <div class="login-wrapper">
-        <!-- Левая панель — бренд -->
+        <!-- Левая панель — бренд (теперь на белом фоне) -->
         <div class="login-brand">
             <div class="brand-content">
-                <div class="brand-icon">
-                    <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <rect x="10" y="35" width="60" height="35" rx="2" stroke="white" stroke-width="2.5" fill="none"/>
-                        <path d="M5 37L40 10L75 37" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-                        <rect x="25" y="48" width="12" height="22" rx="1" stroke="white" stroke-width="2" fill="none"/>
-                        <rect x="45" y="45" width="14" height="10" rx="1" stroke="white" stroke-width="2" fill="none"/>
-                        <line x1="52" y1="45" x2="52" y2="55" stroke="white" stroke-width="1.5"/>
-                        <line x1="45" y1="50" x2="59" y2="50" stroke="white" stroke-width="1.5"/>
-                    </svg>
+                <!-- ЛОГОТИП: замените src на путь к вашему файлу -->
+                <div class="brand-logo">
+                    <img src="assets/images/logo.svg" alt="Скаут Хаус" class="logo-img">
                 </div>
-                <h1>МодульныйДом</h1>
-                <p class="brand-subtitle">База знаний по производству,<br>монтажу и обслуживанию</p>
+                <h1>Скаут Хаус</h1>
+                <p class="brand-subtitle">Проект производства работ</p>
                 <div class="brand-features">
                     <div class="feature-item">
                         <span class="feature-icon">📋</span>
@@ -49,7 +49,7 @@
         <div class="login-form-panel">
             <div class="form-container">
                 <h2>Вход в систему</h2>
-                <p class="form-description">Введите учётные данные для доступа к базе знаний</p>
+                <p class="form-description">Введите учётные данные для доступа к проекту производства работ</p>
 
                 <form id="loginForm" novalidate>
                     <div class="form-group">
