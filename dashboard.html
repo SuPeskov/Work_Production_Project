@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Главная — База знаний | Модульный дом</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="dashboard-page">
+
+    <!-- Верхняя навигация -->
+    <header class="top-bar">
+        <div class="top-bar-left">
+            <div class="logo-small">
+                <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" width="32" height="32">
+                    <rect x="10" y="35" width="60" height="35" rx="2" stroke="currentColor" stroke-width="3" fill="none"/>
+                    <path d="M5 37L40 10L75 37" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                </svg>
+                <span>МодульныйДом</span>
+            </div>
+        </div>
+        <div class="top-bar-right">
+            <div class="user-info">
+                <div class="user-avatar" id="userAvatar">А</div>
+                <div class="user-details">
+                    <span class="user-name" id="userName">Пользователь</span>
+                    <span class="user-role" id="userRole">Роль</span>
+                </div>
+            </div>
+            <button class="btn-logout" id="logoutBtn" title="Выйти">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                    <polyline points="16 17 21 12 16 7"/>
+                    <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+                <span>Выйти</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Основной контент -->
+    <main class="dashboard-main">
+        <div class="welcome-section">
+            <h1>Добро пожаловать, <span id="welcomeName">Пользователь</span>!</h1>
+            <p>База знаний по производству, монтажу и обслуживанию каркасных модульных домов</p>
+        </div>
+
+        <!-- Карточки разделов -->
+        <div class="cards-grid">
+            <a href="#" class="card card-production">
+                <div class="card-icon">🏭</div>
+                <h3>Производство</h3>
+                <p>Пооперационные карты изготовления элементов каркаса, панелей и модулей</p>
+                <span class="card-badge">12 операций</span>
+            </a>
+            <a href="#" class="card card-assembly">
+                <div class="card-icon">🔩</div>
+                <h3>Сборка модулей</h3>
+                <p>Технологические процессы сборки модулей на производственной площадке</p>
+                <span class="card-badge">8 операций</span>
+            </a>
+            <a href="#" class="card card-installation">
+                <div class="card-icon">🏗️</div>
+                <h3>Монтаж на объекте</h3>
+                <p>Инструкции по доставке, установке и стыковке модулей на фундаменте</p>
+                <span class="card-badge">15 операций</span>
+            </a>
+            <a href="#" class="card card-engineering">
+                <div class="card-icon">📐</div>
+                <h3>Инженерные системы</h3>
+                <p>Электрика, сантехника, вентиляция, отопление в модульном доме</p>
+                <span class="card-badge">10 операций</span>
+            </a>
+            <a href="#" class="card card-finishing">
+                <div class="card-icon">🎨</div>
+                <h3>Отделочные работы</h3>
+                <p>Внутренняя и наружная отделка модульного дома</p>
+                <span class="card-badge">9 операций</span>
+            </a>
+            <a href="#" class="card card-maintenance">
+                <div class="card-icon">🛡️</div>
+                <h3>Обслуживание</h3>
+                <p>Регламенты ТО, сезонные проверки, гарантийные обязательства</p>
+                <span class="card-badge">6 операций</span>
+            </a>
+        </div>
+
+        <!-- Статистика -->
+        <div class="stats-row">
+            <div class="stat-item">
+                <span class="stat-number">60</span>
+                <span class="stat-label">Технологических операций</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number">6</span>
+                <span class="stat-label">Разделов</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number">24</span>
+                <span class="stat-label">Чертежа и схемы</span>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/users.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        // Проверка авторизации при загрузке dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!isAuthenticated()) {
+                window.location.href = 'index.html';
+                return;
+            }
+            const user = getCurrentUser();
+            if (user) {
+                document.getElementById('userName').textContent = user.name;
+                document.getElementById('userRole').textContent = user.role;
+                document.getElementById('welcomeName').textContent = user.name;
+                document.getElementById('userAvatar').textContent = user.name.charAt(0).toUpperCase();
+            }
+        });
+
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            logout();
+            window.location.href = 'index.html';
+        });
+    </script>
+</body>
+</html>
