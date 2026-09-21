@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2.1.1 — Сборка каркаса панели | Скаут Хаус</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="operation-page">
+
+    <!-- Верхняя навигация -->
+    <header class="top-bar">
+        <div class="top-bar-left">
+            <div class="logo-small">
+                <a href="../../dashboard.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 10px;">
+                    <img src="../../assets/images/logo.svg" alt="Скаут Хаус" class="logo-small-img">
+                    <span>Скаут Хаус</span>
+                </a>
+            </div>
+            <nav class="breadcrumb">
+                <a href="../../dashboard.html">Главная</a>
+                <span class="separator">/</span>
+                <a href="../production.html">Производство</a>
+                <span class="separator">/</span>
+                <span class="current">2.1.1 — Сборка каркаса панели</span>
+            </nav>
+        </div>
+        <div class="top-bar-right">
+            <button class="btn-back" onclick="history.back()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                    <line x1="19" y1="12" x2="5" y2="12"/>
+                    <polyline points="12 19 5 12 12 5"/>
+                </svg>
+                <span>Назад</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Основной контент -->
+    <main class="operation-main">
+        <div class="operation-header">
+            <div class="operation-number">Операция 2.1.1</div>
+            <h1>Сборка каркаса панели</h1>
+        </div>
+
+        <!-- Необходимая документация -->
+        <section class="operation-section documentation">
+            <h2>📋 Необходимая документация</h2>
+            <div class="section-content">
+                <p>Раздел КС.ПП.</p>
+                <a href="https://disk.yandex.ru/i/4s-dUwrDRPrBFw" target="_blank" class="doc-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/>
+                        <line x1="16" y1="17" x2="8" y2="17"/>
+                        <polyline points="10 9 9 9 8 9"/>
+                    </svg>
+                    Альбом сборки типовых узлов каркаса
+                </a>
+            </div>
+        </section>
+
+        <!-- Производимые операции -->
+        <section class="operation-section operations">
+            <h2> Производимые операции</h2>
+            <div class="section-content">
+                <ol class="steps-list">
+                    <li>Просверлить в балках по 3 отверстия на каждый стык с лагой. Привязка по высоте балки: 40мм - 95мм - 150мм.</li>
+                    <li>Собрать каркас, выравнивая балки и лаги по верхней плоскости. Крепить балку на 3 самореза ЖЦ 6х140 в каждый торец лаги.</li>
+                    <li>Дособрать продольные балки (согласно сечения А-А). Крепить на саморезы ЖЦ 6х120 с шагом 300мм.</li>
+                    <li>Установить торцевые лаги. Торцевые сдвоенные лаги дополнительно склеить ПВА-М и стянуть саморезами ЖЦ 6х80 в шахматном порядке с шагом 300мм.</li>
+                </ol>
+            </div>
+        </section>
+
+        <!-- Контрольные параметры -->
+        <section class="operation-section quality">
+            <h2>✅ Контрольные параметры</h2>
+            <div class="section-content">
+                <ul class="quality-list">
+                    <li><strong>Внешние габариты панели.</strong> Допуск: ±2мм.</li>
+                    <li><strong>Отклонения от верхней плоскости панели.</strong> Допуск: 0 -2мм.</li>
+                    <li><strong>Диагонали панели.</strong> Допуск ±3мм.</li>
+                    <li><strong>Количество саморезов в узлах крепления:</strong> соответствует требованиям конструкционного узла.</li>
+                </ul>
+                <div class="quality-note">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                        <polyline points="22 4 12 14.01 9 11.01"/>
+                    </svg>
+                    <span>По факту контрольных замеров ставится отметка в паспорте ОТК.</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Необходимый инструмент -->
+        <section class="operation-section tools">
+            <h2>🛠️ Необходимый инструмент и оборудование</h2>
+            <div class="section-content">
+                <ul class="tools-list">
+                    <li>Аккумуляторный шуруповерт с зажимным патроном</li>
+                    <li>Аккумуляторный шуруповерт ударный</li>
+                    <li>Рычаг для выгибания досок</li>
+                    <li>Киянка</li>
+                    <li>Рулетка 10м</li>
+                    <li>Уголок плотницкий металлический</li>
+                    <li>Карандаш простой</li>
+                    <li>Сверло d6х100мм</li>
+                    <li>Бита PZ3</li>
+                    <li>Кисть 100мм</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Расходные материалы -->
+        <section class="operation-section materials">
+            <h2>📦 Расходные материалы</h2>
+            <div class="section-content">
+                <ul class="materials-list">
+                    <li>Саморез ЖЦ 6х140</li>
+                    <li>Саморез ЖЦ 6х120</li>
+                    <li>Клей ПВА-М</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- QR-код на фотоальбом -->
+        <section class="operation-section photos">
+            <h2> Фотоальбом операции</h2>
+            <div class="section-content">
+                <div class="qr-container">
+                    <div class="qr-code">
+                        <!-- Здесь будет QR-код -->
+                        <img src="../../assets/images/qr/2.1.1.png" alt="QR-код на фотоальбом 2.1.1">
+                    </div>
+                    <div class="qr-info">
+                        <p>Отсканируйте QR-код для просмотра фотоальбома с примерами выполнения данной операции</p>
+                        <a href="#" target="_blank" class="btn-qr">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                                <polyline points="15 3 21 3 21 9"/>
+                                <line x1="10" y1="14" x2="21" y2="3"/>
+                            </svg>
+                            Открыть фотоальбом
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Навигация -->
+        <div class="operation-navigation">
+            <a href="../production.html" class="btn-nav btn-prev">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                    <line x1="19" y1="12" x2="5" y2="12"/>
+                    <polyline points="12 19 5 12 12 5"/>
+                </svg>
+                <span>К разделу Производство</span>
+            </a>
+            <a href="2.1.2.html" class="btn-nav btn-next">
+                <span>Следующая операция: 2.1.2</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                    <line x1="5" y1="12" x2="19" y2="12"/>
+                    <polyline points="12 5 19 12 12 19"/>
+                </svg>
+            </a>
+        </div>
+    </main>
+
+    <script src="../../js/users.js"></script>
+    <script src="../../js/auth.js"></script>
+</body>
+</html>
