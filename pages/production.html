@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Производство — Скаут Хаус</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body class="production-page">
+
+    <!-- Верхняя навигация -->
+    <header class="top-bar">
+        <div class="top-bar-left">
+            <div class="logo-small">
+                <a href="../dashboard.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 10px;">
+                    <img src="../assets/images/logo.svg" alt="Скаут Хаус" class="logo-small-img">
+                    <span>Скаут Хаус</span>
+                </a>
+            </div>
+            <nav class="breadcrumb">
+                <a href="../dashboard.html">Главная</a>
+                <span class="separator">/</span>
+                <span class="current">Производство</span>
+            </nav>
+        </div>
+        <div class="top-bar-right">
+            <div class="user-info">
+                <div class="user-avatar" id="userAvatar">А</div>
+                <div class="user-details">
+                    <span class="user-name" id="userName">Пользователь</span>
+                    <span class="user-role" id="userRole">Роль</span>
+                </div>
+            </div>
+            <button class="btn-logout" id="logoutBtn" title="Выйти">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                    <polyline points="16 17 21 12 16 7"/>
+                    <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+                <span>Выйти</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Основной контент -->
+    <main class="production-main">
+        <div class="section-header">
+            <h1>🏭 Производство</h1>
+            <p>Пооперационные карты изготовления элементов каркаса, панелей и модулей</p>
+        </div>
+
+        <!-- Аккордеон с разделами -->
+        <div class="accordion-container">
+            
+            <!-- Раздел 1: Заготовка -->
+            <div class="accordion-section" data-section="1">
+                <div class="accordion-header">
+                    <div class="section-number">1</div>
+                    <div class="section-info">
+                        <h2>Заготовка</h2>
+                        <span class="subsection-count">5 подразделов</span>
+                    </div>
+                    <div class="accordion-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="accordion-content">
+                    <div class="subsections-list">
+                        
+                        <!-- Подраздел 1.1 -->
+                        <div class="subsection-item" data-subsection="1.1">
+                            <div class="subsection-header">
+                                <span class="subsection-number">1.1</span>
+                                <span class="subsection-title">Напил элементов каркаса</span>
+                                <div class="subsection-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="6 9 12 15 18 9"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="subsection-content">
+                                <ul class="operations-list">
+                                    <li><a href="operations/1.1.1.html">1.1.1 — Распиловка досок каркаса</a></li>
+                                    <li><a href="operations/1.1.2.html">1.1.2 — Распиловка бруса</a></li>
+                                    <li><a href="operations/1.1.3.html">1.1.3 — Торцовка элементов</a></li>
+                                    <li><a href="operations/1.1.4.html">1.1.4 — Фаска и обработка кромок</a></li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Подраздел 1.2 -->
+                        <div class="subsection-item" data-subsection="1.2">
+                            <div class="subsection-header">
+                                <span class="subsection-number">1.2</span>
+                                <span class="subsection-title">Напил листового материала</span>
+                                <div class="subsection-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="6 9 12 15 18 9"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="subsection-content">
+                                <ul class="operations-list">
+                                    <li><a href="operations/1.2.1.html">1.2.1 — Раскрой ОСБ</a></li>
+                                    <li><a href="operations/1.2.2.html">1.2.2 — Раскрой фанеры</a></li>
+                                    <li><a href="operations/1.2.3.html">1.2.3 — Раскрой ГВЛ</a></li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Подраздел 1.3 -->
+                        <div class="subsection-item" data-subsection="1.3">
+                            <div class="subsection-header">
+                                <span class="subsection-number">1.3</span>
+                                <span class="subsection-title">Напил отделочной доски</span>
+                                <div class="subsection-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="6 9 12 15 18 9"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="subsection-content">
+                                <ul class="operations-list">
+                                    <li><a href="operations/1.3.1.html">1.3.1 — Распиловка вагонки</a></li>
+                                    <li><a href="operations/1.3.2.html">1.3.2 — Распиловка имитации бруса</a></li>
+                                    <li><a href="operations/1.3.3.html">1.3.3 — Обработка торцов</a></li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Подраздел 1.4 -->
+                        <div class="subsection-item" data-subsection="1.4">
+                            <div class="subsection-header">
+                                <span class="subsection-number">1.4</span>
+                                <span class="subsection-title">Заготовка для сборки модуля</span>
+                                <div class="subsection-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="6 9 12 15 18 9"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="subsection-content">
+                                <ul class="operations-list">
+                                    <li><a href="operations/1.4.1.html">1.4.1 — Подготовка лежней</a></li>
+                                    <li><a href="operations/1.4.2.html">1.4.2 — Изготовление стропил</a></li>
+                                    <li><a href="operations/1.4.3.html">1.4.3 — Заготовка обвязки</a></li>
+                                    <li><a href="operations/1.4.4.html">1.4.4 — Подготовка стоек</a></li>
+                                    <li><a href="operations/1.4.5.html">1.4.5 — Изготовление перемычек</a></li>
+                                    <li><a href="operations/1.4.6.html">1.4.6 — Заготовка укосин</a></li>
+                                    <li><a href="operations/1.4.7.html">1.4.7 — Подготовка ригелей</a></li>
+                                    <li><a href="operations/1.4.8.html">1.4.8 — Для панелей</a></li>
+                                    <li><a href="operations/1.4.9.html">1.4.9 — Специальные элементы</a></li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Подраздел 1.5 -->
+                        <div class="subsection-item" data-subsection="1.5">
+                            <div class="subsection-header">
+                                <span class="subsection-number">1.5</span>
+                                <span class="subsection-title">Заготовка для веранд и террас</span>
+                                <div class="subsection-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="6 9 12 15 18 9"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="subsection-content">
+                                <ul class="operations-list">
+                                    <li><a href="operations/1.5.1.html">1.5.1 — Распиловка террасной доски</a></li>
+                                    <li><a href="operations/1.5.2.html">1.5.2 — Изготовление ограждений</a></li>
+                                    <li><a href="operations/1.5.3.html">1.5.3 — Подготовка стоек веранды</a></li>
+                                </ul>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Раздел 2: Сборка панелей -->
+            <div class="accordion-section" data-section="2">
+                <div class="accordion-header">
+                    <div class="section-number">2</div>
+                    <div class="section-info">
+                        <h2>Сборка панелей</h2>
+                        <span class="subsection-count">4 подраздела</span>
+                    </div>
+                    <div class="accordion-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="accordion-content">
+                    <div class="subsections-list">
+                        
+                        <!-- Подраздел 2.1 -->
+                        <div class="subsection-item" data-subsection="2.1">
+                            <div class="subsection-header">
+                                <span class="subsection-number">2.1</span>
+                                <span class="subsection-title">Сборка панели пола</span>
+                                <div class="subsection-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="6 9 12 15 18 9"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="subsection-content">
+                                <ul class="operations-list">
+                                    <li><a href="operations/2.1.1.html">2.1.1 — Сборка каркаса панели</a></li>
+                                    <li><a href="operations/2.1.2.html">2.1.2 — Укладка ОСБ на каркас панели</a></li>
+                                    <li><a href="operations/2.1.3.html">2.1.3 — Укладка фанеры на каркас панели</a></li>
+                                    <li><a href="operations/2.1.4.html">2.1.4 — Прокладка трассы канализации</a></li>
+                                    <li><a href="operations/2.1.5.html">2.1.5 — Прокладка электролиний и установка гильз</a></li>
+                                    <li><a href="operations/2.1.6.html">2.1.6 — Утепление панели ППУ</a></li>
+                                    <li><a href="operations/2.1.7.html">2.1.7 — Утепление панели мин.ватой</a></li>
+                                    <li><a href="operations/2.1.8.html">2.1.8 — Укладка ветрозащиты</a></li>
+                                    <li><a href="operations/2.1.9.html">2.1.9 — Укладка защитной сетки</a></li>
+                                    <li><a href="operations/2.1.10.html">2.1.10 — Установка лежней</a></li>
+                                    <li><a href="operations/2.1.11.html">2.1.11 — Контроль качества</a></li>
+                                    <li><a href="operations/2.1.12.html">2.1.12 — Маркировка панели</a></li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Подраздел 2.2 -->
+                        <div class="subsection-item" data-subsection="2.2">
+                            <div class="subsection-header">
+                                <span class="subsection-number">2.2</span>
+                                <span class="subsection-title">Сборка панели крыши</span>
+                                <div class="subsection-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="6 9 12 15 18 9"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="subsection-content">
+                                <ul class="operations-list">
+                                    <li><a href="operations/2.2.1.html">2.2.1 — Сборка каркаса кровельной панели</a></li>
+                                    <li><a href="operations/2.2.2.html">2.2.2 — Укладка пароизоляции</a></li>
+                                    <li><a href="operations/2.2.3.html">2.2.3 — Утепление кровельной панели</a></li>
+                                    <li><a href="operations/2.2.4.html">2.2.4 — Монтаж ОСБ</a></li>
+                                    <li><a href="operations/2.2.5.html">2.2.5 — Установка вентиляционных элементов</a></li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Подраздел 2.3 -->
+                        <div class="subsection-item" data-subsection="2.3">
+                            <div class="subsection-header">
+                                <span class="subsection-number">2.3</span>
+                                <span class="subsection-title">Сборка панели стены внешней</span>
+                                <div class="subsection-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="6 9 12 15 18 9"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="subsection-content">
+                                <ul class="operations-list">
+                                    <li><a href="operations/2.3.1.html">2.3.1 — Сборка каркаса внешней стены</a></li>
+                                    <li><a href="operations/2.3.2.html">2.3.2 — Установка оконных и дверных проёмов</a></li>
+                                    <li><a href="operations/2.3.3.html">2.3.3 — Монтаж плит с внешней стороны</a></li>
+                                    <li><a href="operations/2.3.4.html">2.3.4 — Утепление стены</a></li>
+                                    <li><a href="operations/2.3.5.html">2.3.5 — Монтаж ветрозащиты</a></li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Подраздел 2.4 -->
+                        <div class="subsection-item" data-subsection="2.4">
+                            <div class="subsection-header">
+                                <span class="subsection-number">2.4</span>
+                                <span class="subsection-title">Сборка панели стены внутренней</span>
+                                <div class="subsection-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="6 9 12 15 18 9"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="subsection-content">
+                                <ul class="operations-list">
+                                    <li><a href="operations/2.4.1.html">2.4.1 — Сборка каркаса внутренней стены</a></li>
+                                    <li><a href="operations/2.4.2.html">2.4.2 — Установка дверных проёмов</a></li>
+                                    <li><a href="operations/2.4.3.html">2.4.3 — Монтаж ГВЛ/ОСБ</a></li>
+                                    <li><a href="operations/2.4.4.html">2.4.4 — Звукоизоляция</a></li>
+                                </ul>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Раздел 3: Сборка модуля -->
+            <div class="accordion-section" data-section="3">
+                <div class="accordion-header">
+                    <div class="section-number">3</div>
+                    <div class="section-info">
+                        <h2>Сборка модуля</h2>
+                        <span class="subsection-count">9 подразделов</span>
+                    </div>
+                    <div class="accordion-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="accordion-content">
+                    <div class="subsections-list">
+                        
+                        <div class="subsection-item" data-subsection="3.1">
+                            <div class="subsection-header">
+                                <span class="subsection-number">3.1</span>
+                                <span class="subsection-title">Каркас и внешний контур модуля</span>
+                                <div class="subsection-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="6 9 12 15 18 9"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="subsection-content">
+                                <ul class="operations-list">
+                                    <li><a href="operations/3.1.1.html">3.1.1 — Установка панелей пола</a></li>
+                                    <li><a href="operations/3.1.2.html">3.1.2 — Монтаж стеновых панелей</a></li>
+                                    <li><a href="operations/3.1.3.html">3.1.3 — Стыковка панелей</a></li>
+                                    <li><a href="operations/3.1.4.html">3.1.4 — Герметизация швов</a></li>
+                                    <li><a href="operations/3.1.5.html">3.1.5 — Установка кровельных панелей</a></li>
+                                    <li><a href="operations/3.1.6.html">3.1.6 — Монтаж фронтонов</a></li>
+                                    <li><a href="operations/3.1.7.html">3.1.7 — Установка окон</a></li>
+                                    <li><a href="operations/3.1.8.html">3.1.8 — Установка дверей</a></li>
+                                    <li><a href="operations/3.1.9.html">3.1.9 — Внешняя отделка</a></li>
+                                    <li><a href="operations/3.1.10.html">3.1.10 — Монтаж водостоков</a></li>
+                                    <li><a href="operations/3.1.11.html">3.1.11 — Контроль геометрии</a></li>
+                                    <li><a href="operations/3.1.12.html">3.1.12 — Антисептирование</a></li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="subsection-item" data-subsection="3.2">
+                            <div class="subsection-header">
+                                <span class="subsection-number">3.2</span>
+                                <span class="subsection-title">Кровельные работы</span>
+                                <div class="subsection-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="6 9 12 15 18 9"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="subsection-content">
+                                <ul class="operations-list">
+                                    <li><a href="operations/3.2.1.html">3.2.1 — Укладка пароизоляции</a></li>
+                                    <li><a href="operations/3.2.2.html">3.2.2 — Монтаж контробрешётки</a></li>
+                                    <li><a href="operations/3.2.3.html">3.2.3 — Установка обрешётки</a></li>
+                                    <li><a href="operations/3.2.4.html">3.2.4 — Монтаж металлочерепицы</a></li>
+                                    <li><a href="operations/3.2.5.html">3.2.5 — Установка конька</a></li>
+                                    <li><a href="operations/3.2.6.html">3.2.6 — Монтаж ендовы</a></li>
+                                    <li><a href="operations/3.2.7.html">3.2.7 — Установка планок примыкания</a></li>
+                                    <li><a href="operations/3.2.8.html">3.2.8 — Монтаж снегозадержателей</a></li>
+                                    <li><a href="operations/3.2.9.html">3.2.9 — Подшивка свесов</a></li>
+                                    <li><a href="operations/3.2.10.html">3.2.10 — Установка вентиляционных элементов</a></li>
+                                    <li><a href="operations/3.2.11.html">3.2.11 — Герметизация примыканий</a></li>
+                                    <li><a href="operations/3.2.12.html">3.2.12 — Контроль качества кровли</a></li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="subsection-item" data-subsection="3.3">
+                            <div class="subsection-header">
+                                <span class="subsection-number">3.3</span>
+                                <span class="subsection-title">Работы во внутреннем контуре модуля</span>
+                                <div class="subsection-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="6 9 12 15 18 9"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="subsection-content">
+                                <ul class="operations-list">
+                                    <li><a href="operations/3.3.1.html">3.3.1 — Монтаж внутренних перегородок</a></li>
+                                    <li><a href="operations/3.3.2.html">3.3.2 — Утепление перекрытий</a></li>
+                                    <li><a href="operations/3.3.3.html">3.3.3 — Пароизоляция потолка</a></li>
+                                    <li><a href="operations/3.3.4.html">3.3.4 — Обшивка потолка</a></li>
+                                    <li><a href="operations/3.3.5.html">3.3.5 — Обшивка стен ГВЛ</a></li>
+                                    <li><a href="operations/3.3.6.html">3.3.6 — Шпаклёвка швов</a></li>
+                                    <li><a href="operations/3.3.7.html">3.3.7 — Грунтовка стен</a></li>
+                                    <li><a href="operations/3.3.8.html">3.3.8 — Покраска стен</a></li>
+                                    <li><a href="operations/3.3.9.html">3.3.9 — Укладка напольного покрытия</a></li>
+                                    <li><a href="operations/3.3.10.html">3.3.10 — Установка плинтусов</a></li>
+                                    <li><a href="operations/3.3.11.html">3.3.11 — Монтаж потолочных плинтусов</a></li>
+                                    <li><a href="operations/3.3.12.html">3.3.12 — Установка розеток и выключателей</a></li>
+                                    <li><a href="operations/3.3.13.html">3.3.13 — Монтаж светильников</a></li>
+                                    <li><a href="operations/3.3.14.html">3.3.14 — Установка сантехники</a></li>
+                                    <li><a href="operations/3.3.15.html">3.3.15 — Монтаж кухонной мебели</a></li>
+                                    <li><a href="operations/3.3.16.html">3.3.16 — Установка шкафов</a></li>
+                                    <li><a href="operations/3.3.17.html">3.3.17 — Монтаж зеркал</a></li>
+                                    <li><a href="operations/3.3.18.html">3.3.18 — Установка полотенцесушителей</a></li>
+                                    <li><a href="operations/3.3.19.html">3.3.19 — Монтаж смесителей</a></li>
+                                    <li><a href="operations/3.3.20.html">3.3.20 — Установка душевой кабины</a></li>
+                                    <li><a href="operations/3.3.21.html">3.3.21 — Монтаж ванны</a></li>
+                                    <li><a href="operations/3.3.22.html">3.3.22 — Установка унитаза</a></li>
+                                    <li><a href="operations/3.3.23.html">3.3.23 — Монтаж раковины</a></li>
+                                    <li><a href="operations/3.3.24.html">3.3.24 — Установка вытяжки</a></li>
+                                    <li><a href="operations/3.3.25.html">3.3.25 — Финишная уборка</a></li>
+                                    <li><a href="operations/3.3.26.html">3.3.26 — Контроль качества внутренних работ</a></li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="subsection-item" data-subsection="3.4">
+                            <div class="subsection-header">
+                                <span class="subsection-number">3.4</span>
+                                <span class="subsection-title">Инженерная часть. Электрика</span>
+                                <div class="subsection-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="6 9 12 15 18 9"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="subsection-content">
+                                <ul class="operations-list">
+                                    <li><a href="operations/3.4.1.html">3.4.1 — Прокладка электрокабеля</a></li>
+                                    <li><a href="operations/3.4.2.html">3.4.2 — Установка электрощита</a></li>
+                                    <li><a href="operations/3.4.3.html">3.4.3 — Монтаж автоматов</a></li>
+                                    <li><a href="operations/3.4.4.html">3.4.4 — Подключение розеток</a></li>
+                                    <li><a href="operations/3.4.5.html">3.4.5 — Подключение выключателей</a></li>
+                                    <li><a href="operations/3.4.6.html">3.4.6 — Установка УЗО</a></li>
+                                    <li><a href="operations/3.4.7.html">3.4.7 — Подключение освещения</a></li>
+                                    <li><a href="operations/3.4.8.html">3.4.8 — Заземление</a></li>
+                                    <li><a href="operations/3.4.9.html">3.4.9 — Тестирование сети</a></li>
+                                    <li><a href="operations/3.4.10.html">3.4.10 — Маркировка кабелей</a></li>
+                                    <li><a href="operations/3.4.11.html">3.4.11 — Составление схемы</a></li>
+                                    <li><a href="operations/3.4.12.html">3.4.12 — Пусконаладка</a></li>
+                                    <li><a href="operations/3.4.13.html">3.4.13 — Инструктаж пользователя</a></li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="subsection-item" data-subsection="3.5">
+                            <div class="subsection-header">
+                                <span class="subsection-number">3.5</span>
+                                <span class="subsection-title">Инженерная часть. Водопровод</span>
+                                <div class="subsection-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="6 9 12 15 18 9"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="subsection-content">
+                                <ul class="operations-list">
+                                    <li><a href="operations/3.5.1.html">3.5.1 — Прокладка труб ХВС</a></li>
+                                    <li><a href="operations/3.5.2.html">3.5.2 — Прокладка труб ГВС</a></li>
+                                    <li><a href="operations/3.5.3.html">3.5.3 — Установка водонагревателя</a></li>
+                                    <li><a href="operations/3.5.4.html">3.5.4 — Монтаж насосной станции</a></li>
+                                    <li><a href="operations/3.5.5.html">3.5.5 — Установка фильтров</a></li>
+                                    <li><a href="operations/3.5.6.html">3.5.6 — Подключение стиральной машины</a></li>
+                                    <li><a href="operations/3.5.7.html">3.5.7 — Подключение посудомоечной машины</a></li>
+                                    <li><a href="operations/3.5.8.html">3.5.8 — Опрессовка системы</a></li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="subsection-item" data-subsection="3.6">
+                            <div class="subsection-header">
+                                <span class="subsection-number">3.6</span>
+                                <span class="subsection-title">Инженерная часть. Канализация</span>
+                                <div class="subsection-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="6 9 12 15 18 9"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="subsection-content">
+                                <ul class="operations-list">
+                                    <li><a href="operations/3.6.1.html">3.6.1 — Монтаж канализационных труб</a></li>
+                                    <li><a href="operations/3.6.2.html">3.6.2 — Установка трапов</a></li>
+                                    <li><a href="operations/3.6.3.html">3.6.3 — Подключение сантехники</a></li>
+                                    <li><a href="operations/3.6.4.html">3.6.4 — Установка сифонов</a></li>
+                                    <li><a href="operations/3.6.5.html">3.6.5 — Монтаж фановой трубы</a></li>
+                                    <li><a href="operations/3.6.6.html">3.6.6 — Герметизация соединений</a></li>
+                                    <li><a href="operations/3.6.7.html">3.6.7 — Проверка уклонов</a></li>
+                                    <li><a href="operations/3.6.8.html">3.6.8 — Тестирование системы</a></li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="subsection-item" data-subsection="3.7">
+                            <div class="subsection-header">
+                                <span class="subsection-number">3.7</span>
+                                <span class="subsection-title">Инженерная часть. Вентиляция</span>
+                                <div class="subsection-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="6 9 12 15 18 9"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="subsection-content">
+                                <ul class="operations-list">
+                                    <li><a href="operations/3.7.1.html">3.7.1 — Монтаж приточной вентиляции</a></li>
+                                    <li><a href="operations/3.7.2.html">3.7.2 — Установка вытяжки</a></li>
+                                    <li><a href="operations/3.7.3.html">3.7.3 — Проверка воздухообмена</a></li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="subsection-item" data-subsection="3.8">
+                            <div class="subsection-header">
+                                <span class="subsection-number">3.8</span>
+                                <span class="subsection-title">Инженерная часть. Отопление</span>
+                                <div class="subsection-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="6 9 12 15 18 9"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="subsection-content">
+                                <ul class="operations-list">
+                                    <li><a href="operations/3.8.1.html">3.8.1 — Установка котла</a></li>
+                                    <li><a href="operations/3.8.2.html">3.8.2 — Монтаж радиаторов</a></li>
+                                    <li><a href="operations/3.8.3.html">3.8.3 — Подключение системы отопления</a></li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="subsection-item" data-subsection="3.9">
+                            <div class="subsection-header">
+                                <span class="subsection-number">3.9</span>
+                                <span class="subsection-title">Подготовка к отгрузке</span>
+                                <div class="subsection-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="6 9 12 15 18 9"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="subsection-content">
+                                <ul class="operations-list">
+                                    <li><a href="operations/3.9.1.html">3.9.1 — Финальный контроль качества</a></li>
+                                    <li><a href="operations/3.9.2.html">3.9.2 — Упаковка и маркировка</a></li>
+                                </ul>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Раздел 4: Опции -->
+            <div class="accordion-section" data-section="4">
+                <div class="accordion-header">
+                    <div class="section-number">4</div>
+                    <div class="section-info">
+                        <h2>Опции</h2>
+                        <span class="subsection-count">Дополнительные работы</span>
+                    </div>
+                    <div class="accordion-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="accordion-content">
+                    <div class="subsections-list">
+                        <div class="subsection-item">
+                            <div class="subsection-content">
+                                <ul class="operations-list">
+                                    <li><a href="operations/4.1.html">4.1 — Терраса</a></li>
+                                    <li><a href="operations/4.2.html">4.2 — Веранда</a></li>
+                                    <li><a href="operations/4.3.html">4.3 — Навес</a></li>
+                                    <li><a href="operations/4.4.html">4.4 — Крыльцо</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Раздел 5: Монтаж -->
+            <div class="accordion-section" data-section="5">
+                <div class="accordion-header">
+                    <div class="section-number">5</div>
+                    <div class="section-info">
+                        <h2>Монтаж</h2>
+                        <span class="subsection-count">2 подраздела</span>
+                    </div>
+                    <div class="accordion-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="accordion-content">
+                    <div class="subsections-list">
+                        <div class="subsection-item" data-subsection="5.1">
+                            <div class="subsection-header">
+                                <span class="subsection-number">5.1</span>
+                                <span class="subsection-title">Сборка модулей</span>
+                                <div class="subsection-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="6 9 12 15 18 9"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="subsection-content">
+                                <ul class="operations-list">
+                                    <li><a href="operations/5.1.1.html">5.1.1 — Подготовка фундамента</a></li>
+                                    <li><a href="operations/5.1.2.html">5.1.2 — Установка модулей</a></li>
+                                    <li><a href="operations/5.1.3.html">5.1.3 — Стыковка модулей</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="subsection-item" data-subsection="5.2">
+                            <div class="subsection-header">
+                                <span class="subsection-number">5.2</span>
+                                <span class="subsection-title">Сборка префабов</span>
+                                <div class="subsection-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="6 9 12 15 18 9"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="subsection-content">
+                                <ul class="operations-list">
+                                    <li><a href="operations/5.2.1.html">5.2.1 — Монтаж префаб-панелей</a></li>
+                                    <li><a href="operations/5.2.2.html">5.2.2 — Герметизация</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Раздел 6: Сервис -->
+            <div class="accordion-section" data-section="6">
+                <div class="accordion-header">
+                    <div class="section-number">6</div>
+                    <div class="section-info">
+                        <h2>Сервис</h2>
+                        <span class="subsection-count">Техническое обслуживание</span>
+                    </div>
+                    <div class="accordion-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="accordion-content">
+                    <div class="subsections-list">
+                        <div class="subsection-item">
+                            <div class="subsection-content">
+                                <ul class="operations-list">
+                                    <li><a href="operations/6.1.html">6.1 — Сезонное обслуживание</a></li>
+                                    <li><a href="operations/6.2.html">6.2 — Гарантийный ремонт</a></li>
+                                    <li><a href="operations/6.3.html">6.3 — Диагностика систем</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script src="../js/users.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/accordion.js"></script>
+</body>
+</html>
