@@ -3,7 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Главная — База знаний | Модульный дом</title>
+    <title>Главная — Скаут Хаус | Проект производства работ</title>
+    
+    <!-- Шрифты Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="dashboard-page">
@@ -12,11 +18,8 @@
     <header class="top-bar">
         <div class="top-bar-left">
             <div class="logo-small">
-                <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" width="32" height="32">
-                    <rect x="10" y="35" width="60" height="35" rx="2" stroke="currentColor" stroke-width="3" fill="none"/>
-                    <path d="M5 37L40 10L75 37" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-                </svg>
-                <span>МодульныйДом</span>
+                <img src="assets/images/logo.svg" alt="Скаут Хаус" class="logo-small-img">
+                <span>Скаут Хаус</span>
             </div>
         </div>
         <div class="top-bar-right">
@@ -42,7 +45,7 @@
     <main class="dashboard-main">
         <div class="welcome-section">
             <h1>Добро пожаловать, <span id="welcomeName">Пользователь</span>!</h1>
-            <p>База знаний по производству, монтажу и обслуживанию каркасных модульных домов</p>
+            <p>Проект производства работ по каркасным модульным домам</p>
         </div>
 
         <!-- Карточки разделов -->
@@ -105,7 +108,6 @@
     <script src="js/users.js"></script>
     <script src="js/auth.js"></script>
     <script>
-        // Проверка авторизации при загрузке dashboard
         document.addEventListener('DOMContentLoaded', function() {
             if (!isAuthenticated()) {
                 window.location.href = 'index.html';
