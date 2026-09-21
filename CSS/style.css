@@ -16,6 +16,9 @@
     --primary-dark: #0e3a20;
     --accent: #d4a843;
     --accent-light: #f0cc6b;
+    --button-primary: #FABC1B; /* RGB(250, 188, 27) */
+    --button-hover: #E5A800;   /* Чуть темнее для hover */
+    --button-text: #1a1a2e;    /* Тёмный текст на жёлтом фоне */
     --bg-dark: #0f1923;
     --bg-card: #ffffff;
     --text-primary: #1a1a2e;
@@ -32,6 +35,7 @@
     --radius-sm: 8px;
     --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
 
 html {
     font-size: 16px;
@@ -323,8 +327,8 @@ h1, h2, h3, h4, h5, h6 {
 .btn-login {
     width: 100%;
     padding: 14px 24px;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
-    color: white;
+    background: linear-gradient(135deg, var(--button-primary) 0%, #FFD040 100%);
+    color: var(--button-text); /* Тёмный текст на жёлтом фоне */
     border: none;
     border-radius: var(--radius-sm);
     font-family: 'Inter', sans-serif;
@@ -342,7 +346,8 @@ h1, h2, h3, h4, h5, h6 {
 
 .btn-login:hover {
     transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(26, 86, 50, 0.35);
+    background: linear-gradient(135deg, var(--button-hover) 0%, var(--button-primary) 100%);
+    box-shadow: 0 6px 20px rgba(250, 188, 27, 0.4);
 }
 
 .btn-login:active {
@@ -351,6 +356,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .btn-login.success {
     background: linear-gradient(135deg, var(--success) 0%, #22c55e 100%);
+    color: white;
 }
 
 .btn-arrow {
