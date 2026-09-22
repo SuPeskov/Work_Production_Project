@@ -778,6 +778,7 @@ h1, h2, h3, h4, h5, h6 {
     color: var(--primary);
 }
 
+/* === Accordion Content === */
 .accordion-content {
     max-height: 0;
     overflow: hidden;
@@ -786,8 +787,34 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .accordion-section.active .accordion-content {
-    max-height: 2000px;
+    max-height: 10000px; /* Увеличено с 2000px */
+    overflow-y: auto; /* Изменено с hidden на auto */
     transition: max-height 0.5s ease-in;
+}
+
+/* Кастомный скроллбар для красивого вида */
+.accordion-section.active .accordion-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.accordion-section.active .accordion-content::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.accordion-section.active .accordion-content::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+.accordion-section.active .accordion-content::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Для Firefox */
+.accordion-section.active .accordion-content {
+    scrollbar-width: thin;
+    scrollbar-color: #c1c1c1 #f1f1f1;
 }
 
 .subsections-list {
@@ -854,8 +881,27 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .subsection-item.active .subsection-content {
-    max-height: 1000px;
+    max-height: 5000px; /* Увеличено */
+    overflow-y: auto; /* Добавлено для прокрутки */
     transition: max-height 0.5s ease-in;
+}
+
+/* Скроллбар для подразделов */
+.subsection-item.active .subsection-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.subsection-item.active .subsection-content::-webkit-scrollbar-track {
+    background: #f8f9fa;
+}
+
+.subsection-item.active .subsection-content::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 3px;
+}
+
+.subsection-item.active .subsection-content::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
 }
 
 .operations-list {

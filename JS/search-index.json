@@ -7399,7 +7399,8 @@
       "number": "",
       "icon": "🏭",
       "content": "Пооперационные карты изготовления элементов каркаса, панелей и модулей Производство",
-      "url": "pages/production.html"
+      "url": "pages/production.html",
+      "anchor": "section-1"
     },
     {
       "id": "sub_1.1",

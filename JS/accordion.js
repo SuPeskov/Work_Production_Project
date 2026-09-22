@@ -100,49 +100,71 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // === Авто-раскрытие по якорю (Разделы и Подразделы) ===
-window.addEventListener('load', function() {
-    setTimeout(() => {
-        const hash = window.location.hash.substring(1);
-        if (!hash) return;
+function handleHashChange() {
+    console.log('🔄 Обнаружено изменение якоря в URL');
+    
+    const hash = window.location.hash.substring(1);
+    console.log(' Новый якорь:', hash);
+    
+    if (!hash) {
+        console.log('ℹ️  Якорь пуст, сворачиваем всё');
+        // Можно добавить логику сворачивания всех разделов
+        return;
+    }
+    
+    const target = document.getElementById(hash);
+    if (!target) {
+        console.warn('⚠️  Элемент с id="' + hash + '" не найден');
+        return;
+    }
+    
+    console.log('✅ Найден элемент:', target);
+    
+    // Если это ОСНОВНОЙ РАЗДЕЛ (section-X)
+    if (hash.startsWith('section-')) {
+        console.log('📂 Раскрываем основной раздел...');
+        if (!target.classList.contains('active')) {
+            const header = target.querySelector('.accordion-header');
+            if (header) header.click();
+        }
+        setTimeout(() => {
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            target.classList.add('highlighted');
+            setTimeout(() => target.classList.remove('highlighted'), 2500);
+        }, 400);
+    }
+    
+    // Если это ПОДРАЗДЕЛ (subsection-X.X)
+    else if (hash.startsWith('subsection-')) {
+        console.log('📁 Раскрываем подраздел...');
+        const parentSection = target.closest('.accordion-section');
+        if (parentSection && !parentSection.classList.contains('active')) {
+            const header = parentSection.querySelector('.accordion-header');
+            if (header) header.click();
+        }
         
-        console.log('📍 Найден якорь:', hash);
-        const target = document.getElementById(hash);
-        
-        if (!target) return;
-
-        // 1. Если это ОСНОВНОЙ РАЗДЕЛ (section-X)
-        if (hash.startsWith('section-')) {
-            console.log('📂 Раскрываем основной раздел...');
-            if (!target.classList.contains('active')) {
-                const header = target.querySelector('.accordion-header');
-                if (header) header.click();
+        setTimeout(() => {
+            const subsectionHeader = target.querySelector('.subsection-header');
+            if (subsectionHeader && !target.classList.contains('active')) {
+                subsectionHeader.click();
             }
             setTimeout(() => {
-                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                target.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 target.classList.add('highlighted');
                 setTimeout(() => target.classList.remove('highlighted'), 2500);
             }, 400);
-        }
-        
-        // 2. Если это ПОДРАЗДЕЛ (subsection-X.X)
-        else if (hash.startsWith('subsection-')) {
-            console.log('📁 Раскрываем подраздел...');
-            const parentSection = target.closest('.accordion-section');
-            if (parentSection && !parentSection.classList.contains('active')) {
-                parentSection.querySelector('.accordion-header').click();
-            }
-            
-            setTimeout(() => {
-                const subsectionHeader = target.querySelector('.subsection-header');
-                if (subsectionHeader && !target.classList.contains('active')) {
-                    subsectionHeader.click();
-                }
-                setTimeout(() => {
-                    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    target.classList.add('highlighted');
-                    setTimeout(() => target.classList.remove('highlighted'), 2500);
-                }, 400);
-            }, 500);
+        }, 500);
+    }
+}
+
+// Слушаем изменение якоря в URL (без перезагрузки страницы)
+window.addEventListener('hashchange', handleHashChange);
+
+// Также вызываем при загрузке страницы (если есть якорь в URL)
+window.addEventListener('load', function() {
+    setTimeout(() => {
+        if (window.location.hash) {
+            handleHashChange();
         }
     }, 100);
 });

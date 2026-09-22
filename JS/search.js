@@ -215,49 +215,34 @@ document.addEventListener('DOMContentLoaded', async function() {
  * в зависимости от расположения текущей страницы
  */
 function buildUrl(result) {
-    // Получаем целевой путь из результата
-    let targetPath = result.url;
-    
-    // Убираем возможные префиксы './' или '../'
-    targetPath = targetPath.replace(/^\.\.?\//, '');
-    
-    // Определяем текущий путь
-    const currentPath = window.location.pathname;
-    
-    let url;
-    
-    // Если мы уже в папке pages
-    if (currentPath.includes('/pages/')) {
-        // Если целевой файл тоже в pages - используем только имя файла
-        if (targetPath.startsWith('pages/')) {
-            const fileName = targetPath.replace('pages/', '');
-            url = fileName;
-        } else {
-            url = targetPath;
-        }
-    } 
-    // Если мы в корне сайта
-    else {
-        // Если целевой файл в pages - добавляем pages/
-        if (!targetPath.startsWith('pages/') && !targetPath.startsWith('./') && !targetPath.startsWith('../')) {
-            url = 'pages/' + targetPath;
-        } else {
-            url = targetPath.replace(/^\.\.?\//, '');
-        }
+    // 1. Получаем чистый путь (убираем ./ или ../ если вдруг есть)
+    let targetPath = result.url.replace(/^\.\.?\//, '');
+
+    // 2. Определяем, где мы сейчас находимся
+    const currentPath = window.location.pathname; 
+    let finalUrl = '';
+
+    // 3. Логика формирования относительного пути
+    if (currentPath.includes('/pages/operations/')) {
+        // Мы внутри операции (глубина 2). Чтобы попасть в pages/, нужно выйти на уровень вверх (../)
+        finalUrl = '../' + targetPath;
+    } else if (currentPath.includes('/pages/')) {
+        // Мы уже в папке pages/. 
+        // Если targetPath = 'pages/production.html', нам нужно просто 'production.html'
+        // Если targetPath = 'pages/operations/2.1.1.html', нам нужно 'operations/2.1.1.html'
+        finalUrl = targetPath.replace(/^pages\//, '');
+    } else {
+        // Мы в корне (например, dashboard.html)
+        finalUrl = targetPath;
     }
-    
-    // Добавляем якорь для подразделов
+
+    // 4. Добавляем якорь, если он есть
     if (result.anchor) {
-        url += '#' + result.anchor;
+        finalUrl += '#' + result.anchor;
     }
-    
-    console.log('🔗 Формирую URL:', {
-        currentPath: currentPath,
-        targetPath: result.url,
-        result: url
-    });
-    
-    return url;
+
+    console.log('🔗 Итоговый URL для клика:', finalUrl);
+    return finalUrl;
 }
 
  function renderItem(result, query) {
