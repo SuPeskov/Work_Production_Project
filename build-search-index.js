@@ -61,14 +61,14 @@ function extractOperation(filePath) {
         }
     });
     
-    return {
-        id: `op_${operationNumber}`,
-        type: 'operation',
-        title: title,
-        number: operationNumber,
-        content: sections.join(' '),
-        url: filePath.replace('./pages/', 'pages/')
-    };
+return {
+    id: `op_${operationNumber}`,
+    type: 'operation',
+    title: title,
+    number: operationNumber,
+    content: sections.join(' '),
+    url: filePath.replace('./pages/', 'pages/').replace(/\\/g, '/')  // ← нормализуем слэши
+};
 }
 
 // === Извлечение разделов и подразделов из страницы раздела ===
@@ -78,15 +78,15 @@ function extractSectionsFromFile(filePath, sectionTitle, icon) {
     const documents = [];
     
     // Добавляем сам раздел (страницу) как документ
-    documents.push({
-        id: `section_${path.basename(filePath, '.html')}`,
-        type: 'section',
-        title: sectionTitle,
-        number: '',
-        icon: icon,
-        content: $('.section-header p').text().trim() + ' ' + sectionTitle,
-        url: filePath.replace('./pages/', 'pages/')
-    });
+documents.push({
+    id: `section_${path.basename(filePath, '.html')}`,
+    type: 'section',
+    title: sectionTitle,
+    number: '',
+    icon: icon,
+    content: $('.section-header p').text().trim() + ' ' + sectionTitle,
+    url: filePath.replace('./pages/', 'pages/').replace(/\\/g, '/')  // ← нормализуем
+});
     
     // Извлекаем подразделы из аккордеона
     $('.subsection-item').each((i, elem) => {
@@ -100,15 +100,20 @@ function extractSectionsFromFile(filePath, sectionTitle, icon) {
         });
         
         if (subsectionTitle) {
-            documents.push({
-                id: `sub_${subsectionNumber}`,
-                type: 'subsection',
-                title: subsectionTitle,
-                number: subsectionNumber,
-                content: `${sectionTitle} ${subsectionTitle} ${operationsText.join(' ')}`,
-                url: filePath.replace('./pages/', 'pages/'),
-                anchor: `subsection-${subsectionNumber}` // якорь для перехода
-            });
+    // Определяем номер раздела из HTML-атрибута data-section
+    const sectionNumber = $('.accordion-section').first().attr('data-section') || '1';
+
+    // Добавляем сам раздел (страницу) как документ с якорем
+    documents.push({
+        id: `section_${path.basename(filePath, '.html')}`,
+        type: 'section',
+        title: sectionTitle,
+        number: `Раздел ${sectionNumber}`,
+        icon: icon,
+        content: $('.section-header p').text().trim() + ' ' + sectionTitle,
+        url: filePath.replace('./pages/', 'pages/').replace(/\\/g, '/'),
+        anchor: `section-${sectionNumber}` // <-- ДОБАВЛЕН ЯКОРЬ
+    });
         }
     });
     

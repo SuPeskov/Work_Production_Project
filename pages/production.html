@@ -13,8 +13,8 @@
 </head>
 <body class="production-page">
 
-    <!-- Верхняя навигация -->
- <header class="top-bar">
+ <!-- Верхняя навигация -->
+<header class="top-bar">
     <div class="top-bar-left">
         <div class="logo-small">
             <a href="../dashboard.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 10px;">
@@ -30,17 +30,18 @@
         </nav>
     </div>
     
-<!-- ПОИСКОВАЯ СТРОКА -->
-<div class="search-container">
-    <div class="search-input-wrapper">
-        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="8"/>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-        </svg>
-        <input type="text" id="searchInput" placeholder="Поиск по базе знаний..." autocomplete="off">
+    <!-- ПОИСКОВАЯ СТРОКА -->
+    <div class="search-container">
+        <div class="search-input-wrapper">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input type="text" id="searchInput" placeholder="Поиск по базе знаний..." autocomplete="off">
+        </div>
+        <!-- ВАЖНО: этот блок должен быть -->
+        <div id="searchResults" class="search-overlay hidden"></div>
     </div>
-    <div id="searchResults" class="search-overlay hidden"></div>
-</div>
     
     <div class="top-bar-right">
         <div class="user-info">
@@ -72,7 +73,7 @@
         <div class="accordion-container">
             
             <!-- Раздел 1: Заготовка -->
-            <div class="accordion-section" data-section="1">
+            <div class="accordion-section" data-section="1" id="section-1">
                 <div class="accordion-header">
                     <div class="section-number">1</div>
                     <div class="section-info">
@@ -200,7 +201,7 @@
             </div>
 
             <!-- Раздел 2: Сборка панелей -->
-            <div class="accordion-section" data-section="2">
+            <div class="accordion-section" data-section="2" id="section-2">
                 <div class="accordion-header">
                     <div class="section-number">2</div>
                     <div class="section-info">
@@ -315,7 +316,7 @@
             </div>
 
             <!-- Раздел 3: Сборка модуля -->
-            <div class="accordion-section" data-section="3">
+            <div class="accordion-section" data-section="3" id="section-3">
                 <div class="accordion-header">
                     <div class="section-number">3</div>
                     <div class="section-info">
@@ -567,7 +568,7 @@
             </div>
 
             <!-- Раздел 4: Опции -->
-            <div class="accordion-section" data-section="4">
+            <div class="accordion-section" data-section="4" id="section-4">
                 <div class="accordion-header">
                     <div class="section-number">4</div>
                     <div class="section-info">
@@ -597,7 +598,7 @@
             </div>
 
             <!-- Раздел 5: Монтаж -->
-            <div class="accordion-section" data-section="5">
+            <div class="accordion-section" data-section="5" id="section-5">
                 <div class="accordion-header">
                     <div class="section-number">5</div>
                     <div class="section-info">
@@ -652,7 +653,7 @@
             </div>
 
             <!-- Раздел 6: Сервис -->
-            <div class="accordion-section" data-section="6">
+            <div class="accordion-section" data-section="6" id="section-6">
                 <div class="accordion-header">
                     <div class="section-number">6</div>
                     <div class="section-info">
@@ -683,11 +684,15 @@
         </div>
     </main>
 
-    <script src="../js/users.js"></script>
-    <script src="../js/auth.js"></script>
-    <script src="../js/accordion.js"></script>
-    <script src="https://unpkg.com/lunr@2.3.9/lunr.min.js"></script>
-    <script src="https://unpkg.com/lunr-languages@1.14.0/lunr.ru.js"></script>
-    <script src="../js/search.js"></script>
+<!-- Lunr.js и поддержка русского языка -->
+<script src="https://unpkg.com/lunr@2.3.9/lunr.min.js"></script>
+<script src="https://unpkg.com/lunr-languages@1.14.0/lunr.stemmer.support.js"></script>
+<script src="https://unpkg.com/lunr-languages@1.14.0/lunr.ru.js"></script>
+
+<!-- Наши скрипты -->
+<script src="../js/users.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/accordion.js"></script>
+<script src="../js/search.js"></script>
 </body>
 </html>

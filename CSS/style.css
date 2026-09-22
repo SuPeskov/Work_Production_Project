@@ -1786,3 +1786,24 @@ h1, h2, h3, h4, h5, h6 {
         font-size: 3rem;
     }
 }
+
+/* Подсветка подраздела при переходе по якорю */
+.subsection-item.highlighted {
+    animation: highlight-pulse 2.5s ease-out;
+}
+
+@keyframes highlight-pulse {
+    0%, 20% {
+        background: rgba(250, 188, 27, 0.15);
+        box-shadow: 0 0 0 4px rgba(250, 188, 27, 0.3);
+    }
+    100% {
+        background: transparent;
+        box-shadow: 0 0 0 0 rgba(250, 188, 27, 0);
+    }
+}
+
+.subsection-item.highlighted .subsection-header {
+    border-color: var(--button-primary);
+    background: #fffbf0;
+}
