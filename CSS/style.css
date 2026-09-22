@@ -1466,3 +1466,323 @@ h1, h2, h3, h4, h5, h6 {
     letter-spacing: 0.03em;
     flex-shrink: 0;
 }
+
+/* === SEARCH PAGE === */
+.search-page {
+    background: #f4f6f9;
+    min-height: 100vh;
+}
+
+.search-main {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 32px;
+}
+
+/* Полноширинная поисковая строка в top-bar */
+.search-container-full {
+    flex: 1;
+    max-width: 600px;
+    margin: 0 24px;
+    position: relative;
+}
+
+.clear-search-btn {
+    position: absolute;
+    right: 10px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    color: var(--text-light);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition);
+}
+
+.clear-search-btn:hover {
+    background: var(--border);
+    color: var(--text-primary);
+}
+
+.clear-search-btn.hidden {
+    display: none;
+}
+
+/* Заголовок страницы поиска */
+.search-page-header {
+    margin-bottom: 24px;
+}
+
+.search-page-header h1 {
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 1.75rem;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.search-page-header p {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    color: var(--text-secondary);
+    font-size: 1rem;
+}
+
+.search-page-header strong {
+    color: var(--primary);
+}
+
+/* Фильтры */
+.search-filters {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+}
+
+.filter-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    background: white;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 0.88rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition);
+}
+
+.filter-btn:hover {
+    border-color: var(--primary-light);
+    color: var(--primary);
+}
+
+.filter-btn.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+}
+
+.filter-count {
+    display: inline-block;
+    padding: 2px 8px;
+    background: rgba(0, 0, 0, 0.08);
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    min-width: 24px;
+    text-align: center;
+}
+
+.filter-btn.active .filter-count {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+/* Контейнер результатов */
+.search-results-container {
+    background: white;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    min-height: 300px;
+}
+
+/* Карточка результата */
+.search-result-card {
+    display: block;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    text-decoration: none;
+    color: inherit;
+    transition: background var(--transition);
+}
+
+.search-result-card:last-child {
+    border-bottom: none;
+}
+
+.search-result-card:hover {
+    background: #f8faf9;
+}
+
+.result-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.result-card-title {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 1.05rem;
+    color: var(--text-primary);
+    margin: 0 0 8px 0;
+    line-height: 1.4;
+}
+
+.result-card-title mark {
+    background: #fef3c7;
+    color: var(--text-primary);
+    padding: 1px 4px;
+    border-radius: 3px;
+}
+
+.result-card-excerpt {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.88rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin: 0 0 12px 0;
+}
+
+.result-card-excerpt mark {
+    background: #fef3c7;
+    color: var(--text-primary);
+    padding: 1px 4px;
+    border-radius: 3px;
+}
+
+.result-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.result-card-relevance {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.75rem;
+    color: var(--text-light);
+}
+
+.result-card-arrow {
+    color: var(--primary);
+    font-size: 1.2rem;
+    transition: transform var(--transition);
+}
+
+.search-result-card:hover .result-card-arrow {
+    transform: translateX(4px);
+}
+
+/* Пустое состояние */
+.search-empty-state {
+    padding: 60px 32px;
+    text-align: center;
+}
+
+.empty-icon {
+    font-size: 4rem;
+    margin-bottom: 16px;
+}
+
+.search-empty-state h3 {
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 1.25rem;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.search-empty-state p {
+    font-family: 'Inter', sans-serif;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+}
+
+.search-hint-list {
+    text-align: left;
+    display: inline-block;
+    margin: 12px 0 0 0;
+    padding-left: 20px;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.search-hint-list li {
+    margin-bottom: 6px;
+}
+
+/* Примеры запросов */
+.search-examples {
+    margin-top: 24px;
+}
+
+.examples-title {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    margin-bottom: 12px;
+}
+
+.example-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+}
+
+.example-chip {
+    padding: 8px 16px;
+    background: #f0f7f3;
+    border: 1px solid #c8e6c9;
+    border-radius: 20px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    color: var(--primary);
+    cursor: pointer;
+    transition: all var(--transition);
+}
+
+.example-chip:hover {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+    transform: translateY(-1px);
+}
+
+/* Группы результатов */
+.search-results-group {
+    display: flex;
+    flex-direction: column;
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 768px) {
+    .search-main {
+        padding: 20px 16px;
+    }
+    
+    .search-container-full {
+        max-width: none;
+        margin: 0 12px;
+    }
+    
+    .search-filters {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        padding-bottom: 4px;
+    }
+    
+    .filter-btn {
+        flex-shrink: 0;
+    }
+    
+    .search-result-card {
+        padding: 16px 18px;
+    }
+    
+    .search-empty-state {
+        padding: 40px 20px;
+    }
+    
+    .empty-icon {
+        font-size: 3rem;
+    }
+}

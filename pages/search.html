@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Результаты поиска — Скаут Хаус</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body class="search-page">
+
+    <!-- Верхняя навигация -->
+    <header class="top-bar">
+        <div class="top-bar-left">
+            <div class="logo-small">
+                <a href="../dashboard.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 10px;">
+                    <img src="../assets/images/logo.svg" alt="Скаут Хаус" class="logo-small-img">
+                    <span>Скаут Хаус</span>
+                </a>
+            </div>
+            <div class="top-bar-divider"></div>
+            <nav class="breadcrumb">
+                <a href="../dashboard.html">Главная</a>
+                <span class="separator">/</span>
+                <span class="current">Результаты поиска</span>
+            </nav>
+        </div>
+        
+        <!-- Поисковая строка -->
+        <div class="search-container search-container-full">
+            <div class="search-input-wrapper">
+                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"/>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                <input type="text" id="searchInput" placeholder="Поиск по базе знаний..." autocomplete="off">
+                <button id="clearSearch" class="clear-search-btn hidden" title="Очистить">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        
+        <div class="top-bar-right">
+            <div class="user-info">
+                <div class="user-avatar" id="userAvatar">А</div>
+                <div class="user-details">
+                    <span class="user-name" id="userName">Пользователь</span>
+                    <span class="user-role" id="userRole">Роль</span>
+                </div>
+            </div>
+            <button class="btn-logout" id="logoutBtn" title="Выйти">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                    <polyline points="16 17 21 12 16 7"/>
+                    <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+                <span>Выйти</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Основной контент -->
+    <main class="search-main">
+        <!-- Заголовок с запросом -->
+        <div class="search-page-header">
+            <h1>Результаты поиска</h1>
+            <p id="searchQueryInfo">Введите запрос в строку поиска выше</p>
+        </div>
+
+        <!-- Фильтры по типу -->
+        <div class="search-filters">
+            <button class="filter-btn active" data-filter="all">
+                Все <span class="filter-count" id="countAll">0</span>
+            </button>
+            <button class="filter-btn" data-filter="section">
+                📂 Разделы <span class="filter-count" id="countSection">0</span>
+            </button>
+            <button class="filter-btn" data-filter="subsection">
+                📁 Подразделы <span class="filter-count" id="countSubsection">0</span>
+            </button>
+            <button class="filter-btn" data-filter="operation">
+                📄 Операции <span class="filter-count" id="countOperation">0</span>
+            </button>
+        </div>
+
+        <!-- Контейнер результатов -->
+        <div id="searchResultsContainer" class="search-results-container">
+            <div class="search-empty-state">
+                <div class="empty-icon">🔍</div>
+                <h3>Начните поиск</h3>
+                <p>Введите ключевые слова, номер операции или название раздела</p>
+                <div class="search-examples">
+                    <p class="examples-title">Примеры запросов:</p>
+                    <div class="example-chips">
+                        <span class="example-chip" data-query="Заготовка">Заготовка</span>
+                        <span class="example-chip" data-query="Сборка панели пола">Сборка панели пола</span>
+                        <span class="example-chip" data-query="2.1.1">2.1.1</span>
+                        <span class="example-chip" data-query="ППУ">ППУ</span>
+                        <span class="example-chip" data-query="канализация">канализация</span>
+                        <span class="example-chip" data-query="электрика">электрика</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://unpkg.com/lunr@2.3.9/lunr.min.js"></script>
+    <script src="https://unpkg.com/lunr-languages@1.14.0/lunr.stemmer.support.js"></script>
+    <script src="https://unpkg.com/lunr-languages@1.14.0/lunr.ru.js"></script>
+    <script src="../js/users.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/search.js"></script>
+</body>
+</html>
