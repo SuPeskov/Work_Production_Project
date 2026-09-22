@@ -1,11 +1,11 @@
 /**
- * accordion.js — Логика аккордеона для раздела Производство
+ * accordion.js — Логика аккордеона для страниц разделов
+ * Теперь каждый подраздел — это отдельный accordion-section
  */
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('📂 accordion.js загружен');
+    console.log(' accordion.js загружен');
     
-    // === Аккордеон для основных разделов ===
     const accordionSections = document.querySelectorAll('.accordion-section');
     
     accordionSections.forEach(section => {
@@ -15,16 +15,14 @@ document.addEventListener('DOMContentLoaded', function() {
         header.addEventListener('click', function() {
             const isOpen = section.classList.contains('active');
             
-            // Закрыть все разделы
+            // Закрыть все подразделы
             accordionSections.forEach(s => {
                 s.classList.remove('active');
                 const content = s.querySelector('.accordion-content');
-                if (content) {
-                    content.style.maxHeight = null;
-                }
+                if (content) content.style.maxHeight = null;
             });
             
-            // Открыть текущий, если он был закрыт
+            // Открыть текущий, если был закрыт
             if (!isOpen) {
                 section.classList.add('active');
                 const content = section.querySelector('.accordion-content');
@@ -35,41 +33,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // === Аккордеон для подразделов ===
-    const subsectionItems = document.querySelectorAll('.subsection-item');
-    
-    subsectionItems.forEach(item => {
-        const header = item.querySelector('.subsection-header');
-        if (!header) return;
-        
-        header.addEventListener('click', function(e) {
-            e.stopPropagation();
-            const isOpen = item.classList.contains('active');
-            
-            // Закрыть все подразделы в этом разделе
-            const parentSection = item.closest('.accordion-content');
-            if (parentSection) {
-                parentSection.querySelectorAll('.subsection-item').forEach(sub => {
-                    sub.classList.remove('active');
-                    const content = sub.querySelector('.subsection-content');
-                    if (content) {
-                        content.style.maxHeight = null;
-                    }
-                });
-            }
-            
-            // Открыть текущий, если он был закрыт
-            if (!isOpen) {
-                item.classList.add('active');
-                const content = item.querySelector('.subsection-content');
-                if (content) {
-                    content.style.maxHeight = content.scrollHeight + "px";
-                }
-            }
-        });
-    });
-    
-    // === Инициализация пользователя ===
+    // Инициализация пользователя
     if (typeof isAuthenticated === 'function' && !isAuthenticated()) {
         window.location.href = '../index.html';
         return;
@@ -79,92 +43,41 @@ document.addEventListener('DOMContentLoaded', function() {
     if (user) {
         const userNameEl = document.getElementById('userName');
         const userRoleEl = document.getElementById('userRole');
-        const welcomeNameEl = document.getElementById('welcomeName');
         const userAvatarEl = document.getElementById('userAvatar');
         
         if (userNameEl) userNameEl.textContent = user.name;
         if (userRoleEl) userRoleEl.textContent = user.role;
-        if (welcomeNameEl) welcomeNameEl.textContent = user.name;
         if (userAvatarEl) userAvatarEl.textContent = user.name.charAt(0).toUpperCase();
     }
     
     const logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) {
         logoutBtn.addEventListener('click', function() {
-            if (typeof logout === 'function') {
-                logout();
-            }
+            if (typeof logout === 'function') logout();
             window.location.href = '../index.html';
         });
     }
 });
 
-// === Авто-раскрытие по якорю (Разделы и Подразделы) ===
-function handleHashChange() {
-    console.log('🔄 Обнаружено изменение якоря в URL');
-    
-    const hash = window.location.hash.substring(1);
-    console.log(' Новый якорь:', hash);
-    
-    if (!hash) {
-        console.log('ℹ️  Якорь пуст, сворачиваем всё');
-        // Можно добавить логику сворачивания всех разделов
-        return;
-    }
-    
-    const target = document.getElementById(hash);
-    if (!target) {
-        console.warn('⚠️  Элемент с id="' + hash + '" не найден');
-        return;
-    }
-    
-    console.log('✅ Найден элемент:', target);
-    
-    // Если это ОСНОВНОЙ РАЗДЕЛ (section-X)
-    if (hash.startsWith('section-')) {
-        console.log('📂 Раскрываем основной раздел...');
+// === Авто-раскрытие по якорю ===
+window.addEventListener('load', function() {
+    setTimeout(() => {
+        const hash = window.location.hash.substring(1);
+        if (!hash || !hash.startsWith('section-')) return;
+        
+        console.log('📍 Якорь:', hash);
+        const target = document.getElementById(hash);
+        if (!target) return;
+        
         if (!target.classList.contains('active')) {
             const header = target.querySelector('.accordion-header');
             if (header) header.click();
         }
+        
         setTimeout(() => {
-            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            target.scrollIntoView({ behavior: 'smooth', block: 'center' });
             target.classList.add('highlighted');
             setTimeout(() => target.classList.remove('highlighted'), 2500);
         }, 400);
-    }
-    
-    // Если это ПОДРАЗДЕЛ (subsection-X.X)
-    else if (hash.startsWith('subsection-')) {
-        console.log('📁 Раскрываем подраздел...');
-        const parentSection = target.closest('.accordion-section');
-        if (parentSection && !parentSection.classList.contains('active')) {
-            const header = parentSection.querySelector('.accordion-header');
-            if (header) header.click();
-        }
-        
-        setTimeout(() => {
-            const subsectionHeader = target.querySelector('.subsection-header');
-            if (subsectionHeader && !target.classList.contains('active')) {
-                subsectionHeader.click();
-            }
-            setTimeout(() => {
-                target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                target.classList.add('highlighted');
-                setTimeout(() => target.classList.remove('highlighted'), 2500);
-            }, 400);
-        }, 500);
-    }
-}
-
-// Слушаем изменение якоря в URL (без перезагрузки страницы)
-window.addEventListener('hashchange', handleHashChange);
-
-// Также вызываем при загрузке страницы (если есть якорь в URL)
-window.addEventListener('load', function() {
-    setTimeout(() => {
-        if (window.location.hash) {
-            handleHashChange();
-        }
     }, 100);
 });

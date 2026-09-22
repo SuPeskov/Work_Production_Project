@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Раздел 2. Сборка панелей — Скаут Хаус</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body class="section-page">
+
+    <!-- Верхняя навигация -->
+    <header class="top-bar">
+        <div class="top-bar-left">
+            <div class="logo-small">
+                <a href="../dashboard.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 10px;">
+                    <img src="../assets/images/logo.svg" alt="Скаут Хаус" class="logo-small-img">
+                    <span>Скаут Хаус</span>
+                </a>
+            </div>
+            <div class="top-bar-divider"></div>
+            <nav class="breadcrumb">
+                <a href="../dashboard.html">Главная</a>
+                <span class="separator">/</span>
+                <span class="current">2. Сборка панелей</span>
+            </nav>
+        </div>
+        
+        <!-- Поисковая строка -->
+        <div class="search-container">
+            <div class="search-input-wrapper">
+                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"/>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                <input type="text" id="searchInput" placeholder="Поиск по базе знаний..." autocomplete="off">
+            </div>
+            <div id="searchResults" class="search-overlay hidden"></div>
+        </div>
+        
+        <div class="top-bar-right">
+            <div class="user-info">
+                <div class="user-avatar" id="userAvatar">А</div>
+                <div class="user-details">
+                    <span class="user-name" id="userName">Пользователь</span>
+                    <span class="user-role" id="userRole">Роль</span>
+                </div>
+            </div>
+            <button class="btn-logout" id="logoutBtn" title="Выйти">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                    <polyline points="16 17 21 12 16 7"/>
+                    <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+                <span>Выйти</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Основной контент -->
+    <main class="section-main">
+        <div class="section-header">
+            <div class="section-header-top">
+                <span class="section-number-badge">02</span>
+                <h1>🧱 Сборка панелей</h1>
+            </div>
+            <p>Изготовление панелей пола, крыши, внешних и внутренних стен модуля</p>
+        </div>
+
+        <!-- Аккордеон с подразделами -->
+        <div class="accordion-container">
+            
+            <!-- Подраздел 2.1: Сборка панели пола -->
+            <div class="accordion-section" data-section="2.1" id="section-2.1">
+                <div class="accordion-header">
+                    <div class="section-number">2.1</div>
+                    <div class="section-info">
+                        <h2>Сборка панели пола</h2>
+                        <span class="subsection-count">12 операций</span>
+                    </div>
+                    <div class="accordion-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="accordion-content">
+                    <ul class="operations-list">
+                        <li><a href="operations/2.1.1.html">2.1.1 — Сборка каркаса панели</a></li>
+                        <li><a href="operations/2.1.2.html">2.1.2 — Укладка ОСБ на каркас панели</a></li>
+                        <li><a href="operations/2.1.3.html">2.1.3 — Укладка фанеры на каркас панели</a></li>
+                        <li><a href="operations/2.1.4.html">2.1.4 — Прокладка трассы канализации</a></li>
+                        <li><a href="operations/2.1.5.html">2.1.5 — Прокладка электролиний и установка гильз</a></li>
+                        <li><a href="operations/2.1.6.html">2.1.6 — Утепление панели ППУ</a></li>
+                        <li><a href="operations/2.1.7.html">2.1.7 — Утепление панели мин.ватой</a></li>
+                        <li><a href="operations/2.1.8.html">2.1.8 — Укладка ветрозащиты</a></li>
+                        <li><a href="operations/2.1.9.html">2.1.9 — Укладка защитной сетки</a></li>
+                        <li><a href="operations/2.1.10.html">2.1.10 — Установка лежней</a></li>
+                        <li><a href="operations/2.1.11.html">2.1.11 — Контроль качества панели пола</a></li>
+                        <li><a href="operations/2.1.12.html">2.1.12 — Маркировка панели пола</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Подраздел 2.2: Сборка панели крыши -->
+            <div class="accordion-section" data-section="2.2" id="section-2.2">
+                <div class="accordion-header">
+                    <div class="section-number">2.2</div>
+                    <div class="section-info">
+                        <h2>Сборка панели крыши</h2>
+                        <span class="subsection-count">5 операций</span>
+                    </div>
+                    <div class="accordion-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="accordion-content">
+                    <ul class="operations-list">
+                        <li><a href="operations/2.2.1.html">2.2.1 — Сборка каркаса кровельной панели</a></li>
+                        <li><a href="operations/2.2.2.html">2.2.2 — Укладка пароизоляции</a></li>
+                        <li><a href="operations/2.2.3.html">2.2.3 — Утепление кровельной панели</a></li>
+                        <li><a href="operations/2.2.4.html">2.2.4 — Монтаж ОСБ</a></li>
+                        <li><a href="operations/2.2.5.html">2.2.5 — Установка вентиляционных элементов</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Подраздел 2.3: Сборка панели стены внешней -->
+            <div class="accordion-section" data-section="2.3" id="section-2.3">
+                <div class="accordion-header">
+                    <div class="section-number">2.3</div>
+                    <div class="section-info">
+                        <h2>Сборка панели стены внешней</h2>
+                        <span class="subsection-count">5 операций</span>
+                    </div>
+                    <div class="accordion-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="accordion-content">
+                    <ul class="operations-list">
+                        <li><a href="operations/2.3.1.html">2.3.1 — Сборка каркаса внешней стены</a></li>
+                        <li><a href="operations/2.3.2.html">2.3.2 — Установка оконных и дверных проёмов</a></li>
+                        <li><a href="operations/2.3.3.html">2.3.3 — Монтаж плит с внешней стороны</a></li>
+                        <li><a href="operations/2.3.4.html">2.3.4 — Утепление стены</a></li>
+                        <li><a href="operations/2.3.5.html">2.3.5 — Монтаж ветрозащиты</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Подраздел 2.4: Сборка панели стены внутренней -->
+            <div class="accordion-section" data-section="2.4" id="section-2.4">
+                <div class="accordion-header">
+                    <div class="section-number">2.4</div>
+                    <div class="section-info">
+                        <h2>Сборка панели стены внутренней</h2>
+                        <span class="subsection-count">4 операции</span>
+                    </div>
+                    <div class="accordion-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="accordion-content">
+                    <ul class="operations-list">
+                        <li><a href="operations/2.4.1.html">2.4.1 — Сборка каркаса внутренней стены</a></li>
+                        <li><a href="operations/2.4.2.html">2.4.2 — Установка дверных проёмов</a></li>
+                        <li><a href="operations/2.4.3.html">2.4.3 — Монтаж ГВЛ/ОСБ</a></li>
+                        <li><a href="operations/2.4.4.html">2.4.4 — Звукоизоляция</a></li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Lunr.js для поиска -->
+    <script src="https://unpkg.com/lunr@2.3.9/lunr.min.js"></script>
+    <script src="https://unpkg.com/lunr-languages@1.14.0/lunr.stemmer.support.js"></script>
+    <script src="https://unpkg.com/lunr-languages@1.14.0/lunr.ru.js"></script>
+    
+    <script src="../js/users.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/accordion.js"></script>
+    <script src="../js/search.js"></script>
+</body>
+</html>

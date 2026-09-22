@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Главная — Скаут Хаус | Проект производства работ</title>
     
-    <!-- Шрифты Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -48,59 +47,96 @@
             <p>Проект производства работ по каркасным модульным домам</p>
         </div>
 
-        <!-- Карточки разделов -->
+        <!-- 6 карточек разделов -->
         <div class="cards-grid">
-            <a href="pages/production.html" class="card card-production">
-                <div class="card-icon">🏭</div>
-                <h3>Производство</h3>
-                <p>Пооперационные карты изготовления элементов каркаса, панелей и модулей</p>
-                <span class="card-badge">6 разделов</span>
-            </a>
-            <a href="#" class="card card-assembly">
+            
+            <!-- Раздел 1: Заготовка -->
+            <a href="pages/preparation.html" class="card card-section">
+                <div class="card-number">01</div>
                 <div class="card-icon"></div>
-                <h3>Сборка модулей</h3>
-                <p>Технологические процессы сборки модулей на производственной площадке</p>
-                <span class="card-badge">8 операций</span>
+                <h3>Заготовка</h3>
+                <p>Напил элементов каркаса, листового материала, отделочной доски и заготовка для сборки модуля</p>
+                <div class="card-stats">
+                    <span class="card-badge">5 подразделов</span>
+                    <span class="card-badge">~25 операций</span>
+                </div>
             </a>
-            <a href="#" class="card card-installation">
-                <div class="card-icon">️</div>
-                <h3>Монтаж на объекте</h3>
-                <p>Инструкции по доставке, установке и стыковке модулей на фундаменте</p>
-                <span class="card-badge">15 операций</span>
+
+            <!-- Раздел 2: Сборка панелей -->
+            <a href="pages/panels.html" class="card card-section">
+                <div class="card-number">02</div>
+                <div class="card-icon">🧱</div>
+                <h3>Сборка панелей</h3>
+                <p>Изготовление панелей пола, крыши, внешних и внутренних стен модуля</p>
+                <div class="card-stats">
+                    <span class="card-badge">4 подраздела</span>
+                    <span class="card-badge">~30 операций</span>
+                </div>
             </a>
-            <a href="#" class="card card-engineering">
-                <div class="card-icon">📐</div>
-                <h3>Инженерные системы</h3>
-                <p>Электрика, сантехника, вентиляция, отопление в модульном доме</p>
-                <span class="card-badge">10 операций</span>
+
+            <!-- Раздел 3: Сборка модуля -->
+            <a href="pages/module.html" class="card card-section">
+                <div class="card-number">03</div>
+                <div class="card-icon">🏠</div>
+                <h3>Сборка модуля</h3>
+                <p>Сборка каркаса, кровельные работы, внутренний контур, инженерные системы</p>
+                <div class="card-stats">
+                    <span class="card-badge">9 подразделов</span>
+                    <span class="card-badge">~100 операций</span>
+                </div>
             </a>
-            <a href="#" class="card card-finishing">
+
+            <!-- Раздел 4: Сборка опций -->
+            <a href="pages/options.html" class="card card-section">
+                <div class="card-number">04</div>
                 <div class="card-icon"></div>
-                <h3>Отделочные работы</h3>
-                <p>Внутренняя и наружная отделка модульного дома</p>
-                <span class="card-badge">9 операций</span>
+                <h3>Сборка опций</h3>
+                <p>Террасы, веранды, навесы и крыльца — дополнительные конструкции к модулю</p>
+                <div class="card-stats">
+                    <span class="card-badge">4 подраздела</span>
+                    <span class="card-badge">~15 операций</span>
+                </div>
             </a>
-            <a href="#" class="card card-maintenance">
-                <div class="card-icon">️</div>
-                <h3>Обслуживание</h3>
-                <p>Регламенты ТО, сезонные проверки, гарантийные обязательства</p>
-                <span class="card-badge">6 операций</span>
+
+            <!-- Раздел 5: Монтаж -->
+            <a href="pages/installation.html" class="card card-section">
+                <div class="card-number">05</div>
+                <div class="card-icon">🏗️</div>
+                <h3>Монтаж</h3>
+                <p>Доставка, установка и стыковка модулей на фундаменте заказчика</p>
+                <div class="card-stats">
+                    <span class="card-badge">2 подраздела</span>
+                    <span class="card-badge">~10 операций</span>
+                </div>
             </a>
+
+            <!-- Раздел 6: Сервис -->
+            <a href="pages/service.html" class="card card-section">
+                <div class="card-number">06</div>
+                <div class="card-icon">🛡️</div>
+                <h3>Сервис</h3>
+                <p>Сезонное обслуживание, гарантийный ремонт и диагностика систем</p>
+                <div class="card-stats">
+                    <span class="card-badge">3 подраздела</span>
+                    <span class="card-badge">~8 операций</span>
+                </div>
+            </a>
+
         </div>
 
         <!-- Статистика -->
         <div class="stats-row">
             <div class="stat-item">
-                <span class="stat-number">60</span>
-                <span class="stat-label">Технологических операций</span>
-            </div>
-            <div class="stat-item">
                 <span class="stat-number">6</span>
                 <span class="stat-label">Разделов</span>
             </div>
             <div class="stat-item">
-                <span class="stat-number">24</span>
-                <span class="stat-label">Чертежа и схемы</span>
+                <span class="stat-number">27</span>
+                <span class="stat-label">Подразделов</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number">~190</span>
+                <span class="stat-label">Технологических операций</span>
             </div>
         </div>
     </main>

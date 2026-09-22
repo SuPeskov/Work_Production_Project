@@ -10,8 +10,14 @@ const pagesDir = './pages';
 const operationsDir = './pages/operations';
 const outputFile = './js/search-index.json';
 
+// === НОВАЯ СТРУКТУРА: 6 РАЗДЕЛОВ ===
 const sectionPages = [
-    { file: 'production.html', title: 'Производство', icon: '🏭' }
+    { file: 'preparation.html',  title: 'Заготовка',        icon: '' },
+    { file: 'panels.html',       title: 'Сборка панелей',   icon: '🧱' },
+    { file: 'module.html',       title: 'Сборка модуля',    icon: '🏠' },
+    { file: 'options.html',      title: 'Сборка опций',     icon: '🏗️' },
+    { file: 'installation.html', title: 'Монтаж',           icon: '🚜' },
+    { file: 'service.html',      title: 'Сервис',           icon: '🛡️' }
 ];
 
 function getAllHtmlFiles(dir) {
@@ -59,7 +65,7 @@ function extractSectionsFromFile(filePath, sectionTitle, icon) {
     const $ = cheerio.load(html);
     const documents = [];
     
-    // 1. Добавляем сам раздел
+    // 1. Сам раздел
     documents.push({
         id: `section_${path.basename(filePath, '.html')}`,
         type: 'section',
@@ -68,18 +74,17 @@ function extractSectionsFromFile(filePath, sectionTitle, icon) {
         icon: icon,
         content: $('.section-header p').text().trim() + ' ' + sectionTitle,
         url: filePath.replace('./pages/', 'pages/').replace(/\\/g, '/'),
-        anchor: 'section-1' // По умолчанию, или можно парсить data-section
+        anchor: 'section-1' 
     });
     
-    // 2. Ищем подразделы
-    const subsections = $('.subsection-item');
-    console.log(`    🔍 Найдено элементов .subsection-item в HTML: ${subsections.length}`);
+    // 2. Подразделы (аккордеон)
+    const subsections = $('.accordion-section');
+    console.log(`    🔍 Найдено элементов .accordion-section в HTML: ${subsections.length}`);
     
     subsections.each((i, elem) => {
-        const subsectionNumber = $(elem).find('.subsection-number').text().trim();
-        const subsectionTitle = $(elem).find('.subsection-title').text().trim();
+        const subsectionNumber = $(elem).find('.section-number').text().trim();
+        const subsectionTitle = $(elem).find('.section-info h2').text().trim();
         
-        // Собираем текст операций внутри для лучшего поиска
         const operationsText = [];
         $(elem).find('.operations-list a').each((j, link) => {
             operationsText.push($(link).text().trim());
@@ -94,10 +99,8 @@ function extractSectionsFromFile(filePath, sectionTitle, icon) {
                 number: subsectionNumber,
                 content: `${sectionTitle} ${subsectionTitle} ${operationsText.join(' ')}`,
                 url: filePath.replace('./pages/', 'pages/').replace(/\\/g, '/'),
-                anchor: `subsection-${subsectionNumber}`
+                anchor: `section-${subsectionNumber}`
             });
-        } else {
-            console.log(`      ⚠️ Пропущено: не найден номер или заголовок подраздела`);
         }
     });
     
@@ -112,7 +115,7 @@ function buildSearchIndex() {
     for (const section of sectionPages) {
         const filePath = path.join(pagesDir, section.file);
         if (!fs.existsSync(filePath)) {
-            console.warn(`  ⚠️ Файл ${section.file} не найден`);
+            console.warn(`  ⚠️ Файл ${section.file} еще не создан, пропускаем`);
             continue;
         }
         console.log(`  📄 Читаю: ${section.file}`);
@@ -131,7 +134,7 @@ function buildSearchIndex() {
             documents.push(doc);
             console.log(`  ✓ ${doc.number}: ${doc.title}`);
         } catch (error) {
-            console.error(`  ✗ Ошибка в ${file}:`, error.message);
+            console.error(`   Ошибка в ${file}:`, error.message);
         }
     }
     
