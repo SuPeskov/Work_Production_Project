@@ -80,25 +80,49 @@
             </div>
         </section>
 
-        <!-- Контрольные параметры -->
-        <section class="operation-section quality">
-            <h2>✅ Контрольные параметры</h2>
-            <div class="section-content">
-                <ul class="quality-list">
-                    <li><strong>Внешние габариты панели.</strong> Допуск: ±2мм.</li>
-                    <li><strong>Отклонения от верхней плоскости панели.</strong> Допуск: 0 -2мм.</li>
-                    <li><strong>Диагонали панели.</strong> Допуск ±3мм.</li>
-                    <li><strong>Количество саморезов в узлах крепления:</strong> соответствует требованиям конструкционного узла.</li>
-                </ul>
-                <div class="quality-note">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                        <polyline points="22 4 12 14.01 9 11.01"/>
-                    </svg>
-                    <span>По факту контрольных замеров ставится отметка в паспорте ОТК.</span>
-                </div>
+<!-- Контрольные параметры (чек-лист) -->
+<section class="operation-section quality-checklist" id="qualitySection">
+    <h2>✅ Контрольные параметры</h2>
+    <div class="section-content">
+        <div class="checklist-container">
+            <div class="checklist-item">
+                <input type="checkbox" id="check-1" class="quality-checkbox">
+                <label for="check-1">
+                    <span class="checkmark"></span>
+                    <span class="check-text"><strong>Внешние габариты панели.</strong> Допуск: ±2мм.</span>
+                </label>
             </div>
-        </section>
+            <div class="checklist-item">
+                <input type="checkbox" id="check-2" class="quality-checkbox">
+                <label for="check-2">
+                    <span class="checkmark"></span>
+                    <span class="check-text"><strong>Отклонения от верхней плоскости панели.</strong> Допуск: 0 -2мм.</span>
+                </label>
+            </div>
+            <div class="checklist-item">
+                <input type="checkbox" id="check-3" class="quality-checkbox">
+                <label for="check-3">
+                    <span class="checkmark"></span>
+                    <span class="check-text"><strong>Диагонали панели.</strong> Допуск ±3мм.</span>
+                </label>
+            </div>
+            <div class="checklist-item">
+                <input type="checkbox" id="check-4" class="quality-checkbox">
+                <label for="check-4">
+                    <span class="checkmark"></span>
+                    <span class="check-text"><strong>Количество саморезов в узлах крепления:</strong> соответствует требованиям конструкционного узла.</span>
+                </label>
+            </div>
+        </div>
+        <div class="quality-note">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+            <span>По факту контрольных замеров ставится отметка в паспорте ОТК.</span>
+        </div>
+    </div>
+</section>
 
         <!-- Необходимый инструмент -->
         <section class="operation-section tools">
@@ -176,5 +200,44 @@
 
     <script src="../../js/users.js"></script>
     <script src="../../js/auth.js"></script>
+    <script>
+    // Логика чек-листа контрольных параметров
+    document.addEventListener('DOMContentLoaded', function() {
+        const qualitySection = document.getElementById('qualitySection');
+        if (!qualitySection) return;
+        
+        const checkboxes = qualitySection.querySelectorAll('.quality-checkbox');
+        const checklistItems = qualitySection.querySelectorAll('.checklist-item');
+        
+        // Обработка клика на пункт
+        checklistItems.forEach(item => {
+            item.addEventListener('click', function(e) {
+                // Предотвращаем двойное срабатывание при клике на сам checkbox
+                if (e.target.type !== 'checkbox') {
+                    const checkbox = this.querySelector('input[type="checkbox"]');
+                    checkbox.checked = !checkbox.checked;
+                }
+                checkAllCompleted();
+            });
+        });
+        
+        // Обработка прямого клика на checkbox
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                checkAllCompleted();
+            });
+        });
+        
+        function checkAllCompleted() {
+            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+            
+            if (allChecked) {
+                qualitySection.classList.add('completed');
+            } else {
+                qualitySection.classList.remove('completed');
+            }
+        }
+    });
+</script>
 </body>
 </html>
