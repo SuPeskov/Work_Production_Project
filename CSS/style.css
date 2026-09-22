@@ -2359,3 +2359,50 @@ h1, h2, h3, h4, h5, h6 {
         grid-template-columns: 1fr;
     }
 }
+
+/* === БЛОКИ ПРЕДУПРЕЖДЕНИЙ И ИНФОРМАЦИИ === */
+.warning-block {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px 20px;
+    background: #fef2f2;
+    border: 2px solid #fca5a5;
+    border-left: 4px solid #dc2626;
+    border-radius: var(--radius-sm);
+    color: #991b1b;
+    margin-bottom: 20px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.warning-block svg {
+    flex-shrink: 0;
+    color: #dc2626;
+    margin-top: 2px;
+}
+
+.info-block {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px 20px;
+    background: #eff6ff;
+    border: 2px solid #bfdbfe;
+    border-left: 4px solid #3b82f6;
+    border-radius: var(--radius-sm);
+    color: #1e3a8a;
+    margin-top: 20px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.info-block svg {
+    flex-shrink: 0;
+    color: #3b82f6;
+    margin-top: 2px;
+}
