@@ -1288,3 +1288,149 @@ h1, h2, h3, h4, h5, h6 {
         display: none;
     }
 }
+
+/* === SEARCH === */
+.search-container {
+    position: relative;
+    flex: 1;
+    max-width: 500px;
+    margin: 0 24px;
+}
+
+.search-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-icon {
+    position: absolute;
+    left: 14px;
+    width: 18px;
+    height: 18px;
+    color: var(--text-light);
+    pointer-events: none;
+}
+
+#searchInput {
+    width: 100%;
+    padding: 10px 14px 10px 44px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    background: #f8f9fa;
+    transition: all var(--transition);
+    outline: none;
+}
+
+#searchInput:focus {
+    border-color: var(--primary);
+    background: white;
+    box-shadow: 0 0 0 3px rgba(26, 86, 50, 0.1);
+}
+
+#searchInput::placeholder {
+    color: var(--text-light);
+}
+
+.search-overlay {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    background: white;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    max-height: 500px;
+    overflow-y: auto;
+    z-index: 1000;
+    border: 1px solid var(--border);
+}
+
+.search-overlay.hidden {
+    display: none;
+}
+
+.search-results-header {
+    padding: 12px 18px;
+    background: #f8f9fa;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.search-result-item {
+    display: block;
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--border);
+    text-decoration: none;
+    color: inherit;
+    transition: background var(--transition);
+}
+
+.search-result-item:last-child {
+    border-bottom: none;
+}
+
+.search-result-item:hover {
+    background: #f8f9fa;
+}
+
+.search-result-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.search-result-number {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    color: var(--primary);
+    font-size: 0.85rem;
+}
+
+.search-result-title {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.search-result-excerpt {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin: 0 0 8px 0;
+}
+
+.search-result-excerpt mark {
+    background: #fef3c7;
+    color: var(--text-primary);
+    padding: 2px 4px;
+    border-radius: 3px;
+}
+
+.search-result-score {
+    font-size: 0.75rem;
+    color: var(--text-light);
+}
+
+.search-no-results {
+    padding: 32px 18px;
+    text-align: center;
+}
+
+.search-no-results p {
+    margin: 0 0 8px 0;
+    color: var(--text-secondary);
+}
+
+.search-hint {
+    font-size: 0.85rem;
+    color: var(--text-light);
+}
