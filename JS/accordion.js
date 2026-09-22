@@ -93,3 +93,24 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+// Авто-раскрытие подраздела при переходе по якорю
+window.addEventListener('load', function() {
+    const hash = window.location.hash.substring(1);
+    if (hash && hash.startsWith('subsection-')) {
+        const target = document.getElementById(hash);
+        if (target) {
+            // Раскрываем родительский раздел
+            const parentSection = target.closest('.accordion-section');
+            if (parentSection && !parentSection.classList.contains('active')) {
+                parentSection.querySelector('.accordion-header').click();
+            }
+            // Раскрываем сам подраздел
+            setTimeout(() => {
+                const header = target.querySelector('.subsection-header');
+                if (header) header.click();
+                target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 300);
+        }
+    }
+});

@@ -1434,3 +1434,35 @@ h1, h2, h3, h4, h5, h6 {
     font-size: 0.85rem;
     color: var(--text-light);
 }
+
+/* === Группы в результатах поиска === */
+.search-group-label {
+    padding: 8px 18px;
+    background: #f0f7f3;
+    color: var(--primary);
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--border);
+    border-top: 1px solid var(--border);
+}
+
+.search-group-label:first-of-type {
+    border-top: none;
+}
+
+/* === Бейдж типа документа === */
+.search-result-type {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 4px;
+    color: white;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    flex-shrink: 0;
+}
