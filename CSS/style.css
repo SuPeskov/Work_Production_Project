@@ -2127,13 +2127,13 @@ h1, h2, h3, h4, h5, h6 {
 
 /* === ЧЕК-ЛИСТ КОНТРОЛЬНЫХ ПАРАМЕТРОВ === */
 .quality-checklist {
-    background: #fee2e2; /* Красный фон по умолчанию */
+    background: #fee2e2;
     border: 2px solid #fca5a5;
     transition: all 0.4s ease;
 }
 
 .quality-checklist.completed {
-    background: #dcfce7; /* Зеленый фон когда все проверено */
+    background: #dcfce7;
     border-color: #86efac;
 }
 
@@ -2158,6 +2158,7 @@ h1, h2, h3, h4, h5, h6 {
     cursor: pointer;
     transition: all 0.2s ease;
     user-select: none;
+    position: relative;
 }
 
 .checklist-item:hover {
@@ -2165,8 +2166,13 @@ h1, h2, h3, h4, h5, h6 {
     transform: translateX(2px);
 }
 
+/* Скрываем стандартный checkbox */
 .checklist-item input[type="checkbox"] {
-    display: none; /* Скрываем стандартный checkbox */
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
 }
 
 .checkmark {
@@ -2181,6 +2187,7 @@ h1, h2, h3, h4, h5, h6 {
     justify-content: center;
     transition: all 0.2s ease;
     margin-top: 2px;
+    flex-shrink: 0;
 }
 
 .checkmark::after {
@@ -2194,12 +2201,13 @@ h1, h2, h3, h4, h5, h6 {
     margin-top: -2px;
 }
 
-.checklist-item input[type="checkbox"]:checked + label .checkmark {
+/* Состояние checked через селектор :checked + .checkmark */
+.checklist-item input[type="checkbox"]:checked + .checkmark {
     background: #16a34a;
     border-color: #16a34a;
 }
 
-.checklist-item input[type="checkbox"]:checked + label .checkmark::after {
+.checklist-item input[type="checkbox"]:checked + .checkmark::after {
     display: block;
 }
 
@@ -2210,6 +2218,7 @@ h1, h2, h3, h4, h5, h6 {
     color: var(--text-primary);
     line-height: 1.5;
     flex: 1;
+    pointer-events: none; /* Важно: текст не перехватывает клики */
 }
 
 .check-text strong {
@@ -2217,19 +2226,136 @@ h1, h2, h3, h4, h5, h6 {
     color: var(--text-primary);
 }
 
+.quality-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px 20px;
+    background: rgba(30, 30, 30, 0.85); /* Тёмный фон */
+    border: 2px solid rgba(0, 0, 0, 0.3);
+    border-radius: var(--radius-sm);
+    color: #ffffff; /* Белый текст */
+    font-family: 'Inter', sans-serif;
+    font-weight: 600; /* Жирный текст */
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin-top: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.quality-note svg {
+    flex-shrink: 0;
+    color: #fbbf24; /* Жёлтая иконка для контраста */
+    margin-top: 2px;
+}
+
+.quality-note span {
+    font-weight: 600;
+}
+
 /* Анимация при завершении */
 @keyframes checklistComplete {
-    0% {
-        transform: scale(1);
-    }
-    50% {
-        transform: scale(1.02);
-    }
-    100% {
-        transform: scale(1);
-    }
+    0% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+    100% { transform: scale(1); }
 }
 
 .quality-checklist.completed {
     animation: checklistComplete 0.5s ease;
+}
+
+/* === ПРОСТЫЕ ЧЕК-ЛИСТЫ (Инструмент и Материалы) === */
+.tools-checklist,
+.materials-checklist {
+    background: white;
+    border: 1px solid var(--border);
+}
+
+.simple-checklist-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 10px;
+}
+
+.simple-checklist-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: #f8f9fa;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.simple-checklist-item:hover {
+    background: #f1f3f5;
+    border-color: #ced4da;
+}
+
+/* Состояние checked — строка становится темнее */
+.simple-checklist-item:has(input[type="checkbox"]:checked) {
+    background: #e9ecef;
+    border-color: #adb5bd;
+}
+
+.simple-checklist-item input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+}
+
+.simple-checkmark {
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    border: 2px solid #6c757d;
+    border-radius: 4px;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.simple-checkmark::after {
+    content: '';
+    display: none;
+    width: 5px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+    margin-top: -2px;
+}
+
+.simple-checklist-item input[type="checkbox"]:checked + .simple-checkmark {
+    background: #495057;
+    border-color: #495057;
+}
+
+.simple-checklist-item input[type="checkbox"]:checked + .simple-checkmark::after {
+    display: block;
+}
+
+.simple-check-text {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 0.88rem;
+    color: var(--text-primary);
+    line-height: 1.4;
+    flex: 1;
+    pointer-events: none;
+}
+
+/* Адаптив для мобильных */
+@media (max-width: 768px) {
+    .simple-checklist-container {
+        grid-template-columns: 1fr;
+    }
 }

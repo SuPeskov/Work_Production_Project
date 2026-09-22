@@ -85,34 +85,26 @@
     <h2>✅ Контрольные параметры</h2>
     <div class="section-content">
         <div class="checklist-container">
-            <div class="checklist-item">
-                <input type="checkbox" id="check-1" class="quality-checkbox">
-                <label for="check-1">
-                    <span class="checkmark"></span>
-                    <span class="check-text"><strong>Внешние габариты панели.</strong> Допуск: ±2мм.</span>
-                </label>
-            </div>
-            <div class="checklist-item">
-                <input type="checkbox" id="check-2" class="quality-checkbox">
-                <label for="check-2">
-                    <span class="checkmark"></span>
-                    <span class="check-text"><strong>Отклонения от верхней плоскости панели.</strong> Допуск: 0 -2мм.</span>
-                </label>
-            </div>
-            <div class="checklist-item">
-                <input type="checkbox" id="check-3" class="quality-checkbox">
-                <label for="check-3">
-                    <span class="checkmark"></span>
-                    <span class="check-text"><strong>Диагонали панели.</strong> Допуск ±3мм.</span>
-                </label>
-            </div>
-            <div class="checklist-item">
-                <input type="checkbox" id="check-4" class="quality-checkbox">
-                <label for="check-4">
-                    <span class="checkmark"></span>
-                    <span class="check-text"><strong>Количество саморезов в узлах крепления:</strong> соответствует требованиям конструкционного узла.</span>
-                </label>
-            </div>
+            <label class="checklist-item">
+                <input type="checkbox" class="quality-checkbox">
+                <span class="checkmark"></span>
+                <span class="check-text"><strong>Внешние габариты панели.</strong> Допуск: ±2мм.</span>
+            </label>
+            <label class="checklist-item">
+                <input type="checkbox" class="quality-checkbox">
+                <span class="checkmark"></span>
+                <span class="check-text"><strong>Отклонения от верхней плоскости панели.</strong> Допуск: 0 -2мм.</span>
+            </label>
+            <label class="checklist-item">
+                <input type="checkbox" class="quality-checkbox">
+                <span class="checkmark"></span>
+                <span class="check-text"><strong>Диагонали панели.</strong> Допуск ±3мм.</span>
+            </label>
+            <label class="checklist-item">
+                <input type="checkbox" class="quality-checkbox">
+                <span class="checkmark"></span>
+                <span class="check-text"><strong>Количество саморезов в узлах крепления:</strong> соответствует требованиям конструкционного узла.</span>
+            </label>
         </div>
         <div class="quality-note">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
@@ -124,36 +116,88 @@
     </div>
 </section>
 
-        <!-- Необходимый инструмент -->
-        <section class="operation-section tools">
-            <h2>🛠️ Необходимый инструмент и оборудование</h2>
-            <div class="section-content">
-                <ul class="tools-list">
-                    <li>Аккумуляторный шуруповерт с зажимным патроном</li>
-                    <li>Аккумуляторный шуруповерт ударный</li>
-                    <li>Рычаг для выгибания досок</li>
-                    <li>Киянка</li>
-                    <li>Рулетка 10м</li>
-                    <li>Уголок плотницкий металлический</li>
-                    <li>Карандаш простой</li>
-                    <li>Сверло d6х100мм</li>
-                    <li>Бита PZ3</li>
-                    <li>Кисть 100мм</li>
-                </ul>
-            </div>
-        </section>
+        <!-- Необходимый инструмент (чек-лист) -->
+<section class="operation-section tools-checklist">
+    <h2>🛠️ Необходимый инструмент и оборудование</h2>
+    <div class="section-content">
+        <div class="simple-checklist-container">
+            <label class="simple-checklist-item">
+                <input type="checkbox" class="simple-checkbox">
+                <span class="simple-checkmark"></span>
+                <span class="simple-check-text">Аккумуляторный шуруповерт с зажимным патроном</span>
+            </label>
+            <label class="simple-checklist-item">
+                <input type="checkbox" class="simple-checkbox">
+                <span class="simple-checkmark"></span>
+                <span class="simple-check-text">Аккумуляторный шуруповерт ударный</span>
+            </label>
+            <label class="simple-checklist-item">
+                <input type="checkbox" class="simple-checkbox">
+                <span class="simple-checkmark"></span>
+                <span class="simple-check-text">Рычаг для выгибания досок</span>
+            </label>
+            <label class="simple-checklist-item">
+                <input type="checkbox" class="simple-checkbox">
+                <span class="simple-checkmark"></span>
+                <span class="simple-check-text">Киянка</span>
+            </label>
+            <label class="simple-checklist-item">
+                <input type="checkbox" class="simple-checkbox">
+                <span class="simple-checkmark"></span>
+                <span class="simple-check-text">Рулетка 10м</span>
+            </label>
+            <label class="simple-checklist-item">
+                <input type="checkbox" class="simple-checkbox">
+                <span class="simple-checkmark"></span>
+                <span class="simple-check-text">Уголок плотницкий металлический</span>
+            </label>
+            <label class="simple-checklist-item">
+                <input type="checkbox" class="simple-checkbox">
+                <span class="simple-checkmark"></span>
+                <span class="simple-check-text">Карандаш простой</span>
+            </label>
+            <label class="simple-checklist-item">
+                <input type="checkbox" class="simple-checkbox">
+                <span class="simple-checkmark"></span>
+                <span class="simple-check-text">Сверло d6х100мм</span>
+            </label>
+            <label class="simple-checklist-item">
+                <input type="checkbox" class="simple-checkbox">
+                <span class="simple-checkmark"></span>
+                <span class="simple-check-text">Бита PZ3</span>
+            </label>
+            <label class="simple-checklist-item">
+                <input type="checkbox" class="simple-checkbox">
+                <span class="simple-checkmark"></span>
+                <span class="simple-check-text">Кисть 100мм</span>
+            </label>
+        </div>
+    </div>
+</section>
 
-        <!-- Расходные материалы -->
-        <section class="operation-section materials">
-            <h2> Расходные материалы</h2>
-            <div class="section-content">
-                <ul class="materials-list">
-                    <li>Саморез ЖЦ 6х140</li>
-                    <li>Саморез ЖЦ 6х120</li>
-                    <li>Клей ПВА-М</li>
-                </ul>
-            </div>
-        </section>
+<!-- Расходные материалы (чек-лист) -->
+<section class="operation-section materials-checklist">
+    <h2> Расходные материалы</h2>
+    <div class="section-content">
+        <div class="simple-checklist-container">
+            <label class="simple-checklist-item">
+                <input type="checkbox" class="simple-checkbox">
+                <span class="simple-checkmark"></span>
+                <span class="simple-check-text">Саморез ЖЦ 6х140</span>
+            </label>
+            <label class="simple-checklist-item">
+                <input type="checkbox" class="simple-checkbox">
+                <span class="simple-checkmark"></span>
+                <span class="simple-check-text">Саморез ЖЦ 6х120</span>
+            </label>
+            <label class="simple-checklist-item">
+                <input type="checkbox" class="simple-checkbox">
+                <span class="simple-checkmark"></span>
+                <span class="simple-check-text">Клей ПВА-М</span>
+            </label>
+        </div>
+    </div>
+</section>
 
         <!-- QR-код на фотоальбом -->
         <section class="operation-section photos">
@@ -207,37 +251,17 @@
         if (!qualitySection) return;
         
         const checkboxes = qualitySection.querySelectorAll('.quality-checkbox');
-        const checklistItems = qualitySection.querySelectorAll('.checklist-item');
         
-        // Обработка клика на пункт
-        checklistItems.forEach(item => {
-            item.addEventListener('click', function(e) {
-                // Предотвращаем двойное срабатывание при клике на сам checkbox
-                if (e.target.type !== 'checkbox') {
-                    const checkbox = this.querySelector('input[type="checkbox"]');
-                    checkbox.checked = !checkbox.checked;
-                }
-                checkAllCompleted();
-            });
-        });
-        
-        // Обработка прямого клика на checkbox
+        // Слушаем только событие change на checkbox
         checkboxes.forEach(checkbox => {
-            checkbox.addEventListener('change', function() {
-                checkAllCompleted();
-            });
+            checkbox.addEventListener('change', checkAllCompleted);
         });
         
         function checkAllCompleted() {
             const allChecked = Array.from(checkboxes).every(cb => cb.checked);
-            
-            if (allChecked) {
-                qualitySection.classList.add('completed');
-            } else {
-                qualitySection.classList.remove('completed');
-            }
+            qualitySection.classList.toggle('completed', allChecked);
         }
     });
-</script>
+    </script>
 </body>
 </html>
