@@ -300,6 +300,56 @@ h1, h2, h3, h4, h5, h6 {
     height: 16px;
     accent-color: var(--primary);
     cursor: pointer;
+    /* Убираем красную рамку браузера */
+    outline: none !important;
+    box-shadow: none !important;
+    border: none !important;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+/* Убираем красную рамку при фокусе */
+.checkbox-wrapper input[type="checkbox"]:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* Убираем стили невалидности */
+.checkbox-wrapper input[type="checkbox"]:invalid {
+    outline: none !important;
+    box-shadow: none !important;
+    border: none !important;
+}
+
+/* Кастомный вид чекбокса (опционально, для единообразия) */
+.checkbox-wrapper input[type="checkbox"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border: 1.5px solid var(--border);
+    border-radius: 4px;
+    background: white;
+    cursor: pointer;
+    position: relative;
+    transition: all var(--transition);
+}
+
+.checkbox-wrapper input[type="checkbox"]:checked {
+    background: var(--primary);
+    border-color: var(--primary);
+}
+
+.checkbox-wrapper input[type="checkbox"]:checked::after {
+    content: '';
+    position: absolute;
+    left: 5px;
+    top: 2px;
+    width: 4px;
+    height: 8px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
 }
 
 /* Error message */
