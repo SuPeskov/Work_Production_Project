@@ -1265,8 +1265,24 @@ h1, h2, h3, h4, h5, h6 {
     box-shadow: var(--shadow-md);
 }
 
+/* Кнопка "Предыдущая" — стрелка слева от текста */
+.btn-prev {
+    flex-direction: row;
+}
+
 .btn-prev svg {
-    transform: rotate(180deg);
+    order: -1; /* SVG идёт первым (слева) */
+    margin-right: 8px;
+}
+
+/* Кнопка "Следующая" — стрелка справа от текста */
+.btn-next {
+    flex-direction: row;
+}
+
+.btn-next svg {
+    order: 1; /* SVG идёт последним (справа) */
+    margin-left: 8px;
 }
 
 /* Breadcrumb */
