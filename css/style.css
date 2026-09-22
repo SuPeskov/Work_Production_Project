@@ -279,6 +279,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* Checkbox */
+/* === ЧЕКБОКС "ЗАПОМНИТЬ МЕНЯ" === */
 .form-options {
     margin-bottom: 24px;
 }
@@ -286,70 +287,89 @@ h1, h2, h3, h4, h5, h6 {
 .checkbox-wrapper {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     cursor: pointer;
     font-family: 'Inter', sans-serif;
     font-weight: 400;
-    font-size: 0.85rem;
+    font-size: 0.88rem;
     color: var(--text-secondary);
     user-select: none;
-}
-
-.checkbox-wrapper input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
-    accent-color: var(--primary);
-    cursor: pointer;
-    /* Убираем красную рамку браузера */
-    outline: none !important;
-    box-shadow: none !important;
-    border: none !important;
-    -webkit-appearance: none;
-    appearance: none;
-}
-
-/* Убираем красную рамку при фокусе */
-.checkbox-wrapper input[type="checkbox"]:focus {
-    outline: none !important;
-    box-shadow: none !important;
-}
-
-/* Убираем стили невалидности */
-.checkbox-wrapper input[type="checkbox"]:invalid {
-    outline: none !important;
-    box-shadow: none !important;
-    border: none !important;
-}
-
-/* Кастомный вид чекбокса (опционально, для единообразия) */
-.checkbox-wrapper input[type="checkbox"] {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 16px;
-    height: 16px;
-    border: 1.5px solid var(--border);
-    border-radius: 4px;
-    background: white;
-    cursor: pointer;
     position: relative;
-    transition: all var(--transition);
 }
 
-.checkbox-wrapper input[type="checkbox"]:checked {
+/* Полностью скрываем нативный чекбокс браузера */
+.checkbox-wrapper input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+    margin: 0;
+    padding: 0;
+    border: none;
+    outline: none;
+    box-shadow: none;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+/* Убираем красную рамку при фокусе и невалидности */
+.checkbox-wrapper input[type="checkbox"]:focus,
+.checkbox-wrapper input[type="checkbox"]:focus-visible,
+.checkbox-wrapper input[type="checkbox"]:invalid,
+.checkbox-wrapper input[type="checkbox"]:autofill {
+    outline: none !important;
+    box-shadow: none !important;
+    border: none !important;
+    -webkit-box-shadow: none !important;
+}
+
+/* Кастомный чекбокс (квадратик) */
+.checkmark {
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    border: 2px solid var(--border);
+    border-radius: 5px;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+/* Галочка внутри чекбокса (скрыта по умолчанию) */
+.checkmark::after {
+    content: '';
+    display: none;
+    width: 5px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 2.5px 2.5px 0;
+    transform: rotate(45deg);
+    margin-top: -2px;
+}
+
+/* Состояние: чекбокс отмечен */
+.checkbox-wrapper input[type="checkbox"]:checked + .checkmark {
     background: var(--primary);
     border-color: var(--primary);
 }
 
-.checkbox-wrapper input[type="checkbox"]:checked::after {
-    content: '';
-    position: absolute;
-    left: 5px;
-    top: 2px;
-    width: 4px;
-    height: 8px;
-    border: solid white;
-    border-width: 0 2px 2px 0;
-    transform: rotate(45deg);
+.checkbox-wrapper input[type="checkbox"]:checked + .checkmark::after {
+    display: block;
+}
+
+/* Hover-эффект */
+.checkbox-wrapper:hover .checkmark {
+    border-color: var(--primary-light);
+}
+
+/* Состояние фокуса (для доступности с клавиатуры) */
+.checkbox-wrapper input[type="checkbox"]:focus-visible + .checkmark {
+    box-shadow: 0 0 0 3px rgba(26, 86, 50, 0.2);
+    border-color: var(--primary);
 }
 
 /* Error message */
