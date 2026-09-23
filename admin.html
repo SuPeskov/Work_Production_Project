@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ-панель — Скаут Хаус</title>
+    <link rel="stylesheet" href="css/style.css">
+    <!-- JSZip для создания архивов -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <style>
+        body { font-family: 'Inter', Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .btn { padding: 10px 20px; margin: 5px; cursor: pointer; background: #1a5632; color: white; border: none; border-radius: 4px; font-size: 14px; font-family: inherit; }
+        .btn:hover { background: #2d7a4a; }
+        .btn-danger { background: #dc2626; }
+        .btn-danger:hover { background: #b91c1c; }
+        .btn-secondary { background: #6b7280; }
+        .btn-secondary:hover { background: #4b5563; }
+        .btn-upload { background: #2563eb; }
+        .btn-upload:hover { background: #1d4ed8; }
+        .card { background: white; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background: #f5f5f5; font-weight: bold; }
+        input, textarea, select { padding: 8px; margin: 5px 0; width: 100%; box-sizing: border-box; border: 1px solid #ddd; border-radius: 4px; font-family: inherit; }
+        textarea { min-height: 80px; resize: vertical; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .step-editor { background: #f9f9f9; padding: 15px; margin: 10px 0; border-radius: 6px; border: 1px solid #e5e7eb; }
+        .step-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .step-number { background: #1a5632; color: white; padding: 5px 12px; border-radius: 20px; font-weight: bold; }
+        .image-list { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+        .image-item { position: relative; width: 120px; height: 120px; border: 2px solid #ddd; border-radius: 6px; overflow: hidden; background: #f0f0f0; }
+        .image-item img { width: 100%; height: 100%; object-fit: cover; }
+        .image-remove { position: absolute; top: 2px; right: 2px; background: #dc2626; color: white; border: none; border-radius: 50%; width: 22px; height: 22px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; }
+        .image-info { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7); color: white; font-size: 10px; padding: 3px 5px; text-align: center; }
+        .upload-area { border: 2px dashed #cbd5e1; border-radius: 6px; padding: 20px; text-align: center; margin-top: 10px; cursor: pointer; transition: all 0.2s; }
+        .upload-area:hover { border-color: #2563eb; background: #f0f7ff; }
+        .upload-area.dragover { border-color: #2563eb; background: #e0f2fe; }
+        .hidden { display: none; }
+        .version-badge { display: inline-block; padding: 3px 10px; background: #e0e7ff; color: #3730a3; border-radius: 12px; font-size: 12px; font-weight: bold; }
+        .toast { position: fixed; bottom: 24px; right: 24px; background: #16a34a; color: white; padding: 14px 24px; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 10000; transform: translateY(100px); opacity: 0; transition: all 0.3s ease; }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast.error { background: #dc2626; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛠️ Админ-панель Скаут Хаус</h1>
+        
+        <!-- Список операций -->
+        <div class="card" id="listView">
+            <h2>📋 Список операций</h2>
+            <button class="btn" onclick="showEditor()">✨ Новая операция</button>
+            <div id="operationsList"></div>
+        </div>
+        
+        <!-- Редактор операции -->
+        <div class="card hidden" id="editorView">
+            <h2>✏️ Редактор операции</h2>
+            
+            <div class="form-group">
+                <label>Номер операции *</label>
+                <input type="text" id="opNumber" placeholder="2.1.1">
+            </div>
+            
+            <div class="form-group">
+                <label>Название *</label>
+                <input type="text" id="opTitle" placeholder="Сборка каркаса панели">
+            </div>
+            
+            <div class="form-group">
+                <label>Раздел *</label>
+                <select id="opSection">
+                    <option value="">-- Выберите раздел --</option>
+                    <option value="preparation">1. Заготовка</option>
+                    <option value="panels">2. Сборка панелей</option>
+                    <option value="module">3. Сборка модуля</option>
+                    <option value="options">4. Сборка опций</option>
+                    <option value="installation">5. Монтаж</option>
+                    <option value="service">6. Сервис</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Подраздел</label>
+                <input type="text" id="opSubsection" placeholder="2.1">
+            </div>
+            
+            <hr>
+            <h3>📋 Документация</h3>
+            <div id="docsContainer"></div>
+            <button class="btn btn-secondary" onclick="addDoc()">+ Добавить документ</button>
+            
+            <hr>
+            <h3>🔧 Шаги операции</h3>
+            <div id="stepsContainer"></div>
+            <button class="btn" onclick="addStep()">+ Добавить шаг</button>
+            
+            <hr>
+            <h3>✅ Контрольные параметры</h3>
+            <div id="qualityContainer"></div>
+            <button class="btn btn-secondary" onclick="addQualityCheck()">+ Добавить параметр</button>
+            
+            <hr>
+            <h3>🛠️ Инструмент</h3>
+            <div id="toolsContainer"></div>
+            <button class="btn btn-secondary" onclick="addTool()">+ Добавить инструмент</button>
+            
+            <hr>
+            <h3>📦 Материалы</h3>
+            <div id="materialsContainer"></div>
+            <button class="btn btn-secondary" onclick="addMaterial()">+ Добавить материал</button>
+            
+            <hr>
+            <button class="btn" onclick="saveOperation()">💾 Сохранить</button>
+            <button class="btn btn-secondary" onclick="hideEditor()">Отмена</button>
+            <button class="btn btn-upload" onclick="generateHtml()">📦 Сгенерировать HTML + ZIP с картинками</button>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+    // ============================================================
+    // ХРАНИЛИЩЕ ДАННЫХ
+    // ============================================================
+    
+    let operations = JSON.parse(localStorage.getItem('operations') || '[]');
+    let currentOp = null;
+    
+    // Инициализация тестовыми данными
+    if (operations.length === 0) {
+        operations = [{
+            id: 1,
+            number: '2.1.1',
+            title: 'Сборка каркаса панели',
+            section: 'panels',
+            subsection: '2.1',
+            version: 1,
+            docs: [{ title: 'Альбом сборки типовых узлов каркаса', url: 'https://disk.yandex.ru/i/4s-dUwrDRPrBFw' }],
+            steps: [
+                { text: 'Просверлить в балках по 3 отверстия на каждый стык с лагой. Привязка по высоте балки: 30мм — 95мм — 160мм.', images: [] },
+                { text: 'Собрать сдвоенные балки согласно чертежа. Между собой балки склеивать на ПВА-М и стянуть саморезами ЖЦ 6х80 в шахматном порядке с шагом 600мм.', images: [] },
+                { text: 'Собрать каркас, выравнивая балки и лаги по верхней плоскости. Крепить балку на 3 самореза ЖЦ 6х140 в каждый торец лаги.', images: [] }
+            ],
+            qualityChecks: ['Внешние габариты панели. Допуск: ±2мм.', 'Диагонали панели. Допуск ±3мм.'],
+            tools: ['Аккумуляторный шуруповерт с зажимным патроном', 'Рулетка 10м'],
+            materials: ['Саморез ЖЦ 6х140', 'Клей ПВА-М'],
+            updatedAt: new Date().toISOString()
+        }];
+        localStorage.setItem('operations', JSON.stringify(operations));
+    }
+    
+    // ============================================================
+    // НАВИГАЦИЯ
+    // ============================================================
+    
+    function renderOperations() {
+        const container = document.getElementById('operationsList');
+        if (operations.length === 0) {
+            container.innerHTML = '<p>Операций пока нет</p>';
+            return;
+        }
+        
+        let html = '<table><tr><th>Номер</th><th>Название</th><th>Раздел</th><th>Версия</th><th>Действия</th></tr>';
+        operations.forEach(op => {
+            html += `<tr>
+                <td><strong>${op.number}</strong></td>
+                <td>${op.title}</td>
+                <td>${op.section}</td>
+                <td><span class="version-badge">v${op.version || 1}</span></td>
+                <td>
+                    <button class="btn" onclick="editOperation(${op.id})">️ Редактировать</button>
+                    <button class="btn btn-upload" onclick="generateSingleHtml(${op.id})">📦 HTML + ZIP</button>
+                    <button class="btn btn-danger" onclick="deleteOperation(${op.id})">🗑️ Удалить</button>
+                </td>
+            </tr>`;
+        });
+        html += '</table>';
+        container.innerHTML = html;
+    }
+    
+    function showEditor() {
+        currentOp = null;
+        document.getElementById('opNumber').value = '';
+        document.getElementById('opTitle').value = '';
+        document.getElementById('opSection').value = '';
+        document.getElementById('opSubsection').value = '';
+        document.getElementById('docsContainer').innerHTML = '';
+        document.getElementById('stepsContainer').innerHTML = '';
+        document.getElementById('qualityContainer').innerHTML = '';
+        document.getElementById('toolsContainer').innerHTML = '';
+        document.getElementById('materialsContainer').innerHTML = '';
+        document.getElementById('listView').classList.add('hidden');
+        document.getElementById('editorView').classList.remove('hidden');
+    }
+    
+    function hideEditor() {
+        document.getElementById('listView').classList.remove('hidden');
+        document.getElementById('editorView').classList.add('hidden');
+        renderOperations();
+    }
+    
+    function editOperation(id) {
+        currentOp = operations.find(o => o.id === id);
+        if (!currentOp) return;
+        
+        document.getElementById('opNumber').value = currentOp.number;
+        document.getElementById('opTitle').value = currentOp.title;
+        document.getElementById('opSection').value = currentOp.section;
+        document.getElementById('opSubsection').value = currentOp.subsection || '';
+        
+        renderDocs(currentOp.docs || []);
+        renderSteps(currentOp.steps || []);
+        renderQualityChecks(currentOp.qualityChecks || []);
+        renderTools(currentOp.tools || []);
+        renderMaterials(currentOp.materials || []);
+        
+        document.getElementById('listView').classList.add('hidden');
+        document.getElementById('editorView').classList.remove('hidden');
+    }
+    
+    function deleteOperation(id) {
+        if (confirm('Удалить операцию? Это действие нельзя отменить.')) {
+            operations = operations.filter(o => o.id !== id);
+            localStorage.setItem('operations', JSON.stringify(operations));
+            renderOperations();
+            showToast('Операция удалена');
+        }
+    }
+    
+    // ============================================================
+    // ДОКУМЕНТАЦИЯ
+    // ============================================================
+    
+    function renderDocs(docs) {
+        const container = document.getElementById('docsContainer');
+        container.innerHTML = docs.map((doc, i) => `
+            <div style="display: flex; gap: 10px; margin: 10px 0; align-items: center;">
+                <input type="text" placeholder="Название документа" value="${doc.title || ''}" onchange="updateDoc(${i}, 'title', this.value)" style="flex: 2;">
+                <input type="url" placeholder="URL" value="${doc.url || ''}" onchange="updateDoc(${i}, 'url', this.value)" style="flex: 3;">
+                <button class="btn btn-danger" onclick="removeDoc(${i})">✕</button>
+            </div>
+        `).join('');
+    }
+    
+    function addDoc() {
+        const docs = currentOp ? (currentOp.docs || []) : [];
+        docs.push({ title: '', url: '' });
+        if (currentOp) currentOp.docs = docs;
+        renderDocs(docs);
+    }
+    
+    function updateDoc(index, field, value) {
+        if (currentOp && currentOp.docs) currentOp.docs[index][field] = value;
+    }
+    
+    function removeDoc(index) {
+        if (currentOp && currentOp.docs) {
+            currentOp.docs.splice(index, 1);
+            renderDocs(currentOp.docs);
+        }
+    }
+    
+    // ============================================================
+    // ШАГИ С ЗАГРУЗКОЙ КАРТИНОК
+    // ============================================================
+    
+    function renderSteps(steps) {
+        const container = document.getElementById('stepsContainer');
+        const version = currentOp ? (currentOp.version || 1) : 1;
+        
+        container.innerHTML = steps.map((step, i) => `
+            <div class="step-editor">
+                <div class="step-header">
+                    <span class="step-number">Шаг ${i + 1}</span>
+                    <button class="btn btn-danger" onclick="removeStep(${i})">🗑️ Удалить шаг</button>
+                </div>
+                <textarea placeholder="Описание шага..." onchange="updateStep(${i}, this.value)">${step.text || ''}</textarea>
+                
+                <div class="upload-area" onclick="document.getElementById('fileInput-${i}').click()" 
+                     ondragover="handleDragOver(event, this)" ondragleave="handleDragLeave(event, this)" 
+                     ondrop="handleDrop(event, ${i}, this)">
+                    <div>📷 <strong>Нажмите или перетащите картинки сюда</strong></div>
+                    <div style="font-size: 12px; color: #666; margin-top: 5px;">JPG, PNG, WEBP. Файлы будут переименованы в step-${version}.{номер}.jpg</div>
+                    <input type="file" id="fileInput-${i}" multiple accept="image/*" style="display: none;" onchange="handleFileSelect(event, ${i})">
+                </div>
+                
+                ${step.images && step.images.length > 0 ? `
+                    <div class="image-list">
+                        ${step.images.map((img, j) => `
+                            <div class="image-item">
+                                <img src="${img.data}" alt="Фото ${j+1}">
+                                <div class="image-info">step-${version}.${j+1}.jpg</div>
+                                <button class="image-remove" onclick="removeStepImage(${i}, ${j})">✕</button>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : ''}
+            </div>
+        `).join('');
+    }
+    
+    function handleDragOver(e, el) {
+        e.preventDefault();
+        el.classList.add('dragover');
+    }
+    
+    function handleDragLeave(e, el) {
+        e.preventDefault();
+        el.classList.remove('dragover');
+    }
+    
+    function handleDrop(e, stepIndex, el) {
+        e.preventDefault();
+        el.classList.remove('dragover');
+        const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+        processFiles(files, stepIndex);
+    }
+    
+    function handleFileSelect(e, stepIndex) {
+        const files = Array.from(e.target.files);
+        processFiles(files, stepIndex);
+        e.target.value = ''; // сброс для повторного выбора того же файла
+    }
+    
+    function processFiles(files, stepIndex) {
+        if (!currentOp || !currentOp.steps[stepIndex]) return;
+        
+        let loaded = 0;
+        const total = files.length;
+        
+        files.forEach(file => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                currentOp.steps[stepIndex].images.push({
+                    data: e.target.result,
+                    name: file.name,
+                    type: file.type
+                });
+                loaded++;
+                if (loaded === total) {
+                    renderSteps(currentOp.steps);
+                    showToast(`Загружено ${total} фото`);
+                }
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+    
+    function removeStepImage(stepIndex, imgIndex) {
+        if (currentOp && currentOp.steps[stepIndex]) {
+            currentOp.steps[stepIndex].images.splice(imgIndex, 1);
+            renderSteps(currentOp.steps);
+        }
+    }
+    
+    function addStep() {
+        const steps = currentOp ? (currentOp.steps || []) : [];
+        steps.push({ text: '', images: [] });
+        if (currentOp) currentOp.steps = steps;
+        renderSteps(steps);
+    }
+    
+    function updateStep(index, value) {
+        if (currentOp && currentOp.steps[index]) currentOp.steps[index].text = value;
+    }
+    
+    function removeStep(index) {
+        if (currentOp && currentOp.steps) {
+            currentOp.steps.splice(index, 1);
+            renderSteps(currentOp.steps);
+        }
+    }
+    
+    // ============================================================
+    // КОНТРОЛЬНЫЕ ПАРАМЕТРЫ, ИНСТРУМЕНТ, МАТЕРИАЛЫ
+    // ============================================================
+    
+    function renderQualityChecks(checks) {
+        const container = document.getElementById('qualityContainer');
+        container.innerHTML = checks.map((check, i) => `
+            <div style="display: flex; gap: 10px; margin: 10px 0;">
+                <input type="text" value="${check || ''}" onchange="updateQuality(${i}, this.value)" style="flex: 1;">
+                <button class="btn btn-danger" onclick="removeQuality(${i})">✕</button>
+            </div>
+        `).join('');
+    }
+    
+    function addQualityCheck() {
+        const checks = currentOp ? (currentOp.qualityChecks || []) : [];
+        checks.push('');
+        if (currentOp) currentOp.qualityChecks = checks;
+        renderQualityChecks(checks);
+    }
+    
+    function updateQuality(index, value) {
+        if (currentOp && currentOp.qualityChecks) currentOp.qualityChecks[index] = value;
+    }
+    
+    function removeQuality(index) {
+        if (currentOp && currentOp.qualityChecks) {
+            currentOp.qualityChecks.splice(index, 1);
+            renderQualityChecks(currentOp.qualityChecks);
+        }
+    }
+    
+    function renderTools(tools) {
+        const container = document.getElementById('toolsContainer');
+        container.innerHTML = tools.map((tool, i) => `
+            <div style="display: flex; gap: 10px; margin: 10px 0;">
+                <input type="text" value="${tool || ''}" onchange="updateTool(${i}, this.value)" style="flex: 1;">
+                <button class="btn btn-danger" onclick="removeTool(${i})">✕</button>
+            </div>
+        `).join('');
+    }
+    
+    function addTool() {
+        const tools = currentOp ? (currentOp.tools || []) : [];
+        tools.push('');
+        if (currentOp) currentOp.tools = tools;
+        renderTools(tools);
+    }
+    
+    function updateTool(index, value) {
+        if (currentOp && currentOp.tools) currentOp.tools[index] = value;
+    }
+    
+    function removeTool(index) {
+        if (currentOp && currentOp.tools) {
+            currentOp.tools.splice(index, 1);
+            renderTools(currentOp.tools);
+        }
+    }
+    
+    function renderMaterials(materials) {
+        const container = document.getElementById('materialsContainer');
+        container.innerHTML = materials.map((mat, i) => `
+            <div style="display: flex; gap: 10px; margin: 10px 0;">
+                <input type="text" value="${mat || ''}" onchange="updateMaterial(${i}, this.value)" style="flex: 1;">
+                <button class="btn btn-danger" onclick="removeMaterial(${i})"></button>
+            </div>
+        `).join('');
+    }
+    
+    function addMaterial() {
+        const materials = currentOp ? (currentOp.materials || []) : [];
+        materials.push('');
+        if (currentOp) currentOp.materials = materials;
+        renderMaterials(materials);
+    }
+    
+    function updateMaterial(index, value) {
+        if (currentOp && currentOp.materials) currentOp.materials[index] = value;
+    }
+    
+    function removeMaterial(index) {
+        if (currentOp && currentOp.materials) {
+            currentOp.materials.splice(index, 1);
+            renderMaterials(currentOp.materials);
+        }
+    }
+    
+    // ============================================================
+    // СОХРАНЕНИЕ ОПЕРАЦИИ
+    // ============================================================
+    
+    function saveOperation() {
+        const number = document.getElementById('opNumber').value.trim();
+        const title = document.getElementById('opTitle').value.trim();
+        const section = document.getElementById('opSection').value;
+        
+        if (!number || !title || !section) {
+            showToast('Заполните номер, название и раздел!', 'error');
+            return;
+        }
+        
+        const opData = {
+            number, title, section,
+            subsection: document.getElementById('opSubsection').value.trim(),
+            docs: currentOp ? currentOp.docs : [],
+            steps: currentOp ? currentOp.steps : [],
+            qualityChecks: currentOp ? currentOp.qualityChecks : [],
+            tools: currentOp ? currentOp.tools : [],
+            materials: currentOp ? currentOp.materials : [],
+            updatedAt: new Date().toISOString()
+        };
+        
+        if (currentOp) {
+            const index = operations.findIndex(o => o.id === currentOp.id);
+            if (index !== -1) {
+                opData.id = currentOp.id;
+                opData.version = (currentOp.version || 1) + 1; // увеличиваем версию
+                operations[index] = opData;
+                currentOp = opData;
+            }
+        } else {
+            opData.id = Date.now();
+            opData.version = 1;
+            operations.push(opData);
+            currentOp = opData;
+        }
+        
+        localStorage.setItem('operations', JSON.stringify(operations));
+        showToast(`Операция сохранена! Версия: ${opData.version}`);
+        
+        // Обновляем отображение превью картинок с новым номером версии
+        if (currentOp.steps) renderSteps(currentOp.steps);
+    }
+    
+    // ============================================================
+    // ГЕНЕРАЦИЯ HTML + ZIP С КАРТИНКАМИ
+    // ============================================================
+    
+    function generateHtml() {
+        if (!currentOp) {
+            showToast('Сначала сохраните операцию!', 'error');
+            return;
+        }
+        generateSingleHtml(currentOp.id);
+    }
+    
+    function generateSingleHtml(id) {
+        const op = operations.find(o => o.id === id);
+        if (!op) return;
+        
+        const version = op.version || 1;
+        const zip = new JSZip();
+        const folderName = `operation_${op.number}`;
+        const opFolder = zip.folder(folderName);
+        const imagesFolder = opFolder.folder('images');
+        
+        // Собираем все картинки со всех шагов
+        let globalImageIndex = 1;
+        const imageMap = []; // маппинг: old_base64 -> new_filename
+        
+        op.steps.forEach((step, stepIdx) => {
+            if (step.images && step.images.length > 0) {
+                step.images.forEach(img => {
+                    const ext = img.type === 'image/png' ? 'png' : (img.type === 'image/webp' ? 'webp' : 'jpg');
+                    const newFilename = `step-${version}.${globalImageIndex}.${ext}`;
+                    
+                    // Конвертируем base64 в blob
+                    const base64Data = img.data.split(',')[1];
+                    imagesFolder.file(newFilename, base64Data, { base64: true });
+                    
+                    imageMap.push({
+                        oldData: img.data,
+                        newFilename: `images/${newFilename}`
+                    });
+                    
+                    globalImageIndex++;
+                });
+            }
+        });
+        
+        // Генерируем HTML
+        const html = buildOperationHtml(op, imageMap);
+        opFolder.file(`${op.number}.html`, html);
+        
+        // Скачиваем ZIP
+        zip.generateAsync({ type: 'blob' }).then(blob => {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${folderName}_v${version}.zip`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast(`Скачан архив: ${folderName}_v${version}.zip`);
+        });
+    }
+    
+    function buildOperationHtml(op, imageMap) {
+        const sectionPaths = {
+            preparation: '../preparation.html',
+            panels: '../panels.html',
+            module: '../module.html',
+            options: '../options.html',
+            installation: '../installation.html',
+            service: '../service.html'
+        };
+        
+        const sectionNames = {
+            preparation: 'Заготовка', panels: 'Сборка панелей',
+            module: 'Сборка модуля', options: 'Сборка опций',
+            installation: 'Монтаж', service: 'Сервис'
+        };
+        
+        // Шаги с картинками
+        const stepsHtml = op.steps.map((step, i) => {
+            let imagesHtml = '';
+            if (step.images && step.images.length > 0) {
+                const imgs = step.images.map(img => {
+                    const mapping = imageMap.find(m => m.oldData === img.data);
+                    const src = mapping ? mapping.newFilename : '';
+                    return `<img src="../../assets/images/operations/${op.number}/${src}" alt="Фото">`;
+                }).join('');
+                imagesHtml = `<div class="step-image">${imgs}</div>`;
+            }
+            return `<li data-step="${i + 1}"><div class="step-text">${step.text || ''}</div>${imagesHtml}</li>`;
+        }).join('');
+        
+        // Контрольные параметры
+        const qualityHtml = (op.qualityChecks || []).map(q => `
+            <label class="checklist-item">
+                <input type="checkbox" class="quality-checkbox">
+                <span class="checkmark"></span>
+                <span class="check-text">${q}</span>
+            </label>
+        `).join('');
+        
+        // Инструмент
+        const toolsHtml = (op.tools || []).map(t => `
+            <label class="simple-checklist-item">
+                <input type="checkbox" class="simple-checkbox">
+                <span class="simple-checkmark"></span>
+                <span class="simple-check-text">${t}</span>
+            </label>
+        `).join('');
+        
+        // Материалы
+        const materialsHtml = (op.materials || []).map(m => `
+            <label class="simple-checklist-item">
+                <input type="checkbox" class="simple-checkbox">
+                <span class="simple-checkmark"></span>
+                <span class="simple-check-text">${m}</span>
+            </label>
+        `).join('');
+        
+        // Документы
+        const docsHtml = (op.docs || []).map(d => d.url 
+            ? `<a href="${d.url}" target="_blank" class="doc-link">📄 ${d.title}</a>` 
+            : `<p>${d.title}</p>`
+        ).join('');
+        
+        return `<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${op.number} — ${op.title} | Скаут Хаус</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="operation-page">
+    <header class="top-bar">
+        <div class="top-bar-left">
+            <div class="logo-small">
+                <a href="../../dashboard.html">Скаут Хаус</a>
+            </div>
+            <nav class="breadcrumb">
+                <a href="../../dashboard.html">Главная</a> / 
+                <a href="${sectionPaths[op.section] || '#'}">${sectionNames[op.section] || op.section}</a> / 
+                <span>${op.number}</span>
+            </nav>
+        </div>
+    </header>
+    <main class="operation-main">
+        <div class="operation-header">
+            <div class="operation-number">Операция ${op.number} (v${op.version || 1})</div>
+            <h1>${op.title}</h1>
+        </div>
+        <section class="operation-section documentation">
+            <h2>📋 Документация</h2>
+            <div class="section-content">${docsHtml}</div>
+        </section>
+        <section class="operation-section operations">
+            <h2>🔧 Производимые операции</h2>
+            <div class="section-content">
+                <ol class="steps-list">${stepsHtml}</ol>
+            </div>
+        </section>
+        <section class="operation-section quality-checklist" id="qualitySection">
+            <h2>✅ Контрольные параметры</h2>
+            <div class="section-content">
+                <div class="checklist-container">${qualityHtml}</div>
+                <div class="quality-note"><span>По факту контрольных замеров ставится отметка в паспорте ОТК.</span></div>
+            </div>
+        </section>
+        <section class="operation-section tools-checklist">
+            <h2>🛠️ Инструмент</h2>
+            <div class="section-content"><div class="simple-checklist-container">${toolsHtml}</div></div>
+        </section>
+        <section class="operation-section materials-checklist">
+            <h2>📦 Материалы</h2>
+            <div class="section-content"><div class="simple-checklist-container">${materialsHtml}</div></div>
+        </section>
+    </main>
+    <script src="../../js/scrollTop.js"><\/script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const qs = document.getElementById('qualitySection');
+            if (qs) {
+                const cbs = qs.querySelectorAll('.quality-checkbox');
+                cbs.forEach(cb => cb.addEventListener('change', () => {
+                    qs.classList.toggle('completed', Array.from(cbs).every(c => c.checked));
+                }));
+            }
+        });
+    <\/script>
+</body>
+</html>`;
+    }
+    
+    // ============================================================
+    // TOAST
+    // ============================================================
+    
+    function showToast(message, type = 'success') {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.className = 'toast show ' + type;
+        setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+    
+    // Запуск
+    renderOperations();
+    </script>
+</body>
+</html>

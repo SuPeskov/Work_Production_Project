@@ -8,6 +8,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../css/style.css">
+    <style>
+        .step-image.hidden-photo { display: none !important; }
+        .steps-list > li.no-photo { grid-template-columns: 1fr !important; }
+    </style>
 </head>
 <body class="operation-page">
 
@@ -45,7 +49,7 @@
         </div>
 
         <section class="operation-section documentation">
-            <h2>📋 Необходимая документация</h2>
+            <h2> Необходимая документация</h2>
             <div class="section-content">
                 <p>Раздел КС.ПП.</p>
             </div>
@@ -55,13 +59,23 @@
             <h2>🔧 Производимые операции</h2>
             <div class="section-content">
                 <ol class="steps-list">
-                    <li>Сверить количество и габариты полученных заготовок ОСБ с чертежом.</li>
-                    <li>Произвести контрольные замеры геометрии каркаса панели.</li>
-                    <li>Спланировать порядок укладки заготовок на каркас.</li>
-                    <li>Нанести клей ПВА-М на участок каркаса, укрываемый листом ОСБ.</li>
-                    <li>Уложить ОСБ, выровнять по каркасу, закрепить кровельными гвоздями 45мм с шагом 350-400мм к каркасу панели. Крепить от одного края к противоположному, чтобы лист заготовки равномерно разглаживался по длине и не давал коробления-прогиба по центру.</li>
-                    <li>Повторить предыдущую операцию для каждой заготовки ОСБ.</li>
-                    <li>Проверить панель на наличие выступающих шляпок гвоздей. Если такие найдутся, то забить гвоздь до конца.</li>
+                    <li data-step="1">
+                        <div class="step-text">Сверить количество и габариты полученных заготовок ОСБ с чертежом. Произвести контрольные замеры геометрии каркаса панели. Спланировать порядок укладки заготовок на каркас.</div>
+                        <div class="step-image"><img src="../../assets/images/operations/2.1.2/step1.jpg" alt="Проверка заготовок ОСБ"></div>
+                    </li>
+                    <li data-step="2">
+                        <div class="step-text">Нанести клей ПВА-М на участок каркаса, укрываемый листом ОСБ. Уложить ОСБ, выровнять по каркасу, закрепить кровельными гвоздями 45мм с шагом 350-400мм к каркасу панели. Крепить от одного края к противоположному, чтобы лист заготовки равномерно разглаживался по длине и не давал коробления-прогиба по центру.</div>
+                        <div class="step-image"><img src="../../assets/images/operations/2.1.2/step2.1.jpg" alt="Нанесение клея и укладка ОСБ">
+                        <img src="../../assets/images/operations/2.1.2/step2.2.jpg" alt="Нанесение клея и укладка ОСБ"></div>                        
+                    </li>
+                    <li data-step="3">
+                        <div class="step-text">Повторить предыдущую операцию для каждой заготовки ОСБ.</div>
+                        <div class="step-image"><img src="../../assets/images/operations/2.1.2/step3.jpg" alt="Повторение операции"></div>
+                    </li>
+                    <li data-step="4">
+                        <div class="step-text">Проверить панель на наличие выступающих шляпок гвоздей. Если такие найдутся, то забить гвоздь до конца.</div>
+                        <div class="step-image"><img src="../../assets/images/operations/2.1.2/step4.jpg" alt="Проверка шляпок гвоздей"></div>
+                    </li>
                 </ol>
             </div>
         </section>
@@ -141,11 +155,23 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const qs = document.getElementById('qualitySection');
-            if (!qs) return;
-            const cbs = qs.querySelectorAll('.quality-checkbox');
-            cbs.forEach(cb => cb.addEventListener('change', () => {
-                qs.classList.toggle('completed', Array.from(cbs).every(c => c.checked));
-            }));
+            if (qs) {
+                const cbs = qs.querySelectorAll('.quality-checkbox');
+                cbs.forEach(cb => cb.addEventListener('change', () => {
+                    qs.classList.toggle('completed', Array.from(cbs).every(c => c.checked));
+                }));
+            }
+            const stepImages = document.querySelectorAll('.step-image');
+            stepImages.forEach(container => {
+                const img = container.querySelector('img');
+                if (!img) { container.classList.add('hidden-photo'); const li = container.closest('li'); if (li) li.classList.add('no-photo'); return; }
+                if (img.complete) {
+                    if (img.naturalWidth === 0 || img.src === window.location.href) { container.classList.add('hidden-photo'); const li = container.closest('li'); if (li) li.classList.add('no-photo'); }
+                } else {
+                    img.addEventListener('load', function() { if (img.naturalWidth === 0) { container.classList.add('hidden-photo'); const li = container.closest('li'); if (li) li.classList.add('no-photo'); } });
+                    img.addEventListener('error', function() { container.classList.add('hidden-photo'); const li = container.closest('li'); if (li) li.classList.add('no-photo'); });
+                }
+            });
         });
     </script>
 </body>

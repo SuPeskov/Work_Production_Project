@@ -8,6 +8,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../css/style.css">
+    <style>
+        .step-image.hidden-photo { display: none !important; }
+        .steps-list > li.no-photo { grid-template-columns: 1fr !important; }
+    </style>
 </head>
 <body class="operation-page">
 
@@ -53,8 +57,14 @@
             <h2>🔧 Производимые операции</h2>
             <div class="section-content">
                 <ol class="steps-list">
-                    <li>Раскатать сетку поверх ветрозащиты вдоль длинной стороны панели, соблюдая выпуски в стороны, согласно листа КС.ПП. Перехлест полос сетки между собой по бокам должен быть не менее 100мм. Перехлест закрепить 2 скобами к каждой лаге. Нахлест сетки на торцах полос сделать не менее 200мм, при этом нахлест должен попадать на лагу, к которой крепится скобами с шагом 250-300мм.</li>
-                    <li>По периметру каркаса крепить скобами с шагом 500-600мм. Выпуски по торцам аккуратно сложить. Окончательно крепить выпуски сетки после сборки модуля и монтажа ветрозащиты.</li>
+                    <li data-step="1">
+                        <div class="step-text">Раскатать сетку поверх ветрозащиты вдоль длинной стороны панели, соблюдая выпуски в стороны, согласно листа КС.ПП. Перехлест полос сетки между собой по бокам должен быть не менее 100мм. Перехлест закрепить 2 скобами к каждой лаге. Нахлест сетки на торцах полос сделать не менее 200мм, при этом нахлест должен попадать на лагу, к которой крепится скобами с шагом 250-300мм.</div>
+                        <div class="step-image"><img src="../../assets/images/operations/2.1.9/step1.jpg" alt="Раскатка сетки"></div>
+                    </li>
+                    <li data-step="2">
+                        <div class="step-text">По периметру каркаса крепить скобами с шагом 500-600мм. Выпуски по торцам аккуратно сложить. Окончательно крепить выпуски сетки после сборки модуля и монтажа ветрозащиты.</div>
+                        <div class="step-image"><img src="../../assets/images/operations/2.1.9/step2.jpg" alt="Крепление сетки"></div>
+                    </li>
                 </ol>
             </div>
         </section>
@@ -128,11 +138,9 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const qs = document.getElementById('qualitySection');
-            if (!qs) return;
-            const cbs = qs.querySelectorAll('.quality-checkbox');
-            cbs.forEach(cb => cb.addEventListener('change', () => {
-                qs.classList.toggle('completed', Array.from(cbs).every(c => c.checked));
-            }));
+            if (qs) { const cbs = qs.querySelectorAll('.quality-checkbox'); cbs.forEach(cb => cb.addEventListener('change', () => { qs.classList.toggle('completed', Array.from(cbs).every(c => c.checked)); })); }
+            const stepImages = document.querySelectorAll('.step-image');
+            stepImages.forEach(container => { const img = container.querySelector('img'); if (!img) { container.classList.add('hidden-photo'); const li = container.closest('li'); if (li) li.classList.add('no-photo'); return; } if (img.complete) { if (img.naturalWidth === 0 || img.src === window.location.href) { container.classList.add('hidden-photo'); const li = container.closest('li'); if (li) li.classList.add('no-photo'); } } else { img.addEventListener('load', function() { if (img.naturalWidth === 0) { container.classList.add('hidden-photo'); const li = container.closest('li'); if (li) li.classList.add('no-photo'); } }); img.addEventListener('error', function() { container.classList.add('hidden-photo'); const li = container.closest('li'); if (li) li.classList.add('no-photo'); }); } });
         });
     </script>
 </body>

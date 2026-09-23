@@ -8,6 +8,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../css/style.css">
+    <style>
+        .step-image.hidden-photo { display: none !important; }
+        .steps-list > li.no-photo { grid-template-columns: 1fr !important; }
+    </style>
 </head>
 <body class="operation-page">
 
@@ -57,14 +61,26 @@
                     <span><strong>ГВОЗДИ использовать запрещено!</strong></span>
                 </div>
                 <ol class="steps-list">
-                    <li>Сверить количество и габариты полученных заготовок фанеры с чертежом.</li>
-                    <li>Произвести контрольные замеры геометрии каркаса панели.</li>
-                    <li>Спланировать порядок укладки заготовок на каркас.</li>
-                    <li>Просверлить в фанере отверстия под саморезы по периметру с шагом 300мм и по параллельным линиям с межосевым расстоянием 600мм параллельно короткой стороне заготовки. Обработать отверстия зенкером.</li>
-                    <li>Нанести клей ПВА-М на участок панели, укрываемый заготовкой фанеры. Уложить фанеру, выровнять по каркасу, закрепить саморезами ЖЦ 5х60 в подготовленные отверстия. Крепить от одного края к противоположному, чтобы лист заготовки равномерно разглаживался по длине и не давал коробления-прогиба по центру.</li>
-                    <li>Закручивание производить с отрегулированным моментом на шуруповерте, чтобы шляпки саморезов не выступали за пределы фанеры и не были утопленными глубже 2мм.</li>
-                    <li>Повторить предыдущую операцию для каждой заготовки из фанеры.</li>
-                    <li>Проверить панель на наличие выступающих шляпок саморезов. Если такие найдутся, докрутить.</li>
+                    <li data-step="1">
+                        <div class="step-text">Сверить количество и габариты полученных заготовок фанеры с чертежом. Произвести контрольные замеры геометрии каркаса панели. Спланировать порядок укладки заготовок на каркас.</div>
+                        <div class="step-image"><img src="../../assets/images/operations/2.1.3/step1.jpg" alt="Проверка заготовок фанеры"></div>
+                    </li>
+                    <li data-step="2">
+                        <div class="step-text">Просверлить в фанере отверстия под саморезы по периметру с шагом 300мм и по параллельным линиям с межосевым расстоянием 600мм параллельно короткой стороне заготовки. Обработать отверстия зенкером.</div>
+                        <div class="step-image"><img src="../../assets/images/operations/2.1.3/step2.jpg" alt="Сверление отверстий"></div>
+                    </li>
+                    <li data-step="3">
+                        <div class="step-text">Нанести клей ПВА-М на участок панели, укрываемый заготовкой фанеры. Уложить фанеру, выровнять по каркасу, закрепить саморезами ЖЦ 5х60 в подготовленные отверстия. Крепить от одного края к противоположному, чтобы лист заготовки равномерно разглаживался по длине и не давал коробления-прогиба по центру. Закручивание производить с отрегулированным моментом на шуруповерте, чтобы шляпки саморезов не выступали за пределы фанеры и не были утопленными глубже 2мм.</div>
+                        <div class="step-image"><img src="../../assets/images/operations/2.1.3/step3.jpg" alt="Крепление фанеры"></div>
+                    </li>
+                    <li data-step="4">
+                        <div class="step-text">Повторить предыдущую операцию для каждой заготовки из фанеры.</div>
+                        <div class="step-image"><img src="../../assets/images/operations/2.1.3/step4.jpg" alt="Повторение операции"></div>
+                    </li>
+                    <li data-step="5">
+                        <div class="step-text">Проверить панель на наличие выступающих шляпок саморезов. Если такие найдутся, докрутить.</div>
+                        <div class="step-image"><img src="../../assets/images/operations/2.1.3/step5.jpg" alt="Проверка шляпок"></div>
+                    </li>
                 </ol>
             </div>
         </section>
@@ -146,11 +162,9 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const qs = document.getElementById('qualitySection');
-            if (!qs) return;
-            const cbs = qs.querySelectorAll('.quality-checkbox');
-            cbs.forEach(cb => cb.addEventListener('change', () => {
-                qs.classList.toggle('completed', Array.from(cbs).every(c => c.checked));
-            }));
+            if (qs) { const cbs = qs.querySelectorAll('.quality-checkbox'); cbs.forEach(cb => cb.addEventListener('change', () => { qs.classList.toggle('completed', Array.from(cbs).every(c => c.checked)); })); }
+            const stepImages = document.querySelectorAll('.step-image');
+            stepImages.forEach(container => { const img = container.querySelector('img'); if (!img) { container.classList.add('hidden-photo'); const li = container.closest('li'); if (li) li.classList.add('no-photo'); return; } if (img.complete) { if (img.naturalWidth === 0 || img.src === window.location.href) { container.classList.add('hidden-photo'); const li = container.closest('li'); if (li) li.classList.add('no-photo'); } } else { img.addEventListener('load', function() { if (img.naturalWidth === 0) { container.classList.add('hidden-photo'); const li = container.closest('li'); if (li) li.classList.add('no-photo'); } }); img.addEventListener('error', function() { container.classList.add('hidden-photo'); const li = container.closest('li'); if (li) li.classList.add('no-photo'); }); } });
         });
     </script>
 </body>

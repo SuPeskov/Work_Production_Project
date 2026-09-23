@@ -8,6 +8,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../css/style.css">
+    <style>
+        .step-image.hidden-photo { display: none !important; }
+        .steps-list > li.no-photo { grid-template-columns: 1fr !important; }
+    </style>
 </head>
 <body class="operation-page">
 
@@ -30,7 +34,10 @@
         </div>
         <div class="top-bar-right">
             <button class="btn-back" onclick="history.back()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                    <line x1="19" y1="12" x2="5" y2="12"/>
+                    <polyline points="12 19 5 12 12 5"/>
+                </svg>
                 <span>Назад</span>
             </button>
         </div>
@@ -43,16 +50,26 @@
         </div>
 
         <section class="operation-section documentation">
-            <h2> Необходимая документация</h2>
+            <h2>📋 Необходимая документация</h2>
             <div class="section-content">
                 <p>Разделы КС.ПП., КР.М., ЭОМ.</p>
                 <a href="https://disk.yandex.ru/i/XfhjwaZGG9pxSg" target="_blank" class="doc-link">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/>
+                        <line x1="16" y1="17" x2="8" y2="17"/>
+                        <polyline points="10 9 9 9 8 9"/>
+                    </svg>
                     Руководство по выравниванию гильз
                 </a>
                 <div class="info-block">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-                    <span>На этапе изготовления панели пола кабель не прокладывается. Производятся работы только по установке гильз. Места расположения гильз под питающий электрокабель в панели пола указаны в чертежах конкретного модуля КР.М.</span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="16" x2="12" y2="12"/>
+                        <line x1="12" y1="8" x2="12.01" y2="8"/>
+                    </svg>
+                    <span>На этапе изготовления панели пола кабель не прокладывается. Производятся работы только по установке гильз. Места расположения гильз под питающий электрокабель в панели пола указаны в чертежах конкретного модуля КР.М (либо на панели пола КС.ПП в ранних версиях чертежей).</span>
                 </div>
             </div>
         </section>
@@ -61,10 +78,22 @@
             <h2>🔧 Производимые операции</h2>
             <div class="section-content">
                 <ol class="steps-list">
-                    <li>Просверлить/выпилить в листовом материале панели пола отверстия под гильзы.</li>
-                    <li>Установить гильзы в подготовленные отверстия. Материал и длина гильз указаны в спецификации. Низ гильз должен быть на одном уровне с нижней плоскостью лаг панели пола.</li>
-                    <li>Зафиксировать гильзы изнутри саморезами к листовому материалу панели пола. Для фиксации вертикального положения гильз допускается установить закладные из досок между лагами вплотную к гильзам и зафиксировать к ним гильзы с помощью перфоленты.</li>
-                    <li>Торец гильзы со стороны нанесения ППУ запечатать обрезками из минеральной ваты на глубину не более 50мм.</li>
+                    <li data-step="1">
+                        <div class="step-text">Просверлить/выпилить в листовом материале панели пола отверстия под гильзы.</div>
+                        <div class="step-image"><img src="../../assets/images/operations/2.1.5/step1.jpg" alt="Сверление отверстий под гильзы"></div>
+                    </li>
+                    <li data-step="2">
+                        <div class="step-text">Установить гильзы в подготовленные отверстия. Материал и длина гильз указаны в спецификации. Низ гильз должен быть на одном уровне с нижней плоскостью лаг панели пола.</div>
+                        <div class="step-image"><img src="../../assets/images/operations/2.1.5/step2.jpg" alt="Установка гильз"></div>
+                    </li>
+                    <li data-step="3">
+                        <div class="step-text">Зафиксировать гильзы изнутри саморезами к листовому материалу панели пола. Для фиксации вертикального положения гильз допускается установить закладные из досок между лагами вплотную к гильзам и зафиксировать к ним гильзы с помощью перфоленты.</div>
+                        <div class="step-image"><img src="../../assets/images/operations/2.1.5/step3.jpg" alt="Фиксация гильз"></div>
+                    </li>
+                    <li data-step="4">
+                        <div class="step-text">Торец гильзы со стороны нанесения ППУ запечатать обрезками из минеральной ваты на глубину не более 50мм.</div>
+                        <div class="step-image"><img src="../../assets/images/operations/2.1.5/step4.jpg" alt="Запечатывание торца гильзы"></div>
+                    </li>
                 </ol>
             </div>
         </section>
@@ -145,11 +174,23 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const qs = document.getElementById('qualitySection');
-            if (!qs) return;
-            const cbs = qs.querySelectorAll('.quality-checkbox');
-            cbs.forEach(cb => cb.addEventListener('change', () => {
-                qs.classList.toggle('completed', Array.from(cbs).every(c => c.checked));
-            }));
+            if (qs) {
+                const cbs = qs.querySelectorAll('.quality-checkbox');
+                cbs.forEach(cb => cb.addEventListener('change', () => {
+                    qs.classList.toggle('completed', Array.from(cbs).every(c => c.checked));
+                }));
+            }
+            const stepImages = document.querySelectorAll('.step-image');
+            stepImages.forEach(container => {
+                const img = container.querySelector('img');
+                if (!img) { container.classList.add('hidden-photo'); const li = container.closest('li'); if (li) li.classList.add('no-photo'); return; }
+                if (img.complete) {
+                    if (img.naturalWidth === 0 || img.src === window.location.href) { container.classList.add('hidden-photo'); const li = container.closest('li'); if (li) li.classList.add('no-photo'); }
+                } else {
+                    img.addEventListener('load', function() { if (img.naturalWidth === 0) { container.classList.add('hidden-photo'); const li = container.closest('li'); if (li) li.classList.add('no-photo'); } });
+                    img.addEventListener('error', function() { container.classList.add('hidden-photo'); const li = container.closest('li'); if (li) li.classList.add('no-photo'); });
+                }
+            });
         });
     </script>
 </body>

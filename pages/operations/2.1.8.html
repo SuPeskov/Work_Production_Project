@@ -8,6 +8,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../css/style.css">
+    <style>
+        .step-image.hidden-photo { display: none !important; }
+        .steps-list > li.no-photo { grid-template-columns: 1fr !important; }
+    </style>
 </head>
 <body class="operation-page">
 
@@ -43,7 +47,7 @@
         </div>
 
         <section class="operation-section documentation">
-            <h2>📋 Необходимая документация</h2>
+            <h2> Необходимая документация</h2>
             <div class="section-content">
                 <p>Раздел КС.ПП</p>
             </div>
@@ -53,10 +57,22 @@
             <h2>🔧 Производимые операции</h2>
             <div class="section-content">
                 <ol class="steps-list">
-                    <li>Раскатать рулон ветрозащиты поверх утеплителя вдоль длинной стороны панели, соблюдая выпуски в стороны, согласно листа КС.ПП.</li>
-                    <li>Нахлест полос ветрозащиты соединить между собой через «замок» и закрепить 2 скобами А-16 к каждой лаге.</li>
-                    <li>Натянуть мембрану и закрепить по периметру каркаса к верхней плоскости скобами А-16 с шагом 300-400мм.</li>
-                    <li>Выпуски по краям панели загнуть и временно закрепить к бокам каркаса панели пола, отступив 10мм от края мембраны, с шагом 500мм. Окончательная фиксация мембраны производится после сборки модуля и укладки мембраны по стенам модуля.</li>
+                    <li data-step="1">
+                        <div class="step-text">Раскатать рулон ветрозащиты поверх утеплителя вдоль длинной стороны панели, соблюдая выпуски в стороны, согласно листа КС.ПП.</div>
+                        <div class="step-image"><img src="../../assets/images/operations/2.1.8/step1.jpg" alt="Раскатка ветрозащиты"></div>
+                    </li>
+                    <li data-step="2">
+                        <div class="step-text">Нахлест полос ветрозащиты соединить между собой через «замок» и закрепить 2 скобами А-16 к каждой лаге.</div>
+                        <div class="step-image"><img src="../../assets/images/operations/2.1.8/step2.jpg" alt="Соединение полос"></div>
+                    </li>
+                    <li data-step="3">
+                        <div class="step-text">Натянуть мембрану и закрепить по периметру каркаса к верхней плоскости скобами А-16 с шагом 300-400мм.</div>
+                        <div class="step-image"><img src="../../assets/images/operations/2.1.8/step3.jpg" alt="Крепление мембраны"></div>
+                    </li>
+                    <li data-step="4">
+                        <div class="step-text">Выпуски по краям панели загнуть и временно закрепить к бокам каркаса панели пола, отступив 10мм от края мембраны, с шагом 500мм. Окончательная фиксация мембраны производится после сборки модуля и укладки мембраны по стенам модуля.</div>
+                        <div class="step-image"><img src="../../assets/images/operations/2.1.8/step4.jpg" alt="Временная фиксация"></div>
+                    </li>
                 </ol>
             </div>
         </section>
@@ -77,7 +93,7 @@
         </section>
 
         <section class="operation-section tools-checklist">
-            <h2>🛠️ Необходимый инструмент и оборудование</h2>
+            <h2>️ Необходимый инструмент и оборудование</h2>
             <div class="section-content">
                 <div class="simple-checklist-container">
                     <label class="simple-checklist-item"><input type="checkbox" class="simple-checkbox"><span class="simple-checkmark"></span><span class="simple-check-text">Пневмостеплер</span></label>
@@ -98,7 +114,7 @@
         </section>
 
         <section class="operation-section photos">
-            <h2>📷 Фотоальбом операции</h2>
+            <h2> Фотоальбом операции</h2>
             <div class="section-content">
                 <div class="qr-container">
                     <div class="qr-code"><img src="../../assets/images/qr/2.1.8.png" alt="QR-код 2.1.8"></div>
@@ -131,11 +147,9 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const qs = document.getElementById('qualitySection');
-            if (!qs) return;
-            const cbs = qs.querySelectorAll('.quality-checkbox');
-            cbs.forEach(cb => cb.addEventListener('change', () => {
-                qs.classList.toggle('completed', Array.from(cbs).every(c => c.checked));
-            }));
+            if (qs) { const cbs = qs.querySelectorAll('.quality-checkbox'); cbs.forEach(cb => cb.addEventListener('change', () => { qs.classList.toggle('completed', Array.from(cbs).every(c => c.checked)); })); }
+            const stepImages = document.querySelectorAll('.step-image');
+            stepImages.forEach(container => { const img = container.querySelector('img'); if (!img) { container.classList.add('hidden-photo'); const li = container.closest('li'); if (li) li.classList.add('no-photo'); return; } if (img.complete) { if (img.naturalWidth === 0 || img.src === window.location.href) { container.classList.add('hidden-photo'); const li = container.closest('li'); if (li) li.classList.add('no-photo'); } } else { img.addEventListener('load', function() { if (img.naturalWidth === 0) { container.classList.add('hidden-photo'); const li = container.closest('li'); if (li) li.classList.add('no-photo'); } }); img.addEventListener('error', function() { container.classList.add('hidden-photo'); const li = container.closest('li'); if (li) li.classList.add('no-photo'); }); } });
         });
     </script>
 </body>

@@ -10,6 +10,18 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="../../css/style.css">
+    
+    <style>
+        /* Дополнительные стили для скрытия пустых блоков с фото */
+        .step-image.hidden-photo {
+            display: none !important;
+        }
+        
+        /* Если фото скрыто, текст занимает всю ширину */
+        .steps-list > li.no-photo {
+            grid-template-columns: 1fr !important;
+        }
+    </style>
 </head>
 <body class="operation-page">
 
@@ -66,175 +78,119 @@
         </section>
 
         <!-- БЛОК 2: Производимые операции С ФОТО -->
-        <section class="operation-section operations-with-images">
+        <section class="operation-section operations">
             <h2>🔧 Производимые операции</h2>
             <div class="section-content">
-                
-                <!-- Шаг 1: Привязка по высоте -->
-                <div class="operation-step-with-image">
-                    <div class="step-text">
-                        <ol class="steps-list" start="1">
-                            <li>
-                                Просверлить в балках по 3 отверстия на каждый стык с лагой. 
-                                <strong>Привязка по высоте балки: 30мм — 95мм — 160мм.</strong>
-                            </li>
-                        </ol>
-                    </div>
-                    <div class="step-image">
-                        <img src="../../assets/images/operations/2.1.1/step1-height.jpg" 
-                             alt="Разметка отверстий по высоте: 30-95-160мм"
-                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                        <div class="image-placeholder">
-                            <span>Фото: разметка 30-95-160мм</span>
+                <ol class="steps-list">
+                    
+                    <!-- Шаг 1 -->
+                    <li data-step="1">
+                        <div class="step-text">
+                            Просверлить в балках по 3 отверстия на каждый стык с лагой. 
+                            <strong>Привязка по высоте балки: 30мм — 95мм — 160мм.</strong>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Шаг 2: Сдвоенные балки -->
-                <div class="operation-step-with-image">
-                    <div class="step-text">
-                        <ol class="steps-list" start="2">
-                            <li>
-                                Собрать сдвоенные балки согласно чертежа. Между собой балки склеивать на ПВА-М 
-                                и стянуть саморезами ЖЦ 6х80 в шахматном порядке с шагом <strong>600мм</strong>.
-                            </li>
-                        </ol>
-                    </div>
-                    <div class="step-image">
-                        <img src="../../assets/images/operations/2.1.1/step2-double-beam.jpg" 
-                             alt="Сдвоенные балки на ПВА-М"
-                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                        <div class="image-placeholder">
-                            <span>Фото: склейка сдвоенных балок</span>
+                        <div class="step-image">
+                            <img src="../../assets/images/operations/2.1.1/step1-height.jpg" 
+                                 alt="Разметка отверстий по высоте: 30-95-160мм">
                         </div>
-                    </div>
-                </div>
+                    </li>
 
-                <!-- Шаг 3: Сборка каркаса -->
-                <div class="operation-step-with-image">
-                    <div class="step-text">
-                        <ol class="steps-list" start="3">
-                            <li>
-                                Собрать каркас, выравнивая балки и лаги по верхней плоскости. 
-                                Крепить балку на 3 самореза ЖЦ 6х140 в каждый торец лаги.
-                            </li>
-                        </ol>
-                    </div>
-                    <div class="step-image">
-                        <img src="../../assets/images/operations/2.1.1/step3-frame.jpg" 
-                             alt="Сборка каркаса панели"
-                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                        <div class="image-placeholder">
-                            <span>Фото: сборка каркаса</span>
+                    <!-- Шаг 2 -->
+                    <li data-step="2">
+                        <div class="step-text">
+                            Собрать сдвоенные балки согласно чертежа. Между собой балки склеивать на ПВА-М 
+                            и стянуть саморезами ЖЦ 6х80 в шахматном порядке с шагом <strong>600мм</strong>.
                         </div>
-                    </div>
-                </div>
-
-                <!-- Шаг 4: Шканты -->
-                <div class="operation-step-with-image">
-                    <div class="step-text">
-                        <ol class="steps-list" start="4">
-                            <li>
-                                <strong>Усилить лаги шкантами 25мм длиной 150мм.</strong> Сделать отверстия диаметром 25мм 
-                                и глубиной 170мм низкооборотистой дрелью. Погрузить шкант на 50мм в клей ПВА-М 
-                                и вставить в просверленное отверстие. Забить шкант киянкой.
-                            </li>
-                        </ol>
-                    </div>
-                    <div class="step-image">
-                        <img src="../../assets/images/operations/2.1.1/step4-shkant.jpg" 
-                             alt="Усиление лаг шкантами 25мм"
-                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                        <div class="image-placeholder">
-                            <span>Фото: установка шкантов</span>
+                        <div class="step-image">
+                            <img src="../../assets/images/operations/2.1.1/step2-double-beam.jpg" 
+                                 alt="Сдвоенные балки на ПВА-М">
                         </div>
-                    </div>
-                </div>
+                    </li>
 
-                <!-- Шаг 5: Торцевые лаги -->
-                <div class="operation-step-with-image">
-                    <div class="step-text">
-                        <ol class="steps-list" start="5">
-                            <li>
-                                Установить торцевые лаги. Торцевые сдвоенные лаги дополнительно склеить ПВА-М 
-                                и стянуть саморезами ЖЦ 6х80 в шахматном порядке с шагом 300мм.
-                            </li>
-                        </ol>
-                    </div>
-                    <div class="step-image">
-                        <img src="../../assets/images/operations/2.1.1/step5-end-beams.jpg" 
-                             alt="Торцевые лаги"
-                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                        <div class="image-placeholder">
-                            <span>Фото: торцевые лаги</span>
+                    <!-- Шаг 3 -->
+                    <li data-step="3">
+                        <div class="step-text">
+                            Собрать каркас, выравнивая балки и лаги по верхней плоскости. 
+                            Крепить балку на 3 самореза ЖЦ 6х140 в каждый торец лаги.
                         </div>
-                    </div>
-                </div>
-
-                <!-- Шаг 6: Закладные перемычки -->
-                <div class="operation-step-with-image">
-                    <div class="step-text">
-                        <ol class="steps-list" start="6">
-                            <li>
-                                <strong>Разметить положение закладных перемычек.</strong> Засверлить в перемычках отверстия 
-                                под саморезы. Сверлить в боковых гранях под углом к торцевым. 
-                                Закрепить закладные на каркасе саморезами ЖЦ 6х120.
-                            </li>
-                        </ol>
-                    </div>
-                    <div class="step-image">
-                        <img src="../../assets/images/operations/2.1.1/step6-bridges.jpg" 
-                             alt="Закладные перемычки"
-                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                        <div class="image-placeholder">
-                            <span>Фото: закладные перемычки</span>
+                        <div class="step-image">
+                            <img src="../../assets/images/operations/2.1.1/step3-frame.jpg" 
+                                 alt="Сборка каркаса панели">
                         </div>
-                    </div>
-                </div>
+                    </li>
 
-                <!-- Шаг 7: Монтаж строп -->
-                <div class="operation-step-with-image">
-                    <div class="step-text">
-                        <ol class="steps-list" start="7">
-                            <li>
-                                <strong>Произвести монтаж строп.</strong> Установить фанеру внутрь кольца стропы, 
-                                выровнять по нижней стороне каркаса и закрепить к каркасу панели пола 
-                                на участке согласно чертежа. Крепить на саморезы ЖЦ 6х80, 
-                                по <strong>18 штук</strong> на каждое крепление стропы.
-                            </li>
-                        </ol>
-                    </div>
-                    <div class="step-image">
-                        <img src="../../assets/images/operations/2.1.1/step7-strops.jpg" 
-                             alt="Монтаж строп с фанерой"
-                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                        <div class="image-placeholder">
-                            <span>Фото: монтаж строп</span>
+                    <!-- Шаг 4 -->
+                    <li data-step="4">
+                        <div class="step-text">
+                            <strong>Усилить лаги шкантами 25мм длиной 150мм.</strong> Сделать отверстия диаметром 25мм 
+                            и глубиной 170мм низкооборотистой дрелью. Погрузить шкант на 50мм в клей ПВА-М 
+                            и вставить в просверленное отверстие. Забить шкант киянкой.
                         </div>
-                    </div>
-                </div>
+                        <div class="step-image">
+                            <img src="../../assets/images/operations/2.1.1/step4-shkant1.jpg" 
+                                 alt="Усиление лаг шкантами 25мм">
+                            <img src="../../assets/images/operations/2.1.1/step4-shkant2.jpg" 
+                                 alt="Усиление лаг шкантами 25мм">
+                            <img src="../../assets/images/operations/2.1.1/step4-shkant3.jpg" 
+                                 alt="Усиление лаг шкантами 25мм">          
+                        </div>
+                    </li>
 
-                <!-- Итоговое фото: перевернутые панели -->
-                <div class="operation-step-with-image final-image">
-                    <div class="step-text">
-                        <p class="final-note">
+                    <!-- Шаг 5 -->
+                    <li data-step="5">
+                        <div class="step-text">
+                            Установить торцевые лаги. Торцевые сдвоенные лаги дополнительно склеить ПВА-М 
+                            и стянуть саморезами ЖЦ 6х80 в шахматном порядке с шагом 300мм.
+                        </div>
+                        <div class="step-image">
+                            <img src="../../assets/images/operations/2.1.1/step5-end-beams.jpg" 
+                                 alt="Торцевые лаги">
+                        </div>
+                    </li>
+
+                    <!-- Шаг 6 -->
+                    <li data-step="6">
+                        <div class="step-text">
+                            <strong>Разметить положение закладных перемычек.</strong> Засверлить в перемычках отверстия 
+                            под саморезы. Сверлить в боковых гранях под углом к торцевым. 
+                            Закрепить закладные на каркасе саморезами ЖЦ 6х120.
+                        </div>
+                        <div class="step-image">
+                            <img src="../../assets/images/operations/2.1.1/step6-bridges.jpg" 
+                                 alt="Закладные перемычки">
+                        </div>
+                    </li>
+
+                    <!-- Шаг 7 -->
+                    <li data-step="7">
+                        <div class="step-text">
+                            <strong>Произвести монтаж строп.</strong> Установить фанеру внутрь кольца стропы, 
+                            выровнять по нижней стороне каркаса и закрепить к каркасу панели пола 
+                            на участке согласно чертежа. Крепить на саморезы ЖЦ 6х80, 
+                            по <strong>18 штук</strong> на каждое крепление стропы.
+                        </div>
+                        <div class="step-image">
+                            <img src="../../assets/images/operations/2.1.1/step7-strops.jpg" 
+                                 alt="Монтаж строп с фанерой">
+                        </div>
+                    </li>
+
+                    <!-- Шаг 8 (финальный) -->
+                    <li data-step="8" class="final-step">
+                        <div class="step-text">
                             <strong>Готовность к ППУ.</strong> Перевернутые панели со стропами готовы к нанесению ППУ-утеплителя.
-                        </p>
-                    </div>
-                    <div class="step-image">
-                        <img src="../../assets/images/operations/2.1.1/step8-ppu-ready.jpg" 
-                             alt="Перевернутые панели перед ППУ"
-                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                        <div class="image-placeholder">
-                            <span>Фото: панели готовы к ППУ</span>
                         </div>
-                    </div>
-                </div>
+                        <div class="step-image">
+                            <img src="../../assets/images/operations/2.1.1/step8-ppu-ready.jpg" 
+                                 alt="Перевернутые панели перед ППУ">
+                        </div>
+                    </li>
 
+                </ol>
             </div>
         </section>
 
-        <!-- БЛОК 3: Контрольные параметры (РАСШИРЕНО) -->
+        <!-- БЛОК 3: Контрольные параметры -->
         <section class="operation-section quality-checklist" id="qualitySection">
             <h2>✅ Контрольные параметры</h2>
             <div class="section-content">
@@ -315,7 +271,7 @@
 
         <!-- БЛОК 6: QR-код на фотоальбом -->
         <section class="operation-section photos">
-            <h2>📷 Фотоальбом операции</h2>
+            <h2> Фотоальбом операции</h2>
             <div class="section-content">
                 <div class="qr-container">
                     <div class="qr-code">
@@ -358,14 +314,62 @@
     <script src="../../js/users.js"></script>
     <script src="../../js/auth.js"></script>
     <script src="../../js/scrollTop.js"></script>
+    
     <script>
+        // === АВТОМАТИЧЕСКОЕ СКРЫТИЕ ПУСТЫХ БЛОКОВ С ФОТО ===
         document.addEventListener('DOMContentLoaded', function() {
+            
+            // 1. Обработка чек-листа контрольных параметров
             const qs = document.getElementById('qualitySection');
-            if (!qs) return;
-            const cbs = qs.querySelectorAll('.quality-checkbox');
-            cbs.forEach(cb => cb.addEventListener('change', () => {
-                qs.classList.toggle('completed', Array.from(cbs).every(c => c.checked));
-            }));
+            if (qs) {
+                const cbs = qs.querySelectorAll('.quality-checkbox');
+                cbs.forEach(cb => cb.addEventListener('change', () => {
+                    qs.classList.toggle('completed', Array.from(cbs).every(c => c.checked));
+                }));
+            }
+            
+            // 2. Автоматическое скрытие блоков с фото, если изображение не загрузилось
+            const stepImages = document.querySelectorAll('.step-image');
+            
+            stepImages.forEach(container => {
+                const img = container.querySelector('img');
+                
+                if (!img) {
+                    // Если тега img вообще нет — скрываем контейнер
+                    container.classList.add('hidden-photo');
+                    const li = container.closest('li');
+                    if (li) li.classList.add('no-photo');
+                    return;
+                }
+                
+                // Проверяем, загрузилось ли изображение
+                if (img.complete) {
+                    // Изображение уже загружено (из кэша)
+                    if (img.naturalWidth === 0 || img.src === window.location.href) {
+                        // Изображение не загрузилось
+                        container.classList.add('hidden-photo');
+                        const li = container.closest('li');
+                        if (li) li.classList.add('no-photo');
+                    }
+                } else {
+                    // Ждём загрузки изображения
+                    img.addEventListener('load', function() {
+                        if (img.naturalWidth === 0) {
+                            container.classList.add('hidden-photo');
+                            const li = container.closest('li');
+                            if (li) li.classList.add('no-photo');
+                        }
+                    });
+                    
+                    img.addEventListener('error', function() {
+                        container.classList.add('hidden-photo');
+                        const li = container.closest('li');
+                        if (li) li.classList.add('no-photo');
+                    });
+                }
+            });
+            
+            console.log('✅ Скрипт скрытия пустых фото инициализирован');
         });
     </script>
 </body>

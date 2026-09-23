@@ -8,6 +8,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../css/style.css">
+    <style>
+        .step-image.hidden-photo { display: none !important; }
+        .steps-list > li.no-photo { grid-template-columns: 1fr !important; }
+    </style>
 </head>
 <body class="operation-page">
 
@@ -61,7 +65,10 @@
                     <span><strong>ПРОИЗВОДИТЬ РАБОТЫ ПО НАНЕСЕНИЮ ППУ БЕЗ СРЕДСТВ ИНДИВИДУАЛЬНОЙ ЗАЩИТЫ ЗАПРЕЩЕНО!</strong></span>
                 </div>
                 <ol class="steps-list">
-                    <li>Утепление ППУ. Производится обученным специалистом строго с соблюдением технологии нанесения ППУ. Толщина слоя ППУ-утеплителя указана в разделе КС.ПП.</li>
+                    <li data-step="1">
+                        <div class="step-text">Утепление ППУ. Производится обученным специалистом строго с соблюдением технологии нанесения ППУ. Толщина слоя ППУ-утеплителя указана в разделе КС.ПП.</div>
+                        <div class="step-image"><img src="../../assets/images/operations/2.1.6/step1.jpg" alt="Нанесение ППУ"></div>
+                    </li>
                 </ol>
             </div>
         </section>
@@ -109,7 +116,7 @@
         </section>
 
         <section class="operation-section photos">
-            <h2>📷 Фотоальбом операции</h2>
+            <h2> Фотоальбом операции</h2>
             <div class="section-content">
                 <div class="qr-container">
                     <div class="qr-code"><img src="../../assets/images/qr/2.1.6.png" alt="QR-код 2.1.6"></div>
@@ -142,11 +149,9 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const qs = document.getElementById('qualitySection');
-            if (!qs) return;
-            const cbs = qs.querySelectorAll('.quality-checkbox');
-            cbs.forEach(cb => cb.addEventListener('change', () => {
-                qs.classList.toggle('completed', Array.from(cbs).every(c => c.checked));
-            }));
+            if (qs) { const cbs = qs.querySelectorAll('.quality-checkbox'); cbs.forEach(cb => cb.addEventListener('change', () => { qs.classList.toggle('completed', Array.from(cbs).every(c => c.checked)); })); }
+            const stepImages = document.querySelectorAll('.step-image');
+            stepImages.forEach(container => { const img = container.querySelector('img'); if (!img) { container.classList.add('hidden-photo'); const li = container.closest('li'); if (li) li.classList.add('no-photo'); return; } if (img.complete) { if (img.naturalWidth === 0 || img.src === window.location.href) { container.classList.add('hidden-photo'); const li = container.closest('li'); if (li) li.classList.add('no-photo'); } } else { img.addEventListener('load', function() { if (img.naturalWidth === 0) { container.classList.add('hidden-photo'); const li = container.closest('li'); if (li) li.classList.add('no-photo'); } }); img.addEventListener('error', function() { container.classList.add('hidden-photo'); const li = container.closest('li'); if (li) li.classList.add('no-photo'); }); } });
         });
     </script>
 </body>

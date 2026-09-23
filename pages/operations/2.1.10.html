@@ -8,6 +8,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../css/style.css">
+    <style>
+        .step-image.hidden-photo { display: none !important; }
+        .steps-list > li.no-photo { grid-template-columns: 1fr !important; }
+    </style>
 </head>
 <body class="operation-page">
 
@@ -53,8 +57,14 @@
             <h2>🔧 Производимые операции</h2>
             <div class="section-content">
                 <ol class="steps-list">
-                    <li>Установить лежни, соблюдая разметку и выпуски согласно листа КС.ПП.</li>
-                    <li>Закрепить на гвозди 60 мм, к каждой лаге по 2 гвоздя.</li>
+                    <li data-step="1">
+                        <div class="step-text">Установить лежни, соблюдая разметку и выпуски согласно листа КС.ПП.</div>
+                        <div class="step-image"><img src="../../assets/images/operations/2.1.10/step1.jpg" alt="Установка лежней"></div>
+                    </li>
+                    <li data-step="2">
+                        <div class="step-text">Закрепить на гвозди 60 мм, к каждой лаге по 2 гвоздя.</div>
+                        <div class="step-image"><img src="../../assets/images/operations/2.1.10/step2.jpg" alt="Крепление лежней"></div>
+                    </li>
                 </ol>
             </div>
         </section>
@@ -77,7 +87,7 @@
         </section>
 
         <section class="operation-section tools-checklist">
-            <h2>🛠️ Необходимый инструмент и оборудование</h2>
+            <h2>️ Необходимый инструмент и оборудование</h2>
             <div class="section-content">
                 <div class="simple-checklist-container">
                     <label class="simple-checklist-item"><input type="checkbox" class="simple-checkbox"><span class="simple-checkmark"></span><span class="simple-check-text">Гвоздезабивной пистолет</span></label>
@@ -88,7 +98,7 @@
         </section>
 
         <section class="operation-section materials-checklist">
-            <h2>📦 Расходные материалы</h2>
+            <h2> Расходные материалы</h2>
             <div class="section-content">
                 <div class="simple-checklist-container">
                     <label class="simple-checklist-item"><input type="checkbox" class="simple-checkbox"><span class="simple-checkmark"></span><span class="simple-check-text">Гвоздь CNW 25/60 BKSCH</span></label>
@@ -130,11 +140,9 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const qs = document.getElementById('qualitySection');
-            if (!qs) return;
-            const cbs = qs.querySelectorAll('.quality-checkbox');
-            cbs.forEach(cb => cb.addEventListener('change', () => {
-                qs.classList.toggle('completed', Array.from(cbs).every(c => c.checked));
-            }));
+            if (qs) { const cbs = qs.querySelectorAll('.quality-checkbox'); cbs.forEach(cb => cb.addEventListener('change', () => { qs.classList.toggle('completed', Array.from(cbs).every(c => c.checked)); })); }
+            const stepImages = document.querySelectorAll('.step-image');
+            stepImages.forEach(container => { const img = container.querySelector('img'); if (!img) { container.classList.add('hidden-photo'); const li = container.closest('li'); if (li) li.classList.add('no-photo'); return; } if (img.complete) { if (img.naturalWidth === 0 || img.src === window.location.href) { container.classList.add('hidden-photo'); const li = container.closest('li'); if (li) li.classList.add('no-photo'); } } else { img.addEventListener('load', function() { if (img.naturalWidth === 0) { container.classList.add('hidden-photo'); const li = container.closest('li'); if (li) li.classList.add('no-photo'); } }); img.addEventListener('error', function() { container.classList.add('hidden-photo'); const li = container.closest('li'); if (li) li.classList.add('no-photo'); }); } });
         });
     </script>
 </body>

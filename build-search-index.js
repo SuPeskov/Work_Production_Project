@@ -10,14 +10,13 @@ const pagesDir = './pages';
 const operationsDir = './pages/operations';
 const outputFile = './js/search-index.json';
 
-// === НОВАЯ СТРУКТУРА: 6 РАЗДЕЛОВ ===
 const sectionPages = [
     { file: 'preparation.html',  title: 'Заготовка',        icon: '' },
-    { file: 'panels.html',       title: 'Сборка панелей',   icon: '🧱' },
-    { file: 'module.html',       title: 'Сборка модуля',    icon: '🏠' },
-    { file: 'options.html',      title: 'Сборка опций',     icon: '🏗️' },
-    { file: 'installation.html', title: 'Монтаж',           icon: '🚜' },
-    { file: 'service.html',      title: 'Сервис',           icon: '🛡️' }
+    { file: 'panels.html',       title: 'Сборка панелей',   icon: '' },
+    { file: 'module.html',       title: 'Сборка модуля',    icon: '' },
+    { file: 'options.html',      title: 'Сборка опций',     icon: '' },
+    { file: 'installation.html', title: 'Монтаж',           icon: '' },
+    { file: 'service.html',      title: 'Сервис',           icon: '' }
 ];
 
 function getAllHtmlFiles(dir) {
@@ -65,7 +64,6 @@ function extractSectionsFromFile(filePath, sectionTitle, icon) {
     const $ = cheerio.load(html);
     const documents = [];
     
-    // 1. Сам раздел
     documents.push({
         id: `section_${path.basename(filePath, '.html')}`,
         type: 'section',
@@ -77,7 +75,6 @@ function extractSectionsFromFile(filePath, sectionTitle, icon) {
         anchor: 'section-1' 
     });
     
-    // 2. Подразделы (аккордеон)
     const subsections = $('.accordion-section');
     console.log(`    🔍 Найдено элементов .accordion-section в HTML: ${subsections.length}`);
     
