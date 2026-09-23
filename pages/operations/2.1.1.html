@@ -13,7 +13,6 @@
 </head>
 <body class="operation-page">
 
-    <!-- Верхняя навигация -->
     <header class="top-bar">
         <div class="top-bar-left">
             <div class="logo-small">
@@ -42,14 +41,13 @@
         </div>
     </header>
 
-    <!-- Основной контент -->
     <main class="operation-main">
         <div class="operation-header">
             <div class="operation-number">Операция 2.1.1</div>
             <h1>Сборка каркаса панели</h1>
         </div>
 
-        <!-- Необходимая документация -->
+        <!-- БЛОК 1: Документация -->
         <section class="operation-section documentation">
             <h2>📋 Необходимая документация</h2>
             <div class="section-content">
@@ -67,145 +65,260 @@
             </div>
         </section>
 
-        <!-- Производимые операции -->
-        <section class="operation-section operations">
+        <!-- БЛОК 2: Производимые операции С ФОТО -->
+        <section class="operation-section operations-with-images">
             <h2>🔧 Производимые операции</h2>
             <div class="section-content">
-                <ol class="steps-list">
-                    <li>Просверлить в балках по 3 отверстия на каждый стык с лагой. Привязка по высоте балки: 40мм - 95мм - 150мм.</li>
-                    <li>Собрать каркас, выравнивая балки и лаги по верхней плоскости. Крепить балку на 3 самореза ЖЦ 6х140 в каждый торец лаги.</li>
-                    <li>Дособрать продольные балки (согласно сечения А-А). Крепить на саморезы ЖЦ 6х120 с шагом 300мм.</li>
-                    <li>Установить торцевые лаги. Торцевые сдвоенные лаги дополнительно склеить ПВА-М и стянуть саморезами ЖЦ 6х80 в шахматном порядке с шагом 300мм.</li>
-                </ol>
+                
+                <!-- Шаг 1: Привязка по высоте -->
+                <div class="operation-step-with-image">
+                    <div class="step-text">
+                        <ol class="steps-list" start="1">
+                            <li>
+                                Просверлить в балках по 3 отверстия на каждый стык с лагой. 
+                                <strong>Привязка по высоте балки: 30мм — 95мм — 160мм.</strong>
+                            </li>
+                        </ol>
+                    </div>
+                    <div class="step-image">
+                        <img src="../../assets/images/operations/2.1.1/step1-height.jpg" 
+                             alt="Разметка отверстий по высоте: 30-95-160мм"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="image-placeholder">
+                            <span>Фото: разметка 30-95-160мм</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Шаг 2: Сдвоенные балки -->
+                <div class="operation-step-with-image">
+                    <div class="step-text">
+                        <ol class="steps-list" start="2">
+                            <li>
+                                Собрать сдвоенные балки согласно чертежа. Между собой балки склеивать на ПВА-М 
+                                и стянуть саморезами ЖЦ 6х80 в шахматном порядке с шагом <strong>600мм</strong>.
+                            </li>
+                        </ol>
+                    </div>
+                    <div class="step-image">
+                        <img src="../../assets/images/operations/2.1.1/step2-double-beam.jpg" 
+                             alt="Сдвоенные балки на ПВА-М"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="image-placeholder">
+                            <span>Фото: склейка сдвоенных балок</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Шаг 3: Сборка каркаса -->
+                <div class="operation-step-with-image">
+                    <div class="step-text">
+                        <ol class="steps-list" start="3">
+                            <li>
+                                Собрать каркас, выравнивая балки и лаги по верхней плоскости. 
+                                Крепить балку на 3 самореза ЖЦ 6х140 в каждый торец лаги.
+                            </li>
+                        </ol>
+                    </div>
+                    <div class="step-image">
+                        <img src="../../assets/images/operations/2.1.1/step3-frame.jpg" 
+                             alt="Сборка каркаса панели"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="image-placeholder">
+                            <span>Фото: сборка каркаса</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Шаг 4: Шканты -->
+                <div class="operation-step-with-image">
+                    <div class="step-text">
+                        <ol class="steps-list" start="4">
+                            <li>
+                                <strong>Усилить лаги шкантами 25мм длиной 150мм.</strong> Сделать отверстия диаметром 25мм 
+                                и глубиной 170мм низкооборотистой дрелью. Погрузить шкант на 50мм в клей ПВА-М 
+                                и вставить в просверленное отверстие. Забить шкант киянкой.
+                            </li>
+                        </ol>
+                    </div>
+                    <div class="step-image">
+                        <img src="../../assets/images/operations/2.1.1/step4-shkant.jpg" 
+                             alt="Усиление лаг шкантами 25мм"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="image-placeholder">
+                            <span>Фото: установка шкантов</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Шаг 5: Торцевые лаги -->
+                <div class="operation-step-with-image">
+                    <div class="step-text">
+                        <ol class="steps-list" start="5">
+                            <li>
+                                Установить торцевые лаги. Торцевые сдвоенные лаги дополнительно склеить ПВА-М 
+                                и стянуть саморезами ЖЦ 6х80 в шахматном порядке с шагом 300мм.
+                            </li>
+                        </ol>
+                    </div>
+                    <div class="step-image">
+                        <img src="../../assets/images/operations/2.1.1/step5-end-beams.jpg" 
+                             alt="Торцевые лаги"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="image-placeholder">
+                            <span>Фото: торцевые лаги</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Шаг 6: Закладные перемычки -->
+                <div class="operation-step-with-image">
+                    <div class="step-text">
+                        <ol class="steps-list" start="6">
+                            <li>
+                                <strong>Разметить положение закладных перемычек.</strong> Засверлить в перемычках отверстия 
+                                под саморезы. Сверлить в боковых гранях под углом к торцевым. 
+                                Закрепить закладные на каркасе саморезами ЖЦ 6х120.
+                            </li>
+                        </ol>
+                    </div>
+                    <div class="step-image">
+                        <img src="../../assets/images/operations/2.1.1/step6-bridges.jpg" 
+                             alt="Закладные перемычки"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="image-placeholder">
+                            <span>Фото: закладные перемычки</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Шаг 7: Монтаж строп -->
+                <div class="operation-step-with-image">
+                    <div class="step-text">
+                        <ol class="steps-list" start="7">
+                            <li>
+                                <strong>Произвести монтаж строп.</strong> Установить фанеру внутрь кольца стропы, 
+                                выровнять по нижней стороне каркаса и закрепить к каркасу панели пола 
+                                на участке согласно чертежа. Крепить на саморезы ЖЦ 6х80, 
+                                по <strong>18 штук</strong> на каждое крепление стропы.
+                            </li>
+                        </ol>
+                    </div>
+                    <div class="step-image">
+                        <img src="../../assets/images/operations/2.1.1/step7-strops.jpg" 
+                             alt="Монтаж строп с фанерой"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="image-placeholder">
+                            <span>Фото: монтаж строп</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Итоговое фото: перевернутые панели -->
+                <div class="operation-step-with-image final-image">
+                    <div class="step-text">
+                        <p class="final-note">
+                            <strong>Готовность к ППУ.</strong> Перевернутые панели со стропами готовы к нанесению ППУ-утеплителя.
+                        </p>
+                    </div>
+                    <div class="step-image">
+                        <img src="../../assets/images/operations/2.1.1/step8-ppu-ready.jpg" 
+                             alt="Перевернутые панели перед ППУ"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="image-placeholder">
+                            <span>Фото: панели готовы к ППУ</span>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </section>
 
-<!-- Контрольные параметры (чек-лист) -->
-<section class="operation-section quality-checklist" id="qualitySection">
-    <h2>✅ Контрольные параметры</h2>
-    <div class="section-content">
-        <div class="checklist-container">
-            <label class="checklist-item">
-                <input type="checkbox" class="quality-checkbox">
-                <span class="checkmark"></span>
-                <span class="check-text"><strong>Внешние габариты панели.</strong> Допуск: ±2мм.</span>
-            </label>
-            <label class="checklist-item">
-                <input type="checkbox" class="quality-checkbox">
-                <span class="checkmark"></span>
-                <span class="check-text"><strong>Отклонения от верхней плоскости панели.</strong> Допуск: 0 -2мм.</span>
-            </label>
-            <label class="checklist-item">
-                <input type="checkbox" class="quality-checkbox">
-                <span class="checkmark"></span>
-                <span class="check-text"><strong>Диагонали панели.</strong> Допуск ±3мм.</span>
-            </label>
-            <label class="checklist-item">
-                <input type="checkbox" class="quality-checkbox">
-                <span class="checkmark"></span>
-                <span class="check-text"><strong>Количество саморезов в узлах крепления:</strong> соответствует требованиям конструкционного узла.</span>
-            </label>
-        </div>
-        <div class="quality-note">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                <polyline points="22 4 12 14.01 9 11.01"/>
-            </svg>
-            <span>По факту контрольных замеров ставится отметка в паспорте ОТК.</span>
-        </div>
-    </div>
-</section>
+        <!-- БЛОК 3: Контрольные параметры (РАСШИРЕНО) -->
+        <section class="operation-section quality-checklist" id="qualitySection">
+            <h2>✅ Контрольные параметры</h2>
+            <div class="section-content">
+                <div class="checklist-container">
+                    <label class="checklist-item">
+                        <input type="checkbox" class="quality-checkbox">
+                        <span class="checkmark"></span>
+                        <span class="check-text"><strong>Внешние габариты панели.</strong> Допуск: ±2мм.</span>
+                    </label>
+                    <label class="checklist-item">
+                        <input type="checkbox" class="quality-checkbox">
+                        <span class="checkmark"></span>
+                        <span class="check-text"><strong>Отклонения от верхней плоскости панели.</strong> Допуск: 0 -2мм.</span>
+                    </label>
+                    <label class="checklist-item">
+                        <input type="checkbox" class="quality-checkbox">
+                        <span class="checkmark"></span>
+                        <span class="check-text"><strong>Диагонали панели.</strong> Допуск ±3мм.</span>
+                    </label>
+                    <label class="checklist-item">
+                        <input type="checkbox" class="quality-checkbox">
+                        <span class="checkmark"></span>
+                        <span class="check-text"><strong>Наличие строп.</strong> Положение строп соответствует проектному.</span>
+                    </label>
+                    <label class="checklist-item">
+                        <input type="checkbox" class="quality-checkbox">
+                        <span class="checkmark"></span>
+                        <span class="check-text"><strong>Стропы выровнены по нижней стороне каркаса.</strong></span>
+                    </label>
+                    <label class="checklist-item">
+                        <input type="checkbox" class="quality-checkbox">
+                        <span class="checkmark"></span>
+                        <span class="check-text"><strong>Количество саморезов в узлах крепления:</strong> соответствует требованиям конструкционного узла.</span>
+                    </label>
+                </div>
+                <div class="quality-note">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                        <polyline points="22 4 12 14.01 9 11.01"/>
+                    </svg>
+                    <span>По факту контрольных замеров ставится отметка в паспорте ОТК.</span>
+                </div>
+            </div>
+        </section>
 
-        <!-- Необходимый инструмент (чек-лист) -->
-<section class="operation-section tools-checklist">
-    <h2>🛠️ Необходимый инструмент и оборудование</h2>
-    <div class="section-content">
-        <div class="simple-checklist-container">
-            <label class="simple-checklist-item">
-                <input type="checkbox" class="simple-checkbox">
-                <span class="simple-checkmark"></span>
-                <span class="simple-check-text">Аккумуляторный шуруповерт с зажимным патроном</span>
-            </label>
-            <label class="simple-checklist-item">
-                <input type="checkbox" class="simple-checkbox">
-                <span class="simple-checkmark"></span>
-                <span class="simple-check-text">Аккумуляторный шуруповерт ударный</span>
-            </label>
-            <label class="simple-checklist-item">
-                <input type="checkbox" class="simple-checkbox">
-                <span class="simple-checkmark"></span>
-                <span class="simple-check-text">Рычаг для выгибания досок</span>
-            </label>
-            <label class="simple-checklist-item">
-                <input type="checkbox" class="simple-checkbox">
-                <span class="simple-checkmark"></span>
-                <span class="simple-check-text">Киянка</span>
-            </label>
-            <label class="simple-checklist-item">
-                <input type="checkbox" class="simple-checkbox">
-                <span class="simple-checkmark"></span>
-                <span class="simple-check-text">Рулетка 10м</span>
-            </label>
-            <label class="simple-checklist-item">
-                <input type="checkbox" class="simple-checkbox">
-                <span class="simple-checkmark"></span>
-                <span class="simple-check-text">Уголок плотницкий металлический</span>
-            </label>
-            <label class="simple-checklist-item">
-                <input type="checkbox" class="simple-checkbox">
-                <span class="simple-checkmark"></span>
-                <span class="simple-check-text">Карандаш простой</span>
-            </label>
-            <label class="simple-checklist-item">
-                <input type="checkbox" class="simple-checkbox">
-                <span class="simple-checkmark"></span>
-                <span class="simple-check-text">Сверло d6х100мм</span>
-            </label>
-            <label class="simple-checklist-item">
-                <input type="checkbox" class="simple-checkbox">
-                <span class="simple-checkmark"></span>
-                <span class="simple-check-text">Бита PZ3</span>
-            </label>
-            <label class="simple-checklist-item">
-                <input type="checkbox" class="simple-checkbox">
-                <span class="simple-checkmark"></span>
-                <span class="simple-check-text">Кисть 100мм</span>
-            </label>
-        </div>
-    </div>
-</section>
+        <!-- БЛОК 4: Инструмент -->
+        <section class="operation-section tools-checklist">
+            <h2>🛠️ Необходимый инструмент и оборудование</h2>
+            <div class="section-content">
+                <div class="simple-checklist-container">
+                    <label class="simple-checklist-item"><input type="checkbox" class="simple-checkbox"><span class="simple-checkmark"></span><span class="simple-check-text">Аккумуляторный шуруповерт с зажимным патроном</span></label>
+                    <label class="simple-checklist-item"><input type="checkbox" class="simple-checkbox"><span class="simple-checkmark"></span><span class="simple-check-text">Аккумуляторный шуруповерт ударный</span></label>
+                    <label class="simple-checklist-item"><input type="checkbox" class="simple-checkbox"><span class="simple-checkmark"></span><span class="simple-check-text">Рычаг для выгибания досок</span></label>
+                    <label class="simple-checklist-item"><input type="checkbox" class="simple-checkbox"><span class="simple-checkmark"></span><span class="simple-check-text">Киянка</span></label>
+                    <label class="simple-checklist-item"><input type="checkbox" class="simple-checkbox"><span class="simple-checkmark"></span><span class="simple-check-text">Рулетка 10м</span></label>
+                    <label class="simple-checklist-item"><input type="checkbox" class="simple-checkbox"><span class="simple-checkmark"></span><span class="simple-check-text">Уголок плотницкий металлический</span></label>
+                    <label class="simple-checklist-item"><input type="checkbox" class="simple-checkbox"><span class="simple-checkmark"></span><span class="simple-check-text">Карандаш простой</span></label>
+                    <label class="simple-checklist-item"><input type="checkbox" class="simple-checkbox"><span class="simple-checkmark"></span><span class="simple-check-text">Сверло d6х100мм</span></label>
+                    <label class="simple-checklist-item"><input type="checkbox" class="simple-checkbox"><span class="simple-checkmark"></span><span class="simple-check-text">Бита PZ3</span></label>
+                    <label class="simple-checklist-item"><input type="checkbox" class="simple-checkbox"><span class="simple-checkmark"></span><span class="simple-check-text">Кисть 100мм</span></label>
+                </div>
+            </div>
+        </section>
 
-<!-- Расходные материалы (чек-лист) -->
-<section class="operation-section materials-checklist">
-    <h2> Расходные материалы</h2>
-    <div class="section-content">
-        <div class="simple-checklist-container">
-            <label class="simple-checklist-item">
-                <input type="checkbox" class="simple-checkbox">
-                <span class="simple-checkmark"></span>
-                <span class="simple-check-text">Саморез ЖЦ 6х140</span>
-            </label>
-            <label class="simple-checklist-item">
-                <input type="checkbox" class="simple-checkbox">
-                <span class="simple-checkmark"></span>
-                <span class="simple-check-text">Саморез ЖЦ 6х120</span>
-            </label>
-            <label class="simple-checklist-item">
-                <input type="checkbox" class="simple-checkbox">
-                <span class="simple-checkmark"></span>
-                <span class="simple-check-text">Клей ПВА-М</span>
-            </label>
-        </div>
-    </div>
-</section>
+        <!-- БЛОК 5: Материалы -->
+        <section class="operation-section materials-checklist">
+            <h2>📦 Расходные материалы</h2>
+            <div class="section-content">
+                <div class="simple-checklist-container">
+                    <label class="simple-checklist-item"><input type="checkbox" class="simple-checkbox"><span class="simple-checkmark"></span><span class="simple-check-text">Саморез ЖЦ 6х140</span></label>
+                    <label class="simple-checklist-item"><input type="checkbox" class="simple-checkbox"><span class="simple-checkmark"></span><span class="simple-check-text">Саморез ЖЦ 6х120</span></label>
+                    <label class="simple-checklist-item"><input type="checkbox" class="simple-checkbox"><span class="simple-checkmark"></span><span class="simple-check-text">Саморез ЖЦ 6х80</span></label>
+                    <label class="simple-checklist-item"><input type="checkbox" class="simple-checkbox"><span class="simple-checkmark"></span><span class="simple-check-text">Клей ПВА-М</span></label>
+                    <label class="simple-checklist-item"><input type="checkbox" class="simple-checkbox"><span class="simple-checkmark"></span><span class="simple-check-text">Шканты 25×150мм</span></label>
+                </div>
+            </div>
+        </section>
 
-        <!-- QR-код на фотоальбом -->
+        <!-- БЛОК 6: QR-код на фотоальбом -->
         <section class="operation-section photos">
             <h2>📷 Фотоальбом операции</h2>
             <div class="section-content">
                 <div class="qr-container">
                     <div class="qr-code">
-                        <!-- Здесь будет QR-код -->
                         <img src="../../assets/images/qr/2.1.1.png" alt="QR-код на фотоальбом 2.1.1">
                     </div>
                     <div class="qr-info">
@@ -223,7 +336,7 @@
             </div>
         </section>
 
-        <!-- Навигация между операциями -->
+        <!-- Навигация -->
         <div class="operation-navigation">
             <a href="../panels.html" class="btn-nav btn-prev">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
@@ -246,23 +359,14 @@
     <script src="../../js/auth.js"></script>
     <script src="../../js/scrollTop.js"></script>
     <script>
-    // Логика чек-листа контрольных параметров
-    document.addEventListener('DOMContentLoaded', function() {
-        const qualitySection = document.getElementById('qualitySection');
-        if (!qualitySection) return;
-        
-        const checkboxes = qualitySection.querySelectorAll('.quality-checkbox');
-        
-        // Слушаем только событие change на checkbox
-        checkboxes.forEach(checkbox => {
-            checkbox.addEventListener('change', checkAllCompleted);
+        document.addEventListener('DOMContentLoaded', function() {
+            const qs = document.getElementById('qualitySection');
+            if (!qs) return;
+            const cbs = qs.querySelectorAll('.quality-checkbox');
+            cbs.forEach(cb => cb.addEventListener('change', () => {
+                qs.classList.toggle('completed', Array.from(cbs).every(c => c.checked));
+            }));
         });
-        
-        function checkAllCompleted() {
-            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
-            qualitySection.classList.toggle('completed', allChecked);
-        }
-    });
     </script>
 </body>
 </html>
