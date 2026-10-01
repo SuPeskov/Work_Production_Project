@@ -3133,3 +3133,94 @@ h1, h2, h3, h4, h5, h6 {
     }
 }
 
+/* === КНОПКА "ОЗНАКОМЛЕН" === */
+.read-status-section {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin: 24px 0;
+}
+
+.read-status-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.btn-read-status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 28px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(26, 86, 50, 0.25);
+    min-width: 280px;
+    justify-content: center;
+}
+
+.btn-read-status:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(26, 86, 50, 0.35);
+}
+
+.btn-read-status:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+/* Состояние "Ознакомлен" — кнопка заблокирована */
+.btn-read-status.is-read {
+    background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+    box-shadow: 0 4px 12px rgba(22, 163, 74, 0.25);
+    cursor: not-allowed;
+    opacity: 0.85;
+}
+
+.btn-read-status.is-read:hover {
+    transform: none;
+    box-shadow: 0 4px 12px rgba(22, 163, 74, 0.25);
+}
+
+.btn-read-status.is-read .icon-unread { display: none; }
+.btn-read-status.is-read .icon-read { display: block; }
+
+/* Пояснение под кнопкой */
+.read-status-disclaimer {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    text-align: center;
+    margin: 0;
+    line-height: 1.5;
+    max-width: 400px;
+}
+
+/* Информация о дате ознакомления */
+.read-status-info {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    font-family: 'Inter', sans-serif;
+    font-style: italic;
+}
+
+/* Адаптив */
+@media (max-width: 768px) {
+    .btn-read-status {
+        min-width: 100%;
+        padding: 12px 20px;
+        font-size: 0.95rem;
+    }
+    
+    .read-status-disclaimer {
+        font-size: 0.8rem;
+    }
+}
