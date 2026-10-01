@@ -48,7 +48,7 @@
         </div>
 
         <!-- 6 карточек разделов -->
-        <div class="cards-grid">
+        <div class="cards-grid" id="cardsGrid">
             
             <!-- Раздел 1: Заготовка -->
             <a href="pages/preparation.html" class="card card-section">
@@ -159,26 +159,22 @@
 
     <script src="js/users.js"></script>
     <script src="js/auth.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            if (!isAuthenticated()) {
-                window.location.href = 'index.html';
-                return;
-            }
-            const user = getCurrentUser();
-            if (user) {
-                document.getElementById('userName').textContent = user.name;
-                document.getElementById('userRole').textContent = user.role;
-                document.getElementById('welcomeName').textContent = user.name;
-                document.getElementById('userAvatar').textContent = user.name.charAt(0).toUpperCase();
-            }
-        });
-
-        document.getElementById('logoutBtn').addEventListener('click', function() {
-            logout();
-            window.location.href = 'index.html';
-        });
-    </script>
+    <script src="js/kb.js"></script>
     <script src="js/countDashboard.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    if (!isAuthenticated()) return;
+    const u = getCurrentUser();
+    if (u.role !== 'Администратор' && u.role !== 'Гость') return;
+    const grid = document.getElementById('cardsGrid');
+    if (!grid) return;
+    const a = document.createElement('a');
+    a.className = 'card card-section card-monitor';
+    a.href = 'monitoring.html';
+    a.style.borderTop = '4px solid #16a34a';
+    a.innerHTML = '<div class="card-number">📊</div><h3>Мониторинг ознакомления</h3><p>Кто из сотрудников производства, с какими операциями и когда подтвердил ознакомление с ППР</p><div class="card-stats"><span class="card-badge" style="background:#f0fdf4;color:#166534;">Открыть матрицу ознакомления →</span></div>';
+    grid.appendChild(a);
+});
+</script>
 </body>
 </html>

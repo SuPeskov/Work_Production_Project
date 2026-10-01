@@ -3224,3 +3224,12 @@ h1, h2, h3, h4, h5, h6 {
         font-size: 0.8rem;
     }
 }
+/* === Ролевая модель: кнопка гостя, карточка мониторинга, заблокированные разделы === */
+.btn-guest { width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 14px; padding: 12px; border: 1.5px dashed #94a3b8; border-radius: 10px; background: #f8fafc; color: #475569; font: 600 14px 'Inter', sans-serif; cursor: pointer; transition: all .2s; }
+.btn-guest:hover { background: #eff6ff; border-color: #2563eb; color: #2563eb; }
+.btn-admin { display: flex; align-items: center; gap: 8px; background: #6d28d9; color: #fff; border-radius: 8px; padding: 8px 14px; font: 600 14px 'Inter', sans-serif; text-decoration: none; margin-right: 12px; }
+.btn-admin:hover { background: #5b21b6; }
+.card-disabled { opacity: .55; cursor: not-allowed !important; }
+.card-badge-lock { background: #fef2f2 !important; color: #b91c1c !important; }
+.card-monitor { border-top: 4px solid #16a34a; }
+.btn-read-status.is-disabled-guest { opacity: .5; cursor: not-allowed; }

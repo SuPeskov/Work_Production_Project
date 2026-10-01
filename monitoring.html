@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мониторинг ознакомления — Скаут Хаус | ППР</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .mon-wrap { max-width: 1180px; margin: 0 auto; padding: 32px 20px 80px; }
+        .mon-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,.05); overflow-x: auto; }
+        .mon-card h2 { font-size: 18px; margin: 0 0 6px; }
+        .mon-note { color: #64748b; font-size: 13px; margin: 0 0 16px; }
+        table.mon-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .mon-table th { text-align: left; padding: 9px 10px; background: #f8fafc; color: #475569; font-weight: 600; border-bottom: 2px solid #e2e8f0; white-space: nowrap; }
+        .mon-table td { padding: 8px 10px; border-bottom: 1px solid #eef2f7; vertical-align: top; }
+        .op-cell { min-width: 260px; }
+        .op-cell a { color: #2563eb; text-decoration: none; font-weight: 600; }
+        .op-cell a:hover { text-decoration: underline; }
+        .read-chip { display: inline-block; background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; border-radius: 6px; padding: 3px 8px; margin: 2px 4px 2px 0; font-size: 12px; }
+        .not-read { color: #cbd5e1; }
+        .mon-stats { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+        .mon-stat { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px 22px; min-width: 150px; }
+        .mon-stat b { display: block; font-size: 26px; color: #2563eb; }
+        .mon-stat span { font-size: 13px; color: #64748b; }
+        .btn-admin { display: flex; align-items: center; gap: 8px; background: #6d28d9; color: #fff; border-radius: 8px; padding: 8px 14px; font: 600 14px Inter, sans-serif; text-decoration: none; margin-right: 12px; }
+        .filter-row { display: flex; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+        .filter-row select { padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font: 400 14px Inter, sans-serif; background: #fff; }
+    </style>
+</head>
+<body class="dashboard-page">
+
+<header class="top-bar">
+    <div class="top-bar-left">
+        <div class="logo-small">
+            <img src="assets/images/logo.svg" alt="Скаут Хаус" class="logo-small-img">
+            <span>Скаут Хаус — Мониторинг</span>
+        </div>
+    </div>
+    <div class="top-bar-right">
+        <div class="user-info">
+            <div class="user-avatar" id="userAvatar">Г</div>
+            <div class="user-details">
+                <span class="user-name" id="userName">Гость</span>
+                <span class="user-role" id="userRole">Роль</span>
+            </div>
+        </div>
+        <button class="btn-logout" id="logoutBtn" title="Выйти">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            <span>Выйти</span>
+        </button>
+    </div>
+</header>
+
+<main class="mon-wrap">
+    <h1 style="font-size:26px;">Мониторинг ознакомления сотрудников</h1>
+    <p class="mon-note">Кто из сотрудников производства, с какими операциями базы знаний и когда подтвердил ознакомление. Отметка «Ознакомлен» сбрасывается при публикации новой версии операции.</p>
+
+    <div class="mon-stats" id="monStats"></div>
+
+    <div class="mon-card">
+        <h2>Матрица ознакомления по операциям</h2>
+        <div class="filter-row">
+            <select id="fltSection"></select>
+            <select id="fltUser"></select>
+        </div>
+        <table class="mon-table">
+            <thead><tr><th>Раздел</th><th class="op-cell">Операция</th><th>Версия</th><th>Ознакомились</th></tr></thead>
+            <tbody id="monTbody"></tbody>
+        </table>
+    </div>
+
+    <div class="mon-card">
+        <h2>Журнал отметок (хронология)</h2>
+        <table class="mon-table">
+            <thead><tr><th>Дата и время</th><th>Сотрудник</th><th class="op-cell">Операция</th><th>Версия</th></tr></thead>
+            <tbody id="logTbody"></tbody>
+        </table>
+    </div>
+</main>
+
+<script src="js/users.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/kb.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Доступна только Администратору и Гостю
+    if (!isAuthenticated()) { location.href = 'index.html'; return; }
+    const me = getCurrentUser();
+    if (me.role !== ROLE_ADMIN && me.role !== ROLE_GUEST) { location.href = 'dashboard.html'; return; }
+
+    document.getElementById('userName').textContent = me.name;
+    document.getElementById('userRole').textContent = me.role;
+    document.getElementById('userAvatar').textContent = me.name.charAt(0).toUpperCase();
+    document.getElementById('logoutBtn').onclick = e => { e.preventDefault(); logout(); location.href = 'index.html'; };
+    if (me.role === ROLE_ADMIN) {
+        const right = document.querySelector('.top-bar-right');
+        right.insertAdjacentHTML('afterbegin', '<a class="btn-admin" href="admin-panel.html">⚙ Управление</a>');
+    } else {
+        document.getElementById('fltUser').disabled = false; // гостю доступен весь мониторинг по ТЗ
+    }
+
+    const workers = kbGetUsers().filter(u => u.role === ROLE_WORKER);
+    const reads = kbGetReads();
+    const readyOps = KB_OPERATIONS.filter(o => o.status === 'ready');
+
+    // Статистика
+    const confirmed = new Set(reads.map(r => r.userId + '|' + r.opId)).size;
+    const total = workers.length * readyOps.length;
+    document.getElementById('monStats').innerHTML = `
+        <div class="mon-stat"><b>${workers.length}</b><span>сотрудников производства</span></div>
+        <div class="mon-stat"><b>${readyOps.length}</b><span>операций в базе</span></div>
+        <div class="mon-stat"><b>${confirmed}</b><span>подтверждений ознакомления</span></div>
+        <div class="mon-stat"><b>${total ? Math.round(confirmed / total * 100) : 0}%</b><span>полнота ознакомления*</span></div>`;
+
+    // Фильтры
+    const fltSection = document.getElementById('fltSection');
+    fltSection.innerHTML = '<option value="">Все разделы</option>' +
+        KB_SECTIONS.map(s => `<option value="${s.id}">${s.title}</option>`).join('');
+    const fltUser = document.getElementById('fltUser');
+    fltUser.innerHTML = '<option value="">Все сотрудники</option>' +
+        workers.map(u => `<option value="${u.username}">${u.name}</option>`).join('');
+
+    function fmt(ts) { return new Date(ts).toLocaleString('ru-RU', { day:'2-digit', month:'2-digit', year:'2-digit', hour:'2-digit', minute:'2-digit' }); }
+
+    function render() {
+        const sec = fltSection.value, usr = fltUser.value;
+        const tbody = document.getElementById('monTbody');
+        tbody.innerHTML = '';
+        readyOps
+            .filter(o => !sec || o.section === sec)
+            .forEach(o => {
+                const section = kbGetSectionById(o.section);
+                const recs = reads.filter(r => r.opId === o.id && r.version === o.version && (!usr || r.userId === usr));
+                const chips = recs.length ? recs.map(r => {
+                    const w = kbFindUser(r.userId);
+                    return `<span class="read-chip">👤 ${w ? w.name : r.userId} · ${fmt(r.timestamp)}</span>`;
+                }).join('') : '<span class="not-read">— никто не ознакомлен —</span>';
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${section ? section.title : o.section}</td>
+                    <td class="op-cell"><a href="${o.url}">${o.id}</a> — ${o.title}</td>
+                    <td>v${o.version}</td><td>${chips}</td>`;
+                tbody.appendChild(tr);
+            });
+
+        const log = document.getElementById('logTbody');
+        log.innerHTML = '';
+        reads.filter(r => !usr || r.userId === usr)
+            .sort((a, b) => b.timestamp.localeCompare(a.timestamp))
+            .forEach(r => {
+                const op = kbGetOperationById(r.opId);
+                const w = kbFindUser(r.userId);
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td style="white-space:nowrap;">${fmt(r.timestamp)}</td>
+                    <td>${w ? w.name : r.userId}</td>
+                    <td class="op-cell">${op ? `<a href="${op.url}">${r.opId}</a> — ${op.title}` : r.opId}</td>
+                    <td>v${r.version}</td>`;
+                log.appendChild(tr);
+            });
+        if (!log.children.length) log.innerHTML = '<tr><td colspan="4" class="not-read">Отметок пока нет</td></tr>';
+    }
+
+    fltSection.addEventListener('change', render);
+    fltUser.addEventListener('change', render);
+    render();
+});
+</script>
+</body>
+</html>

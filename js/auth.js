@@ -83,8 +83,14 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        // Проверка учётных данных
-        const user = validateCredentials(username, password);
+        // Проверка учётных данных: демо-база + локальная база администратора
+        let user = null;
+        if (typeof kbFindUser === 'function') {
+            const u = kbFindUser(username);
+            if (u && u.password === password) user = u;
+        } else {
+            user = validateCredentials(username, password);
+        }
 
         if (user) {
             // Успешный вход

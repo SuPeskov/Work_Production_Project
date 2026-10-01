@@ -10,23 +10,23 @@ const USERS_DB = [
     {
         username: 'admin',
         password: 'admin123',
-        name: 'Администратор',
+        name: 'Администратор системы',
         role: 'Администратор',
-        access: ['production', 'assembly', 'installation', 'engineering', 'finishing', 'maintenance']
+        access: ['preparation', 'panels', 'module', 'options', 'installation', 'service']
     },
     {
         username: 'builder',
         password: 'build456',
         name: 'Иванов Сергей',
-        role: 'Монтажник',
-        access: ['assembly', 'installation']
+        role: 'Сотрудник производства',
+        access: ['panels', 'installation']
     },
     {
         username: 'engineer',
         password: 'eng789',
         name: 'Петрова Анна',
-        role: 'Инженер',
-        access: ['production', 'engineering', 'finishing']
+        role: 'Сотрудник производства',
+        access: ['preparation', 'panels', 'module']
     }
 ];
 
@@ -34,7 +34,18 @@ const USERS_DB = [
  * Найти пользователя по логину
  */
 function findUser(username) {
+    // Сначала локальная база (созданные администратором/изменённые), затем демо-база
+    if (typeof kbGetUsers === 'function') {
+        const local = kbGetUsers().find(u => u.username === username);
+        if (local) return local;
+    }
     return USERS_DB.find(u => u.username === username);
+}
+
+/** Все пользователи: демо-база + созданные администратором */
+function getAllUsers() {
+    if (typeof kbGetUsers === 'function') return kbGetUsers();
+    return USERS_DB.slice();
 }
 
 /**

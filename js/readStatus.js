@@ -1,47 +1,72 @@
 /**
  * readStatus.js — Кнопка "Ознакомлен" с версионностью
+ * - Пользователь берётся из реальной сессии (auth.js/kb.js)
+ * - Отметки пишутся в единый реестр kb_reads_v1 (для страницы мониторинга)
  * - Пользователь не может снять отметку
  * - Кнопка сбрасывается при изменении версии операции
- * - Администратор может сбросить через отдельный интерфейс (пока заглушка)
+ * - Гость кнопку подтвердить не может
  */
 
 document.addEventListener('DOMContentLoaded', function() {
     const btn = document.getElementById('readBtn');
     if (!btn) return;
-    
+
     const opId = btn.dataset.opId;
     const opVersion = parseInt(btn.dataset.opVersion) || 1;
-    const userId = btn.dataset.userId || 'demo_user';
     const statusInfo = document.getElementById('readStatusInfo');
-    
+
+    // Реальный пользователь из сессии
+    const user = (typeof getCurrentUser === 'function') ? getCurrentUser() : null;
+
+    // Гость не подтверждает ознакомление
+    if (user && typeof ROLE_GUEST !== 'undefined' && user.role === ROLE_GUEST) {
+        btn.disabled = true;
+        btn.classList.add('is-disabled-guest');
+        if (statusInfo) statusInfo.textContent = 'Отметка «Ознакомлен» доступна только сотрудникам производства';
+        return;
+    }
+
+    const userId = user ? user.username : 'anonymous';
     // Ключ в localStorage (включает версию)
     const storageKey = `read_${userId}_${opId}_v${opVersion}`;
-    
+
+    function markAsRead(timestamp) {
+        btn.classList.add('is-read');
+        btn.disabled = true;
+        btn.querySelector('.btn-text').textContent = 'Ознакомлен ✓';
+        if (timestamp && statusInfo) {
+            statusInfo.textContent = `Отметка поставлена: ${new Date(timestamp).toLocaleString('ru-RU')}`;
+        }
+    }
+
     // Функция проверки статуса при загрузке
     function checkStatus() {
+        // Единый реестр отметок (используется страницей мониторинга)
+        if (typeof kbHasRead === 'function' && kbHasRead(userId, opId, opVersion)) {
+            const rec = kbGetReads().find(r => r.userId === userId && r.opId === opId && r.version === opVersion);
+            markAsRead(rec && rec.timestamp);
+            return;
+        }
+
         const readData = localStorage.getItem(storageKey);
-        
+
         if (readData) {
             const data = JSON.parse(readData);
-            
-            // Проверяем, совпадает ли версия
+
             if (data.version === opVersion) {
-                // Версия совпадает — показываем как ознакомленную
-                btn.classList.add('is-read');
-                btn.disabled = true; // Блокируем кнопку
-                btn.querySelector('.btn-text').textContent = 'Ознакомлен';
-                statusInfo.textContent = `Отметка поставлена: ${new Date(data.timestamp).toLocaleString('ru-RU')}`;
+                // Миграция старой одиночной отметки в единый реестр
+                if (typeof kbAddRead === 'function') kbAddRead(userId, opId, opVersion);
+                markAsRead(data.timestamp);
             } else {
                 // Версия не совпадает — сбрасываем
                 localStorage.removeItem(storageKey);
                 resetButton();
             }
         } else {
-            // Нет отметки — показываем активную кнопку
             resetButton();
         }
     }
-    
+
     // Сброс кнопки в исходное состояние
     function resetButton() {
         btn.classList.remove('is-read');
@@ -49,40 +74,29 @@ document.addEventListener('DOMContentLoaded', function() {
         btn.querySelector('.btn-text').textContent = 'Ознакомлен';
         statusInfo.textContent = '';
     }
-    
+
     // Обработчик клика
     btn.addEventListener('click', function() {
-        // Если уже ознакомлен — ничего не делаем
-        if (btn.classList.contains('is-read')) {
-            return;
-        }
-        
-        // Ставим отметку
-        const data = {
-            userId: userId,
-            opId: opId,
-            version: opVersion,
-            timestamp: new Date().toISOString()
-        };
-        
-        localStorage.setItem(storageKey, JSON.stringify(data));
-        
-        // Обновляем UI
-        btn.classList.add('is-read');
-        btn.disabled = true;
-        btn.querySelector('.btn-text').textContent = 'Ознакомлен';
-        statusInfo.textContent = `Отметка поставлена: ${new Date().toLocaleString('ru-RU')}`;
-        
-        // Показываем уведомление
+        if (btn.classList.contains('is-read')) return;
+
+        const now = new Date().toISOString();
+
+        // Единый реестр для мониторинга
+        if (typeof kbAddRead === 'function') kbAddRead(userId, opId, opVersion);
+        // Совместимость со старым ключом
+        localStorage.setItem(storageKey, JSON.stringify({
+            userId: userId, opId: opId, version: opVersion, timestamp: now
+        }));
+
+        markAsRead(now);
         showToast('✓ Вы отметили операцию как ознакомленную');
-        
-        console.log(`✅ Операция ${opId} v${opVersion} отмечена как ознакомленная`);
+        console.log(`✅ Операция ${opId} v${opVersion} отмечена как ознакомленная (${userId})`);
     });
-    
+
     // Проверяем статус при загрузке
     checkStatus();
-    
-    console.log(`✅ Кнопка "Ознакомлен" инициализирована для операции ${opId} v${opVersion}`);
+
+    console.log(`✅ Кнопка "Ознакомлен" инициализирована: ${opId} v${opVersion}, пользователь ${userId}`);
 });
 
 // Простой toast (если ещё нет)
