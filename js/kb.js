@@ -155,6 +155,7 @@ function kbAddRead(userId, opId, version) {
 function kbUserCanViewSection(user, sectionId) {
     if (!user) return false;
     if (user.role === ROLE_ADMIN) return true;
+    if (user.role === ROLE_GUEST) return true; // по ТЗ гость видит все разделы и мониторинг
     return Array.isArray(user.access) && user.access.includes(sectionId);
 }
 
