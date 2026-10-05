@@ -198,6 +198,11 @@ document.addEventListener('DOMContentLoaded', function () {
         if (act === 'del') {
             if (!confirm(`Удалить пользователя «${target.name}» (${uname})?`)) return;
             kbDeleteUser(uname);
+            // Если удалён встроенный демо-аккаунт — запоминаем, чтобы
+            // синхронизация при загрузке страницы не «воскрешала» его
+            if (typeof USERS_DB !== 'undefined' && USERS_DB.some(u => u.username === uname)) {
+                kbRememberRemoved(uname);
+            }
             msg('listMsg', 'Пользователь удалён', true);
             renderUsers();
         }

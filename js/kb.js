@@ -18,6 +18,7 @@ const ROLE_GUEST   = 'Гость';
 
 // === Ключи хранилища ===
 const KB_DB_KEY    = 'kb_db_v2';     // { users: [...] } (v2 — сброс «залипших» ролей)
+const KB_MIG_KEY   = 'kb_migrated_v3'; // разовые миграции прав
 const KB_READ_KEY  = 'kb_reads_v1';  // [{ userId, opId, version, timestamp }]
 
 /**
@@ -44,12 +45,40 @@ function kbSyncSeedUsers() {
     const db = kbLoadDb();
     let changed = false;
     USERS_DB.forEach(seed => {
+        // Удалённые администратором встроенные аккаунты не восстанавливаем
+        // (иначе «закрыв» гостевой аккаунт, нельзя было бы убрать ему доступ ко всем разделам)
+        if (db.removed && db.removed.includes(seed.username)) return;
         const u = db.users.find(x => x.username === seed.username);
         if (!u) { db.users.push({ ...seed }); changed = true; return; }
         if (u.role !== seed.role) { u.role = seed.role; changed = true; }
         if (u.name !== seed.name) { u.name = seed.name; changed = true; }
     });
     if (changed) kbSaveDb(db);
+}
+
+/**
+ * Разовые миграции прав доступа (выполняются до синхронизации seed-аккаунтов).
+ * v3: у встроенного демо-гостя guest был полный доступ ко всем разделам —
+ * это дыра в правах; теперь гость обязан иметь явно назначенный список разделов.
+ */
+function kbRunMigrations() {
+    if (!localStorage.getItem(KB_MIG_KEY)) {
+        const db = kbLoadDb();
+        const g = db.users.find(u => u.username === 'guest');
+        if (g && Array.isArray(g.access) && g.access.length > 0) {
+            g.access = [];
+            kbSaveDb(db);
+        }
+        localStorage.setItem(KB_MIG_KEY, '3');
+    }
+}
+
+/** Запомнить удаление встроенного аккаунта — синхронизация не должна его воскрешать */
+function kbRememberRemoved(username) {
+    const db = kbLoadDb();
+    if (!Array.isArray(db.removed)) db.removed = [];
+    if (!db.removed.includes(username)) db.removed.push(username);
+    kbSaveDb(db);
 }
 
 // === Разделы базы знаний ===
@@ -110,19 +139,28 @@ function kbGetCurrentUser() {
     } catch (e) { user = null; }
     if (!user || !user.username) return null;
 
-    let fresh = null;
-    if (typeof USERS_DB !== 'undefined') {
+    // Гость, созданный администратором через панель управления, хранится только
+    // в локальной БД — проверяем её ПЕРВОЙ. Иначе встроенный демо-гость (guest)
+    // перекрывал бы любого созданного гостя и выдавал ему свой полный доступ ко всем разделам.
+    let fresh = kbReadDbUser(user.username);
+    if (!fresh && typeof USERS_DB !== 'undefined') {
         fresh = USERS_DB.find(u => u.username === user.username) || null;
     }
-    if (!fresh) fresh = kbReadDbUser(user.username);
     if (fresh) {
         if (fresh.role !== user.role || JSON.stringify(fresh.access) !== JSON.stringify(user.access)) {
             user.role = fresh.role;
             user.access = fresh.access;
             try { sessionStorage.setItem('modular_house_session', JSON.stringify(user)); } catch (e) {}
         }
+        // Сессия «Гость» без назначенного доступа к разделам не считается авторизованной:
+        // это старый след от убранного быстрого гостевого входа (тогда гость был бесконтрольным).
+        // Сейчас гость создаётся администратором с конкретным списком разделов.
+        if (user.role === ROLE_GUEST && (!Array.isArray(user.access) || user.access.length === 0)) {
+            try { sessionStorage.removeItem('modular_house_session'); } catch (e) {}
+            return null;
+        }
     } else if (user.role === ROLE_GUEST) {
-        // Старая сессия от убранного быстрого гостевого входа — не считаем авторизованной
+        // Старая сессия от убранного быстрого гостевого входа или удалённого аккаунта — не считаем авторизованной
         try { sessionStorage.removeItem('modular_house_session'); } catch (e) {}
         return null;
     }
@@ -231,8 +269,10 @@ function kbAddRead(userId, opId, version) {
 function kbUserCanViewSection(user, sectionId) {
     if (!user) return false;
     if (user.role === ROLE_ADMIN) return true;
-    // Гость и Сотрудник производства — только по назначенному списку разделов
-    return Array.isArray(user.access) && user.access.includes(sectionId);
+    // Гость и Сотрудник производства — только по назначенному списку разделов.
+    // Пустой список доступа = нет доступа ни к одному разделу (в т.ч. для встроенного демо-гостя).
+    if (!Array.isArray(user.access) || user.access.length === 0) return false;
+    return user.access.includes(sectionId);
 }
 
 function kbUserCanViewOperation(user, op) {
@@ -274,7 +314,8 @@ function kbRootPrefix() {
 // ============================================================
 
 document.addEventListener('DOMContentLoaded', function () {
-    // Сначала — самовосстановление демо-аккаунтов (роли из кода)
+    // Сначала — миграции прав и самовосстановление демо-аккаунтов
+    kbRunMigrations();
     kbSyncSeedUsers();
 
     const prefix = kbRootPrefix();

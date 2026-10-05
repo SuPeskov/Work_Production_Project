@@ -33,7 +33,9 @@ const USERS_DB = [
         password: 'guest123',
         name: 'Демонстрационный гость',
         role: 'Гость',
-        access: ['preparation', 'panels', 'module', 'options', 'installation', 'service']
+        // Демо-гость без явно назначенных разделов = доступа нет ни к одному
+        // (доступ выдаёт администратор через панель управления)
+        access: []
     }
 ];
 
