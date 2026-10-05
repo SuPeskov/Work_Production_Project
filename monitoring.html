@@ -28,6 +28,9 @@
         .btn-admin { display: flex; align-items: center; gap: 8px; background: #6d28d9; color: #fff; border-radius: 8px; padding: 8px 14px; font: 600 14px Inter, sans-serif; text-decoration: none; margin-right: 12px; }
         .filter-row { display: flex; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
         .filter-row select { padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font: 400 14px Inter, sans-serif; background: #fff; }
+        .mon-back-row { margin-bottom: 14px; }
+        .btn-back { display: inline-flex; align-items: center; gap: 6px; background: #2563eb; color: #fff; border-radius: 8px; padding: 9px 16px; font: 600 14px Inter, sans-serif; text-decoration: none; transition: background .2s; }
+        .btn-back:hover { background: #1d4ed8; }
     </style>
 </head>
 <body class="dashboard-page">
@@ -47,7 +50,7 @@
                 <span class="user-role" id="userRole">Роль</span>
             </div>
         </div>
-        <button class="btn-logout" id="logoutBtn" title="Выйти">
+        <button class="btn-logout" id="logoutBtn" title="Выйти из системы">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
             <span>Выйти</span>
         </button>
@@ -55,6 +58,9 @@
 </header>
 
 <main class="mon-wrap">
+    <div class="mon-back-row">
+        <a class="btn-back" href="dashboard.html" id="backToKbBtn">← В базу знаний</a>
+    </div>
     <h1 style="font-size:26px;">Мониторинг ознакомления сотрудников</h1>
     <p class="mon-note">Кто из сотрудников производства, с какими операциями базы знаний и когда подтвердил ознакомление. Отметка «Ознакомлен» сбрасывается при публикации новой версии операции.</p>
 
@@ -88,7 +94,8 @@
 document.addEventListener('DOMContentLoaded', function () {
     // Доступна только Администратору и Гостю
     if (!isAuthenticated()) { location.href = 'index.html'; return; }
-    const me = getCurrentUser();
+    const me = (typeof kbGetCurrentUser === 'function') ? kbGetCurrentUser() : getCurrentUser();
+    if (!me) { location.href = 'index.html'; return; }
     if (me.role !== ROLE_ADMIN && me.role !== ROLE_GUEST) { location.href = 'dashboard.html'; return; }
 
     document.getElementById('userName').textContent = me.name;
@@ -101,6 +108,10 @@ document.addEventListener('DOMContentLoaded', function () {
     } else {
         document.getElementById('fltUser').disabled = false; // гостю доступен весь мониторинг по ТЗ
     }
+    // Кнопка «В базу знаний» — выход из мониторинга к изучению разделов
+    // (Гость: без выхода из системы; Администратор: через вход, т.к. мониторинг вне его разделов)
+    const backBtn = document.getElementById('backToKbBtn');
+    if (backBtn && me.role !== ROLE_GUEST) backBtn.style.display = 'none';
 
     const workers = kbGetUsers().filter(u => u.role === ROLE_WORKER);
     const reads = kbGetReads();
