@@ -15,17 +15,22 @@ document.addEventListener('DOMContentLoaded', function() {
     const opVersion = parseInt(btn.dataset.opVersion) || 1;
     const statusInfo = document.getElementById('readStatusInfo');
 
-    // Реальный пользователь из сессии
-    let user = (typeof getCurrentUser === 'function') ? getCurrentUser() : null;
-
-    // Самовосстановление сессии: если роль в sessionStorage устарела
-    // (сессия создана до исправления роли в базе), берём актуальную роль из БД.
-    if (user && typeof kbFindUser === 'function') {
-        const fresh = kbFindUser(user.username);
-        if (fresh && fresh.role !== user.role) {
-            user.role = fresh.role;
-            user.access = fresh.access;
-            try { sessionStorage.setItem('modular_house_session', JSON.stringify(user)); } catch (e) {}
+    // Реальный пользователь из сессии (с самовосстановлением актуальной роли;
+    // работает и на страницах операций, где auth.js не подключён)
+    let user = null;
+    if (typeof kbGetCurrentUser === 'function') {
+        user = kbGetCurrentUser();
+    } else if (typeof getCurrentUser === 'function') {
+        user = getCurrentUser();
+        // Самовосстановление сессии: если роль в sessionStorage устарела
+        // (сессия создана до исправления роли в базе), берём актуальную роль из БД.
+        if (user && typeof kbFindUser === 'function') {
+            const fresh = kbFindUser(user.username);
+            if (fresh && fresh.role !== user.role) {
+                user.role = fresh.role;
+                user.access = fresh.access;
+                try { sessionStorage.setItem('modular_house_session', JSON.stringify(user)); } catch (e) {}
+            }
         }
     }
 

@@ -17,8 +17,20 @@ const ROLE_WORKER  = 'Сотрудник производства';
 const ROLE_GUEST   = 'Гость';
 
 // === Ключи хранилища ===
-const KB_DB_KEY    = 'kb_db_v1';     // { users: [...] }
+const KB_DB_KEY    = 'kb_db_v2';     // { users: [...] } (v2 — сброс «залипших» ролей)
 const KB_READ_KEY  = 'kb_reads_v1';  // [{ userId, opId, version, timestamp }]
+
+/**
+ * Чтение профиля пользователя из локальной БД kb_db без инициализации.
+ * Используется для самовосстановления сессии на страницах операций,
+ * где auth.js не подключён.
+ */
+function kbReadDbUser(username) {
+    let db = null;
+    try { db = JSON.parse(localStorage.getItem(KB_DB_KEY)); } catch (e) { db = null; }
+    if (!db || !Array.isArray(db.users)) return null;
+    return db.users.find(u => u.username === username) || null;
+}
 
 /**
  * Синхронизация встроенных демо-аккаунтов с USERS_DB.
@@ -80,6 +92,41 @@ const PUBLIC_OP_IDS = undefined;
 function kbUserCanConfirmRead(user) {
     // По ТЗ: только Сотрудник производства; Гость и Администратор — нет
     return !!user && user.role === ROLE_WORKER;
+}
+
+/**
+ * Актуальный профиль текущего пользователя (для страниц операций, где
+ * подключены только users.js + kb.js, без auth.js).
+ * 1) Читает сессию из sessionStorage напрямую;
+ * 2) Самовосстанавливает роль/доступ из USERS_DB (встроенные аккаунты)
+ *    или из локальной БД (созданные администратором);
+ * 3) Обновляет сессию в sessionStorage.
+ */
+function kbGetCurrentUser() {
+    let user = null;
+    try {
+        const data = sessionStorage.getItem('modular_house_session');
+        if (data) user = JSON.parse(data);
+    } catch (e) { user = null; }
+    if (!user || !user.username) return null;
+
+    let fresh = null;
+    if (typeof USERS_DB !== 'undefined') {
+        fresh = USERS_DB.find(u => u.username === user.username) || null;
+    }
+    if (!fresh) fresh = kbReadDbUser(user.username);
+    if (fresh) {
+        if (fresh.role !== user.role || JSON.stringify(fresh.access) !== JSON.stringify(user.access)) {
+            user.role = fresh.role;
+            user.access = fresh.access;
+            try { sessionStorage.setItem('modular_house_session', JSON.stringify(user)); } catch (e) {}
+        }
+    } else if (user.role === ROLE_GUEST) {
+        // Старая сессия от убранного быстрого гостевого входа — не считаем авторизованной
+        try { sessionStorage.removeItem('modular_house_session'); } catch (e) {}
+        return null;
+    }
+    return user;
 }
 
 // ============================================================
@@ -236,11 +283,13 @@ document.addEventListener('DOMContentLoaded', function () {
     const isContentPage = window.location.pathname.includes('/pages/');
     const isPublicPage  = /search\.html$/.test(window.location.pathname); // поиск доступен всем
     if (isContentPage && !isPublicPage) {
-        if (!isAuthenticated()) {
+        // kbGetCurrentUser читает сессию напрямую и самовосстанавливает роль
+        // (на страницах операций auth.js не подключён)
+        const user = (typeof kbGetCurrentUser === 'function') ? kbGetCurrentUser() : getCurrentUser();
+        if (!user) {
             window.location.href = prefix + 'index.html';
             return;
         }
-        const user = getCurrentUser();
         const file = window.location.pathname.split('/').pop();
         if (file !== 'dashboard.html' && !kbCanViewPageByFile(user, file)) {
             blockPage(user);
