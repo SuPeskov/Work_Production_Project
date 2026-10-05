@@ -27,12 +27,13 @@
         .roster-btn:hover { background: #dcfce7; border-color: #86efac; }
         .roster-btn .caret { font-size: 10px; color: #16a34a; transition: transform .15s; }
         .roster-wrap.open .roster-btn .caret { transform: rotate(180deg); }
-        .roster-menu { display: none; position: absolute; top: calc(100% + 6px); left: 0; z-index: 60; min-width: 290px; max-height: 260px; overflow-y: auto; background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; box-shadow: 0 8px 24px rgba(15,23,42,.14); padding: 6px; }
+        .roster-menu { display: none; position: absolute; top: calc(100% + 6px); left: 0; z-index: 60; width: min(430px, calc(100vw - 48px)); max-height: 260px; overflow-y: auto; overscroll-behavior: contain; background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; box-shadow: 0 8px 24px rgba(15,23,42,.14); padding: 6px; }
         .roster-wrap.open .roster-menu { display: block; }
-        .roster-item { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 7px 10px; border-radius: 6px; font-size: 13px; color: #1e293b; }
+        /* Двухстрочная карточка: ФИО сверху, дата/время снизу — ничего не обрезается */
+        .roster-item { padding: 7px 10px; border-radius: 6px; font-size: 13px; color: #1e293b; }
         .roster-item:hover { background: #f0fdf4; }
-        .roster-item b { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .roster-item span { color: #64748b; font-size: 12px; white-space: nowrap; }
+        .roster-item b { display: block; font-weight: 600; }
+        .roster-item span { display: block; margin-top: 2px; color: #64748b; font-size: 12px; font-variant-numeric: tabular-nums; letter-spacing: .01em; }
         .roster-empty { padding: 8px 10px; color: #94a3b8; font-size: 12px; }
         .mon-stats { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
         .mon-stat { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px 22px; min-width: 150px; }
@@ -154,7 +155,8 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!recs.length) return '<span class="not-read">— никто не ознакомлен —</span>';
         const items = recs.map(r => {
             const w = kbFindUser(r.userId);
-            return `<div class="roster-item"><b>${w ? w.name : r.userId}</b><span>${fmt(r.timestamp)}</span></div>`;
+            const dt = fmt(r.timestamp);
+            return `<div class="roster-item"><b>${w ? w.name : r.userId}</b><span>Ознакомлен: ${dt}</span></div>`;
         }).join('');
         return `<div class="roster-wrap">
             <button type="button" class="roster-btn" aria-expanded="false" title="Показать список">👥 Ознакомились: ${recs.length} <span class="caret">▼</span></button>
@@ -162,7 +164,7 @@ document.addEventListener('DOMContentLoaded', function () {
         </div>`;
     }
 
-    // Единовременно открыт только один список; закрытие по клику вне и по Escape
+    // Единовременно открыт только один список; закрытие по клику вне, по Escape и при прокрутке страницы
     document.addEventListener('click', e => {
         const wrap = e.target.closest('.roster-wrap');
         document.querySelectorAll('.roster-wrap.open').forEach(w => { if (w !== wrap) closeRoster(w); });
@@ -171,6 +173,7 @@ document.addEventListener('DOMContentLoaded', function () {
     document.addEventListener('keydown', e => {
         if (e.key === 'Escape') document.querySelectorAll('.roster-wrap.open').forEach(closeRoster);
     });
+    window.addEventListener('scroll', () => document.querySelectorAll('.roster-wrap.open').forEach(closeRoster), { passive: true });
     function toggleRoster(w) {
         const open = w.classList.toggle('open');
         w.querySelector('.roster-btn').setAttribute('aria-expanded', open ? 'true' : 'false');
