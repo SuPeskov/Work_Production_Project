@@ -50,8 +50,18 @@ const KB_OPERATIONS = [
     { id: '2.3.1',  section: 'panels', title: 'Каркас панели крыши (в разработке)',             version: 1, status: 'planned', url: '' }
 ];
 
-// === Операции, доступные гостям (публичный фрагмент базы знаний) ===
-const PUBLIC_OP_IDS = ['2.1.1', '2.1.2'];
+
+
+// === Операции, доступные гостям с назначенным доступом к разделу ===
+// undefined (нет ограничения) => все готовые операции раздела;
+// список id => только перечисленные операции раздела.
+const PUBLIC_OP_IDS = undefined;
+
+/** Может ли пользователь подтверждать ознакомление (кнопка «Ознакомлен») */
+function kbUserCanConfirmRead(user) {
+    // По ТЗ: только Сотрудник производства; Гость и Администратор — нет
+    return !!user && user.role === ROLE_WORKER;
+}
 
 // ============================================================
 // Клиентская база данных (localStorage)
@@ -155,15 +165,19 @@ function kbAddRead(userId, opId, version) {
 function kbUserCanViewSection(user, sectionId) {
     if (!user) return false;
     if (user.role === ROLE_ADMIN) return true;
-    if (user.role === ROLE_GUEST) return true; // по ТЗ гость видит все разделы и мониторинг
+    // Гость и Сотрудник производства — только по назначенному списку разделов
     return Array.isArray(user.access) && user.access.includes(sectionId);
 }
 
 function kbUserCanViewOperation(user, op) {
     if (!user) return false;
     if (user.role === ROLE_ADMIN) return true;
-    if (user.role === ROLE_GUEST) return PUBLIC_OP_IDS.includes(op.id);
-    return kbUserCanViewSection(user, op.section);
+    if (!kbUserCanViewSection(user, op.section)) return false;
+    // Дополнительное ограничение для гостя: конкретные операции (если задано)
+    if (user.role === ROLE_GUEST && Array.isArray(PUBLIC_OP_IDS)) {
+        return PUBLIC_OP_IDS.includes(op.id);
+    }
+    return true;
 }
 
 /** Доступен ли раздел по URL-имени файла страницы (preparation.html → preparation) */
@@ -196,15 +210,6 @@ function kbRootPrefix() {
 document.addEventListener('DOMContentLoaded', function () {
     const prefix = kbRootPrefix();
 
-    // --- Гость: форма входа не требуется ---
-    const guestBtn = document.getElementById('guestLoginBtn');
-    if (guestBtn) {
-        guestBtn.addEventListener('click', function () {
-            setSession({ username: 'guest', name: 'Гость', role: ROLE_GUEST, access: [] });
-            window.location.href = prefix + 'dashboard.html';
-        });
-    }
-
     // --- Защита контентных страниц ---
     const isContentPage = window.location.pathname.includes('/pages/');
     const isPublicPage  = /search\.html$/.test(window.location.pathname); // поиск доступен всем
@@ -218,6 +223,12 @@ document.addEventListener('DOMContentLoaded', function () {
         if (file !== 'dashboard.html' && !kbCanViewPageByFile(user, file)) {
             blockPage(user);
             return;
+        }
+        // Страницы операций: дополнительная проверка по реестру (гость — только разрешённые операции)
+        const opMatch = window.location.pathname.match(/operations\/(\d+\.\d+\.\d+)\.html$/);
+        if (opMatch) {
+            const op = kbGetOperationById(opMatch[1]);
+            if (op && !kbUserCanViewOperation(user, op)) { blockPage(user); return; }
         }
     }
 
@@ -240,11 +251,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const avatarEl = document.getElementById('userAvatar');
         if (roleEl) roleEl.textContent = user.role;
         if (avatarEl) avatarEl.textContent = user.name.charAt(0).toUpperCase();
-        if (user.role === ROLE_GUEST) {
-            if (userNameEl) userNameEl.textContent = 'Гость';
-        } else if (user.name) {
-            userNameEl.textContent = user.name;
-        }
+        if (user.name) userNameEl.textContent = user.name;
         const logoutBtn = document.getElementById('logoutBtn');
         if (logoutBtn) {
             logoutBtn.onclick = function (e) {

@@ -23,6 +23,7 @@
         .badge-role { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
         .badge-admin { background: #ede9fe; color: #6d28d9; }
         .badge-worker { background: #dbeafe; color: #1d4ed8; }
+        .badge-guest { background: #fef3c7; color: #92400e; }
         .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 12px; }
         .form-row label { font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 4px; }
         .form-row input[type=text], .form-row input[type=password], .form-row select {
@@ -92,6 +93,7 @@
                 <div><label>Роль</label>
                     <select id="fRole">
                         <option value="Сотрудник производства" selected>Сотрудник производства</option>
+                        <option value="Гость">Гость</option>
                         <option value="Администратор">Администратор</option>
                     </select>
                 </div>
@@ -171,10 +173,11 @@ document.addEventListener('DOMContentLoaded', function () {
             const isSelf = u.username === getCurrentUser().username;
             const sections = u.role === 'Администратор' ? 'все разделы' :
                 (u.access || []).map(id => (kbGetSectionById(id) || {title:id}).title).join(', ') || '—';
+            const badgeCls = u.role === 'Администратор' ? 'badge-admin' : (u.role === 'Гость' ? 'badge-guest' : 'badge-worker');
             tr.innerHTML = `
                 <td>${u.name}</td>
                 <td><code>${u.username}</code></td>
-                <td><span class="badge-role ${u.role==='Администратор'?'badge-admin':'badge-worker'}">${u.role}</span></td>
+                <td><span class="badge-role ${badgeCls}">${u.role}</span></td>
                 <td>${sections}</td>
                 <td style="white-space:nowrap;">
                     <button class="btn-sm" data-a="pass" data-u="${u.username}">Пароль…</button>

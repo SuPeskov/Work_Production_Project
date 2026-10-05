@@ -27,6 +27,13 @@ const USERS_DB = [
         name: 'Петрова Анна',
         role: 'Сотрудник производства',
         access: ['preparation', 'panels', 'module']
+    },
+    {
+        username: 'guest',
+        password: 'guest123',
+        name: 'Демонстрационный гость',
+        role: 'Гость',
+        access: ['preparation', 'panels', 'module', 'options', 'installation', 'service']
     }
 ];
 

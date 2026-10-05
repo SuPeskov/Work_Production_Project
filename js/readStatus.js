@@ -18,11 +18,19 @@ document.addEventListener('DOMContentLoaded', function() {
     // Реальный пользователь из сессии
     const user = (typeof getCurrentUser === 'function') ? getCurrentUser() : null;
 
-    // Гость не подтверждает ознакомление
-    if (user && typeof ROLE_GUEST !== 'undefined' && user.role === ROLE_GUEST) {
+    // Подтверждать ознакомление может только Сотрудник производства.
+    // Гость и Администратор — кнопка неактивна.
+    const canConfirm = (typeof kbUserCanConfirmRead === 'function')
+        ? kbUserCanConfirmRead(user)
+        : (!!user && user.role !== ROLE_GUEST);
+    if (!canConfirm) {
         btn.disabled = true;
         btn.classList.add('is-disabled-guest');
-        if (statusInfo) statusInfo.textContent = 'Отметка «Ознакомлен» доступна только сотрудникам производства';
+        if (statusInfo) {
+            statusInfo.textContent = (user && user.role === ROLE_ADMIN)
+                ? 'Отметка «Ознакомлен» доступна только сотрудникам производства'
+                : 'Гостевой доступ: просмотр без подтверждения ознакомления';
+        }
         return;
     }
 
