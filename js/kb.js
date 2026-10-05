@@ -37,17 +37,16 @@ const KB_OPERATIONS = [
     { id: '2.1.2',  section: 'panels', title: 'Монтаж листового материала на каркас',              version: 1, status: 'ready',   url: 'pages/operations/2.1.2.html' },
     { id: '2.1.3',  section: 'panels', title: 'Монтаж второго слоя листового материала',                         version: 1, status: 'ready',   url: 'pages/operations/2.1.3.html' },
     { id: '2.1.4',  section: 'panels', title: 'Монтаж трассы канализации',                          version: 1, status: 'ready',   url: 'pages/operations/2.1.4.html' },
-    { id: '2.1.5',  section: 'panels', title: 'Прокладка электролиний и установка гильз',                          version: 1, status: 'ready',   url: 'pages/operations/2.1.5.html' },
-    { id: '2.1.6',  section: 'panels', title: 'Утепление панели ППУ',                     version: 1, status: 'ready',   url: 'pages/operations/2.1.6.html' },
-    { id: '2.1.7',  section: 'panels', title: 'Утепление панели мин.ватой',                        version: 1, status: 'ready',   url: 'pages/operations/2.1.7.html' },
-    { id: '2.1.8',  section: 'panels', title: 'Укладка ветрозащиты',                 version: 1, status: 'ready',   url: 'pages/operations/2.1.8.html' },
-    { id: '2.1.9',  section: 'panels', title: 'Укладка защитной сетки',      version: 1, status: 'ready',   url: 'pages/operations/2.1.9.html' },
-    { id: '2.1.10', section: 'panels', title: 'Установка закладных элементов панели пола',      version: 1, status: 'ready',   url: 'pages/operations/2.1.10.html' },
-    { id: '2.1.11', section: 'panels', title: 'Приёмка и маркировка готовой панели пола',       version: 1, status: 'ready',   url: 'pages/operations/2.1.11.html' },
+    { id: '2.1.5',  section: 'panels', title: 'Прокладка электролиний',                          version: 1, status: 'ready',   url: 'pages/operations/2.1.5.html' },
+    { id: '2.1.6',  section: 'panels', title: 'Монтаж гильз под коммуникации',                     version: 1, status: 'ready',   url: 'pages/operations/2.1.6.html' },
+    { id: '2.1.7',  section: 'panels', title: 'Утепление панели ППУ',                        version: 1, status: 'ready',   url: 'pages/operations/2.1.7.html' },
+    { id: '2.1.8',  section: 'panels', title: 'Утепление панели мин.ватой',                 version: 1, status: 'ready',   url: 'pages/operations/2.1.8.html' },
+    { id: '2.1.9',  section: 'panels', title: 'Монтаж ветрозащиты, монтаж уплотнительных манжет / проклейка гильз пароизоляционным скотчем',      version: 1, status: 'ready',   url: 'pages/operations/2.1.9.html' },
+    { id: '2.1.10', section: 'panels', title: 'Монтаж защитной сетки',      version: 1, status: 'ready',   url: 'pages/operations/2.1.10.html' },
+    { id: '2.1.11', section: 'panels', title: 'Монтаж лежней',       version: 1, status: 'ready',   url: 'pages/operations/2.1.11.html' },
+    { id: '2.1.12', section: 'panels', title: 'Контроль качества панели. Маркировка',       version: 1, status: 'ready',   url: 'pages/operations/2.1.12.html' },
     { id: '2.2.1',  section: 'panels', title: 'Сборка каркаса кровельной панели',                    version: 1, status: 'ready',   url: 'pages/operations/2.2.1.html' },
-    { id: '2.2.2',  section: 'panels', title: 'Укладка листового материала на каркас панели',                      version: 1, status: 'ready',   url: 'pages/operations/2.2.2.html' },
-    // Пример операции в статусе «в разработке» (страница появится позже):
-    { id: '2.3.1',  section: 'panels', title: 'Каркас панели крыши (в разработке)',             version: 1, status: 'planned', url: '' }
+    { id: '2.2.2',  section: 'panels', title: 'Укладка листового материала на каркас панели',                      version: 1, status: 'ready',   url: 'pages/operations/2.2.2.html' }
 ];
 
 
