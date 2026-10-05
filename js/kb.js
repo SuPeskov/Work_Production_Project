@@ -374,24 +374,44 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // --- Администратор: ссылка на панель управления (или возврат в базу знаний, если админ уже в панели/мониторинге) ---
-    if (isAuthenticated() && kbGetCurrentUser().role === ROLE_ADMIN) {
-        const onBackPage = /admin-panel\.html|monitoring\.html/.test(window.location.pathname);
+    // --- Кнопки в шапке по ролям ---
+    // Гость: только «В базу знаний» (на любой странице).
+    // Администратор: «Управление» (переход на admin-panel.html) везде, кроме самой панели;
+    //                 на monitoring.html и admin-panel.html дополнительно «В базу знаний».
+    if (isAuthenticated()) {
+        const user = kbGetCurrentUser();
         const right = document.querySelector('.top-bar-right');
-        if (right && !right.querySelector('.btn-admin')) {
-            const a = document.createElement('a');
-            a.className = 'btn-admin';
-            if (onBackPage) {
-                a.href = prefix + 'dashboard.html';
-                a.title = 'Вернуться к разделам базы знаний';
-                a.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg><span>В базу знаний</span>';
+        if (right) {
+            const ICON_BACK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>';
+            const ICON_GEAR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06-.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l-.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
+
+            const mkBtn = (cls, href, title, html) => {
+                const a = document.createElement('a');
+                a.className = cls;
+                a.href = prefix + href;
+                a.title = title;
+                a.innerHTML = html;
                 right.insertBefore(a, right.firstChild);
-                return;
+                return a;
+            };
+
+            if (user.role === ROLE_GUEST) {
+                // Гость — одна кнопка возврата в базу знаний
+                if (!right.querySelector('.btn-back-kb')) {
+                    mkBtn('btn-admin btn-back-kb', 'dashboard.html', 'Вернуться к разделам базы знаний', ICON_BACK + '<span>В базу знаний</span>');
+                }
+            } else if (user.role === ROLE_ADMIN) {
+                const onAdminPanel = /admin-panel\.html/.test(window.location.pathname);
+                const onMonitoring = /monitoring\.html/.test(window.location.pathname);
+                // «В базу знаний» — на мониторинге и на самой панели управления
+                if ((onMonitoring || onAdminPanel) && !right.querySelector('.btn-back-kb')) {
+                    mkBtn('btn-admin btn-back-kb', 'dashboard.html', 'Вернуться к разделам базы знаний', ICON_BACK + '<span>В базу знаний</span>');
+                }
+                // «Управление» — везде, кроме самой панели управления
+                if (!onAdminPanel && !right.querySelector('.btn-manage')) {
+                    mkBtn('btn-admin btn-manage', 'admin-panel.html', 'Панель управления', ICON_GEAR + '<span>Управление</span>');
+                }
             }
-            a.href = prefix + 'admin-panel.html';
-            a.title = 'Панель управления';
-            a.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>Управление</span>';
-            right.insertBefore(a, right.firstChild);
         }
     }
 
