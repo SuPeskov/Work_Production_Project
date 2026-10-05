@@ -116,16 +116,31 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('userRole').textContent = me.role;
     document.getElementById('userAvatar').textContent = me.name.charAt(0).toUpperCase();
     document.getElementById('logoutBtn').onclick = e => { e.preventDefault(); logout(); location.href = 'index.html'; };
-    if (me.role === ROLE_ADMIN) {
-        const right = document.querySelector('.top-bar-right');
-        right.insertAdjacentHTML('afterbegin', '<a class="btn-admin" href="admin-panel.html">⚙ Управление</a>');
-    } else {
+    if (me.role === ROLE_WORKER || me.role === ROLE_GUEST) {
         document.getElementById('fltUser').disabled = false; // гостю доступен весь мониторинг по ТЗ
     }
-    // Кнопка «В базу знаний» — выход из мониторинга к изучению разделов
-    // (Гость: без выхода из системы; Администратор: через вход, т.к. мониторинг вне его разделов)
+    // Правая кнопка в шапке на странице мониторинга — всегда «В базу знаний»
+    // (заменяем «Управление», если kb.js успел её добавить; если ещё нет — подменим позже)
+    function forceBackButton() {
+        const right = document.querySelector('.top-bar-right');
+        if (!right) return;
+        let a = right.querySelector('.btn-admin');
+        if (!a) {
+            a = document.createElement('a');
+            a.className = 'btn-admin';
+            right.insertBefore(a, right.firstChild);
+        }
+        a.href = 'dashboard.html';
+        a.title = 'Вернуться к разделам базы знаний';
+        a.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg><span>В базу знаний</span>';
+    }
+    forceBackButton();
+    // Страховка: если kb.js добавит свою кнопку после нашего скрипта — перезапишем её
+    new MutationObserver(forceBackButton).observe(document.querySelector('.top-bar-right'), { childList: true });
+    setTimeout(forceBackButton, 300);
+    // Нижняя ссылка «← В базу знаний» скрыта — дублирует правую кнопку в шапке
     const backBtn = document.getElementById('backToKbBtn');
-    if (backBtn && me.role !== ROLE_GUEST) backBtn.style.display = 'none';
+    if (backBtn) backBtn.parentElement.style.display = 'none';
 
     const workers = kbGetUsers().filter(u => u.role === ROLE_WORKER);
     const reads = kbGetReads();

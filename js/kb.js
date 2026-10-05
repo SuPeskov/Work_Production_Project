@@ -374,14 +374,14 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // --- Администратор: ссылка на панель управления (или возврат в базу знаний, если админ уже в панели) ---
+    // --- Администратор: ссылка на панель управления (или возврат в базу знаний, если админ уже в панели/мониторинге) ---
     if (isAuthenticated() && kbGetCurrentUser().role === ROLE_ADMIN) {
-        const inAdminPanel = /admin-panel\.html/.test(window.location.pathname);
+        const onBackPage = /admin-panel\.html|monitoring\.html/.test(window.location.pathname);
         const right = document.querySelector('.top-bar-right');
         if (right && !right.querySelector('.btn-admin')) {
             const a = document.createElement('a');
             a.className = 'btn-admin';
-            if (inAdminPanel) {
+            if (onBackPage) {
                 a.href = prefix + 'dashboard.html';
                 a.title = 'Вернуться к разделам базы знаний';
                 a.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg><span>В базу знаний</span>';
