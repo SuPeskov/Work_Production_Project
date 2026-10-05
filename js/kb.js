@@ -20,6 +20,26 @@ const ROLE_GUEST   = 'Гость';
 const KB_DB_KEY    = 'kb_db_v1';     // { users: [...] }
 const KB_READ_KEY  = 'kb_reads_v1';  // [{ userId, opId, version, timestamp }]
 
+/**
+ * Синхронизация встроенных демо-аккаунтов с USERS_DB.
+ * Исправляет «залипшие» записи в localStorage после смены ролей в коде
+ * (например, у builder раньше была роль «Гость»). Пользовательские поля
+ * (пароль, доступ), изменённые администратором, сохраняются; роль и ФИО
+ * встроенного аккаунта всегда берутся из кода.
+ */
+function kbSyncSeedUsers() {
+    if (typeof USERS_DB === 'undefined') return;
+    const db = kbLoadDb();
+    let changed = false;
+    USERS_DB.forEach(seed => {
+        const u = db.users.find(x => x.username === seed.username);
+        if (!u) { db.users.push({ ...seed }); changed = true; return; }
+        if (u.role !== seed.role) { u.role = seed.role; changed = true; }
+        if (u.name !== seed.name) { u.name = seed.name; changed = true; }
+    });
+    if (changed) kbSaveDb(db);
+}
+
 // === Разделы базы знаний ===
 const KB_SECTIONS = [
     { id: 'preparation', num: '01', title: 'Заготовка',        img: 'assets/images/icons/section-1-zagotovka.svg', desc: 'Напил элементов каркаса, листового материала, отделочной доски и заготовка для сборки модуля', page: 'pages/preparation.html' },
@@ -207,6 +227,9 @@ function kbRootPrefix() {
 // ============================================================
 
 document.addEventListener('DOMContentLoaded', function () {
+    // Сначала — самовосстановление демо-аккаунтов (роли из кода)
+    kbSyncSeedUsers();
+
     const prefix = kbRootPrefix();
 
     // --- Защита контентных страниц ---

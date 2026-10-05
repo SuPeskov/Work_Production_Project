@@ -16,20 +16,37 @@ document.addEventListener('DOMContentLoaded', function() {
     const statusInfo = document.getElementById('readStatusInfo');
 
     // Реальный пользователь из сессии
-    const user = (typeof getCurrentUser === 'function') ? getCurrentUser() : null;
+    let user = (typeof getCurrentUser === 'function') ? getCurrentUser() : null;
+
+    // Самовосстановление сессии: если роль в sessionStorage устарела
+    // (сессия создана до исправления роли в базе), берём актуальную роль из БД.
+    if (user && typeof kbFindUser === 'function') {
+        const fresh = kbFindUser(user.username);
+        if (fresh && fresh.role !== user.role) {
+            user.role = fresh.role;
+            user.access = fresh.access;
+            try { sessionStorage.setItem('modular_house_session', JSON.stringify(user)); } catch (e) {}
+        }
+    }
 
     // Подтверждать ознакомление может только Сотрудник производства.
     // Гость и Администратор — кнопка неактивна.
     const canConfirm = (typeof kbUserCanConfirmRead === 'function')
         ? kbUserCanConfirmRead(user)
-        : (!!user && user.role !== ROLE_GUEST);
+        : (!!user && user.role === 'Сотрудник производства');
     if (!canConfirm) {
         btn.disabled = true;
         btn.classList.add('is-disabled-guest');
         if (statusInfo) {
-            statusInfo.textContent = (user && user.role === ROLE_ADMIN)
-                ? 'Отметка «Ознакомлен» доступна только сотрудникам производства'
-                : 'Гостевой доступ: просмотр без подтверждения ознакомления';
+            if (!user) {
+                statusInfo.textContent = 'Войдите в систему, чтобы подтвердить ознакомление';
+            } else if (user.role === ROLE_ADMIN) {
+                statusInfo.textContent = 'Роль «Администратор»: просмотр без подтверждения ознакомления';
+            } else if (user.role === ROLE_GUEST) {
+                statusInfo.textContent = 'Гостевой доступ: просмотр без подтверждения ознакомления';
+            } else {
+                statusInfo.textContent = 'Отметка «Ознакомлен» доступна только сотрудникам производства';
+            }
         }
         return;
     }
