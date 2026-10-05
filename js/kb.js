@@ -22,12 +22,12 @@ const KB_READ_KEY  = 'kb_reads_v1';  // [{ userId, opId, version, timestamp }]
 
 // === Разделы базы знаний ===
 const KB_SECTIONS = [
-    { id: 'preparation', num: '01', title: 'Заготовка',        icon: '🪵', desc: 'Напил элементов каркаса, листового материала, отделочной доски и заготовка для сборки модуля', page: 'pages/preparation.html' },
-    { id: 'panels',      num: '02', title: 'Сборка панелей',   icon: '🧱', desc: 'Изготовление панелей пола, крыши, внешних и внутренних стен модуля', page: 'pages/panels.html' },
-    { id: 'module',      num: '03', title: 'Сборка модуля',    icon: '🏠', desc: 'Сборка каркаса, кровельные работы, внутренний контур, инженерные системы', page: 'pages/module.html' },
-    { id: 'options',     num: '04', title: 'Сборка опций',     icon: '🪟', desc: 'Террасы, веранды, навесы и крыльца — дополнительные конструкции к модулю', page: 'pages/options.html' },
-    { id: 'installation',num: '05', title: 'Монтаж',           icon: '🏗️', desc: 'Доставка, установка и стыковка модулей на фундаменте заказчика', page: 'pages/installation.html' },
-    { id: 'service',     num: '06', title: 'Сервис',           icon: '🛡️', desc: 'Сезонное обслуживание, гарантийный ремонт и диагностика систем', page: 'pages/service.html' }
+    { id: 'preparation', num: '01', title: 'Заготовка',        img: 'assets/images/icons/section-1-zagotovka.svg', desc: 'Напил элементов каркаса, листового материала, отделочной доски и заготовка для сборки модуля', page: 'pages/preparation.html' },
+    { id: 'panels',      num: '02', title: 'Сборка панелей',   img: 'assets/images/icons/section-2-panels.svg', desc: 'Изготовление панелей пола, крыши, внешних и внутренних стен модуля', page: 'pages/panels.html' },
+    { id: 'module',      num: '03', title: 'Сборка модуля',    img: 'assets/images/icons/section-3-module.svg', desc: 'Сборка каркаса, кровельные работы, внутренний контур, инженерные системы', page: 'pages/module.html' },
+    { id: 'options',     num: '04', title: 'Сборка опций',     img: 'assets/images/icons/section-4-options.svg', desc: 'Террасы, веранды, навесы и крыльца — дополнительные конструкции к модулю', page: 'pages/options.html' },
+    { id: 'installation',num: '05', title: 'Монтаж',           img: 'assets/images/icons/section-5-installation.svg', desc: 'Доставка, установка и стыковка модулей на фундаменте заказчика', page: 'pages/installation.html' },
+    { id: 'service',     num: '06', title: 'Сервис',           img: 'assets/images/icons/section-6-service.svg', desc: 'Сезонное обслуживание, гарантийный ремонт и диагностика систем', page: 'pages/service.html' }
 ];
 
 // === Реестр операций ===
@@ -155,6 +155,7 @@ function kbAddRead(userId, opId, version) {
 function kbUserCanViewSection(user, sectionId) {
     if (!user) return false;
     if (user.role === ROLE_ADMIN) return true;
+    if (user.role === ROLE_GUEST) return true; // по ТЗ гость видит все разделы и мониторинг
     return Array.isArray(user.access) && user.access.includes(sectionId);
 }
 
@@ -282,7 +283,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const opsTotal = KB_OPERATIONS.filter(o => o.section === sec.id).length;
             card.innerHTML = `
                 <div class="card-number">${sec.num}</div>
-                <div class="card-icon">${sec.icon}</div>
+                <div class="card-icon"><img src="${sec.img}" alt=""></div>
                 <h3>${sec.title}</h3>
                 <p>${sec.desc}</p>
                 <div class="card-stats">
