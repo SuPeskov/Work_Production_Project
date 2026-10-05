@@ -358,7 +358,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // --- Панель пользователя в шапке + выход ---
     const userNameEl = document.getElementById('userName');
     if (userNameEl && isAuthenticated()) {
-        const user = getCurrentUser();
+        const user = kbGetCurrentUser();
         const roleEl = document.getElementById('userRole');
         const avatarEl = document.getElementById('userAvatar');
         if (roleEl) roleEl.textContent = user.role;
@@ -375,7 +375,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // --- Администратор: ссылка на панель управления (или возврат в базу знаний, если админ уже в панели) ---
-    if (isAuthenticated() && getCurrentUser().role === ROLE_ADMIN) {
+    if (isAuthenticated() && kbGetCurrentUser().role === ROLE_ADMIN) {
         const inAdminPanel = /admin-panel\.html/.test(window.location.pathname);
         const right = document.querySelector('.top-bar-right');
         if (right && !right.querySelector('.btn-admin')) {
@@ -398,7 +398,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // --- Dashboard: карточки разделов из реестра с фильтром по правам ---
     const grid = document.getElementById('cardsGrid');
     if (grid && isAuthenticated()) {
-        const user = getCurrentUser();
+        const user = kbGetCurrentUser();
         grid.innerHTML = '';
         let visible = 0;
         KB_SECTIONS.forEach(sec => {
@@ -430,7 +430,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // --- Страницы раздела: скрыть ссылки на операции без права ---
     if (isContentPage && isAuthenticated()) {
-        const user = getCurrentUser();
+        const user = kbGetCurrentUser();
         document.querySelectorAll('a[href*="operations/"]').forEach(link => {
             const m = link.getAttribute('href').match(/(\d+\.\d+\.\d+)\.html/);
             if (!m) return;
