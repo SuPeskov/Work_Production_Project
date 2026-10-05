@@ -374,12 +374,20 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // --- Администратор: ссылка на панель управления ---
+    // --- Администратор: ссылка на панель управления (или возврат в базу знаний, если админ уже в панели) ---
     if (isAuthenticated() && getCurrentUser().role === ROLE_ADMIN) {
+        const inAdminPanel = /admin-panel\.html/.test(window.location.pathname);
         const right = document.querySelector('.top-bar-right');
         if (right && !right.querySelector('.btn-admin')) {
             const a = document.createElement('a');
             a.className = 'btn-admin';
+            if (inAdminPanel) {
+                a.href = prefix + 'dashboard.html';
+                a.title = 'Вернуться к разделам базы знаний';
+                a.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg><span>В базу знаний</span>';
+                right.insertBefore(a, right.firstChild);
+                return;
+            }
             a.href = prefix + 'admin-panel.html';
             a.title = 'Панель управления';
             a.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>Управление</span>';
