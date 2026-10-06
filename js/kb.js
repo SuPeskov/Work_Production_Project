@@ -107,8 +107,12 @@ const KB_OPERATIONS = [
     { id: '2.1.11', section: 'panels', title: 'Монтаж лежней',       version: 1, status: 'ready',   url: 'pages/operations/2.1.11.html' },
     { id: '2.1.12', section: 'panels', title: 'Контроль качества панели. Маркировка',       version: 1, status: 'ready',   url: 'pages/operations/2.1.12.html' },
     { id: '2.2.1',  section: 'panels', title: 'Сборка каркаса кровельной панели',                    version: 1, status: 'ready',   url: 'pages/operations/2.2.1.html' },
-    { id: '2.2.2',  section: 'panels', title: 'Укладка листового материала на каркас панели',                      version: 1, status: 'ready',   url: 'pages/operations/2.2.2.html' }
+    { id: '2.2.2',  section: 'panels', title: 'Укладка листового материала на каркас панели',                      version: 1, status: 'ready',   url: 'pages/operations/2.2.2.html' },
+    { id: '2.2.3',  section: 'panels', title: 'Монтаж финишной отделки',                      version: 1, status: 'ready',   url: 'pages/operations/2.2.3.html' }
 ];
+
+// Служебные страницы (шаблон и т.п.) — не являются операциями, доступ свободный
+const KB_SERVICE_PAGES = ['template'];
 
 
 

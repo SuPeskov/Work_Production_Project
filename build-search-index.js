@@ -53,7 +53,7 @@ function extractOperation(filePath) {
         id: `op_${operationNumber}`,
         type: 'operation',
         title: title,
-        number: operationNumber,
+        number: path.basename(filePath, '.html'),
         content: sections.join(' '),
         url: filePath.replace('./pages/', 'pages/').replace(/\\/g, '/')
     };
@@ -122,7 +122,9 @@ function buildSearchIndex() {
     }
     
     console.log('📄 2. Индексация операций:');
-    const operationFiles = getAllHtmlFiles(operationsDir);
+    let operationFiles = getAllHtmlFiles(operationsDir);
+    // Служебные страницы (шаблоны) не индексируются
+    operationFiles = operationFiles.filter(f => !/template\.html$/i.test(path.basename(f)));
     console.log(`  Найдено файлов операций: ${operationFiles.length}`);
     
     for (const file of operationFiles) {
