@@ -35,15 +35,19 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Подтверждать ознакомление может только Сотрудник производства.
-    // Гость и Администратор — кнопка неактивна.
-    const canConfirm = (typeof kbUserCanConfirmRead === 'function')
+    // Гость и Администратор — кнопка неактивна. Черновики (пустые заготовки) — тоже.
+    const opRec = (typeof kbGetOperationById === 'function') ? kbGetOperationById(opId) : null;
+    const isDraft = !!(opRec && opRec.status === 'draft');
+    const canConfirm = (!isDraft) && ((typeof kbUserCanConfirmRead === 'function')
         ? kbUserCanConfirmRead(user)
-        : (!!user && user.role === 'Сотрудник производства');
+        : (!!user && user.role === 'Сотрудник производства'));
     if (!canConfirm) {
         btn.disabled = true;
         btn.classList.add('is-disabled-guest');
         if (statusInfo) {
-            if (!user) {
+            if (isDraft) {
+                statusInfo.textContent = 'Черновик операции: страница наполняется администратором, подтверждение ознакомления недоступно';
+            } else if (!user) {
                 statusInfo.textContent = 'Войдите в систему, чтобы подтвердить ознакомление';
             } else if (user.role === ROLE_ADMIN) {
                 statusInfo.textContent = 'Роль «Администратор»: просмотр без подтверждения ознакомления';

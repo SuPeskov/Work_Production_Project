@@ -108,7 +108,17 @@ const KB_OPERATIONS = [
     { id: '2.1.12', section: 'panels', title: 'Контроль качества панели. Маркировка',       version: 1, status: 'ready',   url: 'pages/operations/2.1.12.html' },
     { id: '2.2.1',  section: 'panels', title: 'Сборка каркаса кровельной панели',                    version: 1, status: 'ready',   url: 'pages/operations/2.2.1.html' },
     { id: '2.2.2',  section: 'panels', title: 'Укладка листового материала на каркас панели',                      version: 1, status: 'ready',   url: 'pages/operations/2.2.2.html' },
-    { id: '2.2.3',  section: 'panels', title: 'Монтаж финишной отделки',                      version: 1, status: 'ready',   url: 'pages/operations/2.2.3.html' }
+    { id: '2.2.3',  section: 'panels', title: 'Монтаж финишной отделки',                      version: 1, status: 'ready',   url: 'pages/operations/2.2.3.html' },
+
+    // Подраздел 2.3 — Сборка панели стены внешней (пустые страницы-заготовки по шаблону template.html)
+    { id: '2.3.1',  section: 'panels', title: 'Сборка каркаса внешней стены',                version: 1, status: 'draft',   url: 'pages/operations/2.3.1.html' },
+    { id: '2.3.2',  section: 'panels', title: 'Установка оконных и дверных проёмов',         version: 1, status: 'draft',   url: 'pages/operations/2.3.2.html' },
+    { id: '2.3.3',  section: 'panels', title: 'Монтаж плит с внешней стороны',               version: 1, status: 'draft',   url: 'pages/operations/2.3.3.html' },
+
+    // Подраздел 2.4 — Сборка панели стены внутренней (пустые страницы-заготовки по шаблону template.html)
+    { id: '2.4.1',  section: 'panels', title: 'Сборка каркаса внутренней стены',             version: 1, status: 'draft',   url: 'pages/operations/2.4.1.html' },
+    { id: '2.4.2',  section: 'panels', title: 'Установка дверных проёмов',                   version: 1, status: 'draft',   url: 'pages/operations/2.4.2.html' },
+    { id: '2.4.3',  section: 'panels', title: 'Монтаж ГВЛ/ОСБ',                              version: 1, status: 'draft',   url: 'pages/operations/2.4.3.html' }
 ];
 
 // Служебные страницы (шаблон и т.п.) — не являются операциями, доступ свободный
@@ -292,6 +302,12 @@ function kbUserCanViewOperation(user, op) {
 
 /** Доступен ли раздел по URL-имени файла страницы (preparation.html → preparation) */
 function kbCanViewPageByFile(user, fileName) {
+    // Заготовки операций (status: 'draft') видны только администратору до наполнения
+    const opMatch = fileName.match(/^(\d+\.\d+\.\d+)\.html$/);
+    if (opMatch) {
+        const op = kbGetOperationById(opMatch[1]);
+        if (op && op.status === 'draft' && user.role !== ROLE_ADMIN) return false;
+    }
     const sec = KB_SECTIONS.find(s => s.page.endsWith(fileName));
     if (!sec) return true; // неизвестная страница — не блокируем
     return kbUserCanViewSection(user, sec.id);
@@ -462,6 +478,21 @@ document.addEventListener('DOMContentLoaded', function () {
             if (op && !kbUserCanViewOperation(user, op)) {
                 const li = link.closest('li');
                 if (li) li.remove(); else link.remove();
+                return;
+            }
+            // Черновики (пустые заготовки): неадминам ссылка запрещена даже внутри разрешённого раздела
+            if (op && op.status === 'draft' && user.role !== ROLE_ADMIN) {
+                const li = link.closest('li');
+                if (li) li.remove(); else link.remove();
+                return;
+            }
+            // Администратору — пометка «черновик»
+            if (op && op.status === 'draft' && user.role === ROLE_ADMIN && !link.querySelector('.op-draft-badge')) {
+                const b = document.createElement('span');
+                b.className = 'op-draft-badge';
+                b.textContent = ' ✎ черновик';
+                b.style.cssText = 'font-size:11px;color:#b45309;background:#fef3c7;padding:2px 6px;border-radius:6px;margin-left:6px;white-space:nowrap;';
+                link.appendChild(b);
             }
         });
     }
