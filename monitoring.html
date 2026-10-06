@@ -179,8 +179,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const backBtn = document.getElementById('backToKbBtn');
     if (backBtn) backBtn.parentElement.style.display = 'none';
 
-    // Санитизация: убираем из реестра отметки удалённых пользователей,
-    // чтобы списки ознакомившихся не росли за счёт «мёртвых» аккаунтов.
+    // Санитизация: отметки удалённых пользователей переносятся в архивный журнал
+    // (сохраняются в хронологии) и убираются из активного реестра (матрицы).
     kbSanitizeReads();
     const workers = kbGetUsers().filter(u => u.role === ROLE_WORKER);
     const reads = kbGetReads();
@@ -200,8 +200,11 @@ document.addEventListener('DOMContentLoaded', function () {
     fltSection.innerHTML = '<option value="">Все разделы</option>' +
         KB_SECTIONS.map(s => `<option value="${s.id}">${s.title}</option>`).join('');
     const fltUser = document.getElementById('fltUser');
+    // В фильтре — все сотрудники, когда-либо подтверждавшие ознакомление
+    // (включая удалённых: их отметки остаются в журнале хронологии)
+    const logIds = [...new Set([...workers.map(u => u.username), ...kbGetArchive().map(r => r.userId)])];
     fltUser.innerHTML = '<option value="">Все сотрудники</option>' +
-        workers.map(u => `<option value="${u.username}">${u.name}</option>`).join('');
+        logIds.map(id => { const u = kbFindUser(id); return `<option value="${id}">${u ? u.name : id + ' (удалён)'}</option>`; }).join('');
 
     function fmt(ts) { return new Date(ts).toLocaleString('ru-RU', { day:'2-digit', month:'2-digit', year:'2-digit', hour:'2-digit', minute:'2-digit' }); }
 
@@ -261,14 +264,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const log = document.getElementById('logTbody');
         log.innerHTML = '';
-        reads.filter(r => !usr || r.userId === usr)
+        // Хронология = активные отметки + архив удалённых пользователей
+        const allLog = [...reads, ...kbGetArchive()];
+        allLog.filter(r => !usr || r.userId === usr)
             .sort((a, b) => b.timestamp.localeCompare(a.timestamp))
             .forEach(r => {
                 const op = kbGetOperationById(r.opId);
                 const w = kbFindUser(r.userId);
+                const nameCell = w ? w.name : (r.name || r.userId) + ' <i style="color:#94a3b8;">(удалён)</i>';
                 const tr = document.createElement('tr');
                 tr.innerHTML = `<td style="white-space:nowrap;">${fmt(r.timestamp)}</td>
-                    <td>${w ? w.name : r.userId}</td>
+                    <td>${nameCell}</td>
                     <td class="op-cell">${op ? `<a href="${op.url}">${r.opId}</a> — ${op.title}` : r.opId}</td>
                     <td>v${r.version}</td>`;
                 log.appendChild(tr);

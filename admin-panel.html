@@ -196,7 +196,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!target) return;
 
         if (act === 'del') {
-            if (!confirm(`Удалить пользователя «${target.name}» (${uname})?`)) return;
+            if (!confirm(`Удалить пользователя «${target.name}» (${uname})?\nЕго отметки останутся в журнале хронологии, но исчезнут из матрицы ознакомления.`)) return;
             kbDeleteUser(uname);
             // Если удалён встроенный демо-аккаунт — запоминаем, чтобы
             // синхронизация при загрузке страницы не «воскрешала» его
