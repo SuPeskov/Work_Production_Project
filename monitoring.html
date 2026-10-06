@@ -179,6 +179,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const backBtn = document.getElementById('backToKbBtn');
     if (backBtn) backBtn.parentElement.style.display = 'none';
 
+    // Санитизация: убираем из реестра отметки удалённых пользователей,
+    // чтобы списки ознакомившихся не росли за счёт «мёртвых» аккаунтов.
+    kbSanitizeReads();
     const workers = kbGetUsers().filter(u => u.role === ROLE_WORKER);
     const reads = kbGetReads();
     const readyOps = KB_OPERATIONS.filter(o => o.status === 'ready');

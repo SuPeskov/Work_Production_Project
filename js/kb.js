@@ -233,6 +233,27 @@ function kbDeleteUser(username) {
     const db = kbLoadDb();
     db.users = db.users.filter(u => u.username !== username);
     kbSaveDb(db);
+    // При удалении пользователя его отметки «Ознакомлен» аннулируются,
+    // чтобы список ознакомившихся в мониторинге не рос за счёт «мёртвых» аккаунтов.
+    kbPurgeReadsForUser(username);
+}
+
+/** Удалить все отметки «Ознакомлен» конкретного пользователя из реестра */
+function kbPurgeReadsForUser(userId) {
+    const reads = kbGetReads().filter(r => r.userId !== userId);
+    localStorage.setItem(KB_READ_KEY, JSON.stringify(reads));
+}
+
+/** Санитизация реестра: убрать отметки пользователей, которых нет в базе (в т.ч. встроенных демо-аккаунтов). Вызывается при загрузке страницы мониторинга. */
+function kbSanitizeReads() {
+    const before = kbGetReads().length;
+    const validIds = new Set(kbGetUsers().map(u => u.username));
+    const reads = kbGetReads().filter(r => validIds.has(r.userId));
+    if (reads.length !== before) {
+        localStorage.setItem(KB_READ_KEY, JSON.stringify(reads));
+        return before - reads.length;
+    }
+    return 0;
 }
 
 function kbSetPassword(username, newPassword) {
