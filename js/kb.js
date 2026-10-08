@@ -202,15 +202,23 @@ function kbSaveDb(db) {
     localStorage.setItem(KB_DB_KEY, JSON.stringify(db));
 }
 
-/** Все пользователи (демо-база + созданные администратором) */
+/** Все пользователи (демо-база + созданные администратором).
+ *  Удалённые администратором встроенные аккаунты (db.removed) НЕ показываются —
+ *  иначе они «воскресали» в списке после перезагрузки страницы. */
 function kbGetUsers() {
+    const db = kbLoadDb();
+    const removed = Array.isArray(db.removed) ? db.removed : [];
     const byName = {};
-    ((typeof USERS_DB !== 'undefined') ? USERS_DB : []).forEach(u => { byName[u.username] = u; });
-    kbLoadDb().users.forEach(u => { byName[u.username] = u; });
+    ((typeof USERS_DB !== 'undefined') ? USERS_DB : [])
+        .filter(u => !removed.includes(u.username))
+        .forEach(u => { byName[u.username] = u; });
+    db.users.forEach(u => { byName[u.username] = u; });
     return Object.values(byName);
 }
 
 function kbFindUser(username) {
+    const db = kbLoadDb();
+    if (Array.isArray(db.removed) && db.removed.includes(username)) return null;
     return kbGetUsers().find(u => u.username === username) || null;
 }
 
@@ -232,9 +240,15 @@ function kbAddUser(data) {
 
 function kbDeleteUser(username) {
     const db = kbLoadDb();
-    const existing = db.users.find(u => u.username === username);
+    const existing = db.users.find(u => u.username === username) ||
+        ((typeof USERS_DB !== 'undefined') ? USERS_DB.find(u => u.username === username) : null);
     const displayName = existing ? existing.name : username;
     db.users = db.users.filter(u => u.username !== username);
+    // Запоминаем удаление встроенного аккаунта: синхронизация seed-пользователей
+    // и kbGetUsers больше не должны его показывать (иначе он «воскресал» в списке
+    // после перезагрузки страницы)
+    if (!Array.isArray(db.removed)) db.removed = [];
+    if (!db.removed.includes(username)) db.removed.push(username);
     kbSaveDb(db);
     // Отметки удалённого пользователя НЕ теряются: они переносятся в архивный
     // журнал (остаются в «Журнале отметок (хронология)») и исчезают из матрицы
