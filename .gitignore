@@ -1,2 +1,7 @@
 # Dependencies
 node_modules/
+# Server artifacts
+server/node_modules/
+server/kb.sqlite*
+server/server.log
+public/
