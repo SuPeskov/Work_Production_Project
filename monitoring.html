@@ -247,6 +247,8 @@ document.addEventListener('DOMContentLoaded', function () {
         tbody.innerHTML = '';
         readyOps
             .filter(o => !sec || o.section === sec)
+            // При выборе конкретного сотрудника показываем только те операции, с которыми он ознакомлен
+            .filter(o => !usr || reads.some(r => r.opId === o.id && r.version === o.version && r.userId === usr))
             .forEach(o => {
                 const section = kbGetSectionById(o.section);
                 const recs = reads.filter(r => r.opId === o.id && r.version === o.version && (!usr || r.userId === usr));
@@ -261,6 +263,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     <td>v${o.version}</td><td>${chips}</td>`;
                 tbody.appendChild(tr);
             });
+        if (!tbody.children.length) {
+            tbody.innerHTML = `<tr><td colspan="4" class="not-read">${usr ? 'Этот сотрудник пока не подтвердил ознакомление ни с одной операцией' : 'Нет данных'}</td></tr>`;
+        }
 
         const log = document.getElementById('logTbody');
         log.innerHTML = '';
