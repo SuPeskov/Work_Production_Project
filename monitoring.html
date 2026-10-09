@@ -94,10 +94,12 @@
 
     <div class="mon-card">
         <h2>Журнал отметок (хронология)</h2>
+        <p class="not-read" style="margin:0 0 8px;">Полная история ознакомлений — всегда выводятся все записи, включая удалённых сотрудников. Список разбит на страницы по 30 строк.</p>
         <table class="mon-table">
             <thead><tr><th>Дата и время</th><th>Сотрудник</th><th class="op-cell">Операция</th><th>Версия</th></tr></thead>
             <tbody id="logTbody"></tbody>
         </table>
+        <div id="logPager" style="display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap;"></div>
     </div>
 </main>
 
@@ -200,6 +202,8 @@ document.addEventListener('DOMContentLoaded', function () {
     fltSection.innerHTML = '<option value="">Все разделы</option>' +
         KB_SECTIONS.map(s => `<option value="${s.id}">${s.title}</option>`).join('');
     const fltUser = document.getElementById('fltUser');
+    const LOG_PAGE_SIZE = 30;
+    let logPage = 1;
     // В фильтре — все сотрудники, когда-либо подтверждавшие ознакомление
     // (включая удалённых: их отметки остаются в журнале хронологии)
     const logIds = [...new Set([...workers.map(u => u.username), ...kbGetArchive().map(r => r.userId)])];
@@ -269,26 +273,44 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const log = document.getElementById('logTbody');
         log.innerHTML = '';
-        // Хронология = активные отметки + архив удалённых пользователей
-        const allLog = [...reads, ...kbGetArchive()];
-        allLog.filter(r => !usr || r.userId === usr)
-            .sort((a, b) => b.timestamp.localeCompare(a.timestamp))
-            .forEach(r => {
-                const op = kbGetOperationById(r.opId);
-                const w = kbFindUser(r.userId);
-                const nameCell = w ? w.name : (r.name || r.userId) + ' <i style="color:#94a3b8;">(удалён)</i>';
-                const tr = document.createElement('tr');
-                tr.innerHTML = `<td style="white-space:nowrap;">${fmt(r.timestamp)}</td>
-                    <td>${nameCell}</td>
-                    <td class="op-cell">${op ? `<a href="${op.url}">${r.opId}</a> — ${op.title}` : r.opId}</td>
-                    <td>v${r.version}</td>`;
-                log.appendChild(tr);
-            });
-        if (!log.children.length) log.innerHTML = '<tr><td colspan="4" class="not-read">Отметок пока нет</td></tr>';
+        // Хронология = ВСЕГДА полная история: активные отметки + архив удалённых пользователей.
+        // Фильтр по сотруднику влияет только на матрицу, но не на журнал.
+        const allLog = [...reads, ...kbGetArchive()]
+            .sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+        const totalPages = Math.max(1, Math.ceil(allLog.length / LOG_PAGE_SIZE));
+        if (logPage > totalPages) logPage = totalPages;
+        if (logPage < 1) logPage = 1;
+        allLog.slice((logPage - 1) * LOG_PAGE_SIZE, logPage * LOG_PAGE_SIZE).forEach(r => {
+            const op = kbGetOperationById(r.opId);
+            const w = kbFindUser(r.userId);
+            const nameCell = w ? w.name : (r.name || r.userId) + ' <i style="color:#94a3b8;">(удалён)</i>';
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td style="white-space:nowrap;">${fmt(r.timestamp)}</td>
+                <td>${nameCell}</td>
+                <td class="op-cell">${op ? `<a href="${op.url}">${r.opId}</a> — ${op.title}` : r.opId}</td>
+                <td>v${r.version}</td>`;
+            log.appendChild(tr);
+        });
+        if (!allLog.length) log.innerHTML = '<tr><td colspan="4" class="not-read">Отметок пока нет</td></tr>';
+
+        // Постраничная навигация журнала (по 30 строк)
+        const pager = document.getElementById('logPager');
+        if (totalPages > 1) {
+            pager.innerHTML = `
+                <button type="button" id="logPrev" ${logPage === 1 ? 'disabled' : ''} style="padding:6px 12px;border:1px solid #cbd5e1;border-radius:8px;background:#fff;cursor:pointer;">← Назад</button>
+                <span>Страница ${logPage} из ${totalPages} · всего записей: ${allLog.length}</span>
+                <button type="button" id="logNext" ${logPage === totalPages ? 'disabled' : ''} style="padding:6px 12px;border:1px solid #cbd5e1;border-radius:8px;background:#fff;cursor:pointer;">Вперёд →</button>`;
+            pager.style.display = 'flex';
+            document.getElementById('logPrev').onclick = () => { if (logPage > 1) { logPage--; render(); } };
+            document.getElementById('logNext').onclick = () => { if (logPage < totalPages) { logPage++; render(); } };
+        } else {
+            pager.innerHTML = allLog.length ? `<span>Всего записей: ${allLog.length}</span>` : '';
+            pager.style.display = allLog.length ? 'flex' : 'none';
+        }
     }
 
     fltSection.addEventListener('change', render);
-    fltUser.addEventListener('change', render);
+    fltUser.addEventListener('change', () => { logPage = 1; render(); });
     render();
 });
 </script>
