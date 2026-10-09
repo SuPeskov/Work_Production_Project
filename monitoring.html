@@ -35,6 +35,14 @@
         .roster-item b { display: block; font-weight: 600; }
         .roster-item span { display: block; margin-top: 2px; color: #64748b; font-size: 12px; font-variant-numeric: tabular-nums; letter-spacing: .01em; }
         .roster-empty { padding: 8px 10px; color: #94a3b8; font-size: 12px; }
+        /* Выпадающий список операций раздела в матрице */
+        .roster-btn.ops-btn { background: #eff6ff; border-color: #bfdbfe; color: #1e40af; }
+        .roster-btn.ops-btn:hover { background: #dbeafe; border-color: #93c5fd; }
+        .roster-btn.ops-btn .caret { color: #2563eb; }
+        .roster-btn.ops-btn strong a, .roster-item b a { color: inherit; text-decoration: none; }
+        .roster-btn.ops-btn strong a:hover, .roster-item b a:hover { text-decoration: underline; }
+        .roster-menu.wide { width: min(560px, calc(100vw - 48px)); }
+        .roster-menu.wide .roster-item span { color: #475569; }
         .mon-stats { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
         .mon-stat { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px 22px; min-width: 150px; }
         .mon-stat b { display: block; font-size: 26px; color: #2563eb; }
@@ -87,7 +95,7 @@
             <select id="fltUser"></select>
         </div>
         <table class="mon-table">
-            <thead><tr><th>Раздел</th><th class="op-cell">Операция</th><th>Версия</th><th>Ознакомились</th></tr></thead>
+            <thead><tr><th class="op-cell">Раздел / Операции</th><th>Версия</th><th>Ознакомились</th></tr></thead>
             <tbody id="monTbody"></tbody>
         </table>
     </div>
@@ -241,24 +249,57 @@ document.addEventListener('DOMContentLoaded', function () {
         w.querySelector('.roster-btn').setAttribute('aria-expanded', 'false');
     }
 
+    // Кэш последних отметок по операциям (пересчитывается в render())
+    let lastReadsByOp = {};
+
+    // Компактный выпадающий список операций раздела (строка матрицы не растёт по вертикали)
+    function opsDropdownHtml(section, ops) {
+        const pageAttr = section.page ? ` href="${section.page}"` : '';
+        const items = ops.map(o => {
+            const cnt = lastReadsByOp[o.id] ? lastReadsByOp[o.id].length : 0;
+            return `<div class="roster-item"><b><a href="${o.url}">${o.id}</a> — ${o.title}</b><span>Ознакомились: ${cnt}${cnt ? '' : ' — никто'}</span></div>`;
+        }).join('');
+        return `<div class="roster-wrap">
+            <button type="button" class="roster-btn ops-btn" aria-expanded="false" title="Показать операции раздела">📂 <strong${pageAttr}>${section.num}. ${section.title}</strong> (${ops.length}) <span class="caret">▼</span></button>
+            <div class="roster-menu wide">${items}</div>
+        </div>`;
+    }
+
     function render() {
         const sec = fltSection.value, usr = fltUser.value;
         const tbody = document.getElementById('monTbody');
         tbody.innerHTML = '';
-        readyOps
-            .filter(o => !sec || o.section === sec)
-            .forEach(o => {
-                const section = kbGetSectionById(o.section);
-                const recs = reads.filter(r => r.opId === o.id && r.version === o.version && (!usr || r.userId === usr));
-                // Сортировка: свежие отметки сверху; один человек — одна строка (последняя отметка)
-                const byUser = {};
-                recs.forEach(r => { if (!byUser[r.userId] || r.timestamp > byUser[r.userId].timestamp) byUser[r.userId] = r; });
-                const latest = Object.values(byUser).sort((a, b) => b.timestamp.localeCompare(a.timestamp));
-                const chips = rosterHtml(latest);
+        const visibleOps = readyOps.filter(o => !sec || o.section === sec);
+        // Последняя отметка каждого сотрудника по каждой операции (с учётом фильтра по сотруднику)
+        lastReadsByOp = {};
+        visibleOps.forEach(o => {
+            const recs = reads.filter(r => r.opId === o.id && r.version === o.version && (!usr || r.userId === usr));
+            const byUser = {};
+            recs.forEach(r => { if (!byUser[r.userId] || r.timestamp > byUser[r.userId].timestamp) byUser[r.userId] = r; });
+            lastReadsByOp[o.id] = Object.values(byUser).sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+        });
+        // Группировка строк матрицы по разделам: одна строка на раздел, операции — в выпадающем списке
+        KB_SECTIONS
+            .filter(s => visibleOps.some(o => o.section === s.id))
+            .forEach(s => {
+                const ops = visibleOps.filter(o => o.section === s.id);
+                let verCell, readCell;
+                if (ops.length === 1) {
+                    // Одна операция в разделе — показываем её прямо в строке
+                    const o = ops[0];
+                    verCell = `v${o.version}`;
+                    readCell = rosterHtml(lastReadsByOp[o.id]);
+                } else {
+                    const versions = [...new Set(ops.map(o => 'v' + o.version))].join(', ');
+                    const total = ops.reduce((n, o) => n + (lastReadsByOp[o.id] ? lastReadsByOp[o.id].length : 0), 0);
+                    verCell = `${versions} <span style="color:#94a3b8;">(${ops.length} оп.)</span>`;
+                    readCell = `<span style="color:#64748b;font-size:12px;">Всего подтверждений: ${total}</span><br>${opsDropdownHtml(s, ops)}`;
+                }
+                const opCell = ops.length === 1
+                    ? `<a href="${ops[0].url}">${ops[0].id}</a> — ${ops[0].title}`
+                    : `<strong>${s.num}. ${s.title}</strong> <span style="color:#94a3b8;">— ${ops.length} операций (см. «Ознакомились»)</span>`;
                 const tr = document.createElement('tr');
-                tr.innerHTML = `<td>${section ? section.title : o.section}</td>
-                    <td class="op-cell"><a href="${o.url}">${o.id}</a> — ${o.title}</td>
-                    <td>v${o.version}</td><td>${chips}</td>`;
+                tr.innerHTML = `<td class="op-cell">${opCell}</td><td>${verCell}</td><td>${readCell}</td>`;
                 tbody.appendChild(tr);
             });
 
