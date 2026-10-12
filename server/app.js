@@ -139,7 +139,7 @@ app.post('/api/read/:opId', auth(true, ['worker']), (req, res) => {
   const op = OP_MAP[req.params.opId];
   if (!op) return res.status(404).json({ error: 'Неизвестная операция' });
   if (!canAccess(req.user, op.section)) return res.status(403).json({ error: 'Нет доступа к разделу' });
-  const version = String(req.body?.version || op.version || 'v1');
+  const version = String(req.body?.version != null && req.body.version !== "" ? req.body.version : (op.version != null ? String(op.version) : "1"));
   // идемпотентность: одна отметка на связку пользователь+операция+версия
   const exists = db.prepare('SELECT id FROM read_log WHERE user_id=? AND op_id=? AND version=?')
     .get(req.user.id, op.id, version);
