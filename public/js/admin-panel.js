@@ -6,14 +6,11 @@ document.addEventListener('DOMContentLoaded', function () {
     const tableBody = document.getElementById('usersTableBody');
     const errorDiv = document.getElementById('formError');
 
-    if (!form || !tableBody) return; // Не на странице админки
+    if (!form || !tableBody) return;
 
-    // Загрузка списка пользователей
     async function loadUsers() {
         try {
-            const response = await fetch('/api/admin/users', {
-                credentials: 'include'
-            });
+            const response = await fetch('/api/admin/users', { credentials: 'include' });
             if (!response.ok) throw new Error('Ошибка загрузки');
             const users = await response.json();
             renderUsers(users);
@@ -23,29 +20,24 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Отрисовка таблицы пользователей
     function renderUsers(users) {
         tableBody.innerHTML = '';
         users.forEach(user => {
             const tr = document.createElement('tr');
             
-            // ФИО
             const tdName = document.createElement('td');
             tdName.textContent = user.name;
             tr.appendChild(tdName);
 
-            // Логин
             const tdLogin = document.createElement('td');
             tdLogin.textContent = user.username;
             tr.appendChild(tdLogin);
 
-            // Роль
             const tdRole = document.createElement('td');
             const roleLabel = { admin: 'Администратор', worker: 'Сотрудник производства', guest: 'Гость' }[user.role] || user.role;
             tdRole.textContent = roleLabel;
             tr.appendChild(tdRole);
 
-            // Доступ к разделам
             const tdAccess = document.createElement('td');
             if (user.role === 'admin') {
                 tdAccess.textContent = 'все разделы';
@@ -56,17 +48,14 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             tr.appendChild(tdAccess);
 
-            // Действия
             const tdActions = document.createElement('td');
             
-            // Кнопка изменения пароля
             const btnPassword = document.createElement('button');
             btnPassword.textContent = 'Пароль...';
             btnPassword.className = 'btn-action';
             btnPassword.onclick = () => changePassword(user.id, user.username);
             tdActions.appendChild(btnPassword);
 
-            // Кнопка изменения доступа (только для не-админов)
             if (user.role !== 'admin') {
                 const btnAccess = document.createElement('button');
                 btnAccess.textContent = 'Доступ...';
@@ -75,7 +64,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 tdActions.appendChild(btnAccess);
             }
 
-            // Кнопка удаления (НЕ показываем для администратора)
             if (user.role !== 'admin') {
                 const btnDelete = document.createElement('button');
                 btnDelete.textContent = 'Удалить';
@@ -89,7 +77,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Создание пользователя
     form.addEventListener('submit', async function (e) {
         e.preventDefault();
         hideError();
@@ -141,7 +128,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // Удаление пользователя
     async function deleteUser(userId, username) {
         if (!confirm(`Вы уверены, что хотите удалить пользователя "${username}"?`)) return;
 
@@ -165,7 +151,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Изменение пароля
     async function changePassword(userId, username) {
         const newPassword = prompt(`Введите новый пароль для пользователя "${username}":`);
         if (!newPassword) return;
@@ -196,7 +181,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Изменение доступа
     async function changeAccess(userId, username, currentSections) {
         const sections = prompt(
             `Введите ID разделов через запятую для пользователя "${username}":\n(preparation, panels, module, options, installation, service)\n\nТекущий доступ: ${currentSections ? currentSections.join(', ') : 'нет'}`,
@@ -242,6 +226,5 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Загружаем пользователей при открытии страницы
     loadUsers();
 });
