@@ -3239,3 +3239,176 @@ h1, h2, h3, h4, h5, h6 {
 .card-badge-lock { background: #fef2f2 !important; color: #b91c1c !important; }
 .card-monitor { border-top: 4px solid #16a34a; }
 .btn-read-status.is-disabled-guest { opacity: .5; cursor: not-allowed; }
+
+/* ============================================
+   Стили панели управления (admin-panel)
+   ============================================ */
+
+.admin-container {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+.admin-section {
+    background: #fff;
+    padding: 24px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    margin-bottom: 30px;
+}
+
+.admin-section h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: #1e293b;
+}
+
+.admin-section h3 {
+    color: #334155;
+    margin-bottom: 16px;
+}
+
+.admin-form {
+    background: #f8fafc;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+    border: 1px solid #e2e8f0;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    font-size: 14px;
+    color: #334155;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: inherit;
+    background: #fff;
+    box-sizing: border-box;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.checkbox-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.checkbox-group label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 400;
+    cursor: pointer;
+}
+
+.error-message {
+    color: #dc2626;
+    background: #fee2e2;
+    padding: 10px 14px;
+    border-radius: 6px;
+    margin-bottom: 15px;
+    font-size: 14px;
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    background: #fff;
+}
+
+.admin-table th,
+.admin-table td {
+    padding: 12px 14px;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 14px;
+}
+
+.admin-table th {
+    background: #f1f5f9;
+    font-weight: 600;
+    color: #475569;
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+}
+
+.admin-table tr:hover td {
+    background: #f8fafc;
+}
+
+.btn-action {
+    padding: 6px 12px;
+    margin-right: 5px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    background: #fff;
+    color: #334155;
+    font-family: inherit;
+    transition: all 0.15s;
+}
+
+.btn-action:hover {
+    background: #e2e8f0;
+    border-color: #94a3b8;
+}
+
+.btn-delete {
+    background: #fff;
+    border-color: #fecaca;
+    color: #dc2626;
+}
+
+.btn-delete:hover {
+    background: #fee2e2;
+    border-color: #dc2626;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .admin-table {
+        font-size: 13px;
+    }
+    
+    .admin-table th,
+    .admin-table td {
+        padding: 8px 10px;
+    }
+}
