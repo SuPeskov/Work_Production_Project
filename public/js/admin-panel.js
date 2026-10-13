@@ -6,8 +6,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const tableBody = document.getElementById('usersTableBody');
     const errorDiv = document.getElementById('formError');
 
-    if (!form || !tableBody) return;
+    if (!form || !tableBody) return; // Не на странице админки
 
+    // Загрузка списка пользователей с сервера
     async function loadUsers() {
         try {
             const response = await fetch('/api/admin/users', { credentials: 'include' });
@@ -20,6 +21,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    // Отрисовка таблицы пользователей
     function renderUsers(users) {
         tableBody.innerHTML = '';
         users.forEach(user => {
@@ -50,12 +52,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const tdActions = document.createElement('td');
             
+            // Кнопка изменения пароля
             const btnPassword = document.createElement('button');
             btnPassword.textContent = 'Пароль...';
             btnPassword.className = 'btn-action';
             btnPassword.onclick = () => changePassword(user.id, user.username);
             tdActions.appendChild(btnPassword);
 
+            // Кнопка изменения доступа (только для не-админов)
             if (user.role !== 'admin') {
                 const btnAccess = document.createElement('button');
                 btnAccess.textContent = 'Доступ...';
@@ -64,6 +68,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 tdActions.appendChild(btnAccess);
             }
 
+            // Кнопка удаления (СКРЫТА для администратора!)
             if (user.role !== 'admin') {
                 const btnDelete = document.createElement('button');
                 btnDelete.textContent = 'Удалить';
@@ -77,6 +82,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // Создание пользователя
     form.addEventListener('submit', async function (e) {
         e.preventDefault();
         hideError();
@@ -128,6 +134,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
+    // Удаление пользователя
     async function deleteUser(userId, username) {
         if (!confirm(`Вы уверены, что хотите удалить пользователя "${username}"?`)) return;
 
@@ -151,10 +158,10 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    // Изменение пароля
     async function changePassword(userId, username) {
         const newPassword = prompt(`Введите новый пароль для пользователя "${username}":`);
         if (!newPassword) return;
-
         if (newPassword.length < 6) {
             alert('Пароль должен содержать минимум 6 символов');
             return;
@@ -169,7 +176,6 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
             const data = await response.json();
-
             if (response.ok && data.ok) {
                 alert('Пароль изменён');
             } else {
@@ -181,12 +187,12 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    // Изменение доступа
     async function changeAccess(userId, username, currentSections) {
         const sections = prompt(
             `Введите ID разделов через запятую для пользователя "${username}":\n(preparation, panels, module, options, installation, service)\n\nТекущий доступ: ${currentSections ? currentSections.join(', ') : 'нет'}`,
             currentSections ? currentSections.join(', ') : ''
         );
-        
         if (sections === null) return;
 
         const sectionsList = sections.split(',').map(s => s.trim()).filter(s => s);
@@ -200,7 +206,6 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
             const data = await response.json();
-
             if (response.ok && data.ok) {
                 await loadUsers();
                 alert('Доступ обновлён');
@@ -226,5 +231,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    // Загружаем пользователей при открытии страницы
     loadUsers();
 });
