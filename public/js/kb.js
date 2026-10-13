@@ -20,6 +20,7 @@ const ROLE_GUEST   = 'Гость';
 const KB_DB_KEY    = 'kb_db_v2';     // { users: [...] } (v2 — сброс «залипших» ролей)
 const KB_MIG_KEY   = 'kb_migrated_v3'; // разовые миграции прав
 const KB_READ_KEY  = 'kb_reads_v1';  // [{ userId, opId, version, timestamp }]
+const KB_ARCHIVE_KEY = 'kb_reads_archive_v1'; // неизменяемый журнал удалённых отметок (для хронологии)
 
 /**
  * Чтение профиля пользователя из локальной БД kb_db без инициализации.
@@ -231,29 +232,70 @@ function kbAddUser(data) {
 
 function kbDeleteUser(username) {
     const db = kbLoadDb();
+    const existing = db.users.find(u => u.username === username);
+    const displayName = existing ? existing.name : username;
     db.users = db.users.filter(u => u.username !== username);
     kbSaveDb(db);
-    // При удалении пользователя его отметки «Ознакомлен» аннулируются,
-    // чтобы список ознакомившихся в мониторинге не рос за счёт «мёртвых» аккаунтов.
-    kbPurgeReadsForUser(username);
+    // Отметки удалённого пользователя НЕ теряются: они переносятся в архивный
+    // журнал (остаются в «Журнале отметок (хронология)») и исчезают из матрицы
+    // ознакомления, чтобы ячейки не росли за счёт «мёртвых» аккаунтов.
+    kbArchiveReadsForUser(username, displayName);
 }
 
-/** Удалить все отметки «Ознакомлен» конкретного пользователя из реестра */
+/** Архивный журнал отметок (только для «Журнала отметок (хронология)») */
+function kbGetArchive() {
+    try {
+        const arr = JSON.parse(localStorage.getItem(KB_ARCHIVE_KEY));
+        return Array.isArray(arr) ? arr : [];
+    } catch (e) { return []; }
+}
+
+function kbSaveArchive(arr) {
+    localStorage.setItem(KB_ARCHIVE_KEY, JSON.stringify(arr));
+}
+
+/** Перенести отметки пользователя из активного реестра в архивный журнал.
+ *  В архиве записи помечаются deleted:true — они остаются в хронологии,
+ *  но не участвуют в матрице ознакомления. */
+function kbArchiveReadsForUser(username, displayName) {
+    const removed = kbGetReads().filter(r => r.userId === username);
+    if (!removed.length) return 0;
+    const archive = kbGetArchive();
+    const known = new Set(archive.map(r => r.userId + '|' + r.opId + '|' + r.version + '|' + r.timestamp));
+    removed.forEach(r => {
+        const key = r.userId + '|' + r.opId + '|' + r.version + '|' + r.timestamp;
+        if (!known.has(key)) {
+            archive.push({ ...r, deleted: true, name: displayName || r.userId });
+        }
+    });
+    kbSaveArchive(archive);
+    kbPurgeReadsForUser(username);
+    return removed.length;
+}
+
+/** Удалить все отметки «Ознакомлен» конкретного пользователя из активного реестра */
 function kbPurgeReadsForUser(userId) {
     const reads = kbGetReads().filter(r => r.userId !== userId);
     localStorage.setItem(KB_READ_KEY, JSON.stringify(reads));
 }
 
-/** Санитизация реестра: убрать отметки пользователей, которых нет в базе (в т.ч. встроенных демо-аккаунтов). Вызывается при загрузке страницы мониторинга. */
+/** Санитизация активного реестра: отметки исчезнувших пользователей переносятся
+ *  в архивный журнал (сохраняются в хронологии) и убираются из матрицы.
+ *  Вызывается при загрузке страницы мониторинга. */
 function kbSanitizeReads() {
-    const before = kbGetReads().length;
+    const all = kbGetReads();
     const validIds = new Set(kbGetUsers().map(u => u.username));
-    const reads = kbGetReads().filter(r => validIds.has(r.userId));
-    if (reads.length !== before) {
-        localStorage.setItem(KB_READ_KEY, JSON.stringify(reads));
-        return before - reads.length;
-    }
-    return 0;
+    const orphaned = all.filter(r => !validIds.has(r.userId));
+    if (!orphaned.length) return 0;
+    const archive = kbGetArchive();
+    const known = new Set(archive.map(r => r.userId + '|' + r.opId + '|' + r.version + '|' + r.timestamp));
+    orphaned.forEach(r => {
+        const key = r.userId + '|' + r.opId + '|' + r.version + '|' + r.timestamp;
+        if (!known.has(key)) archive.push({ ...r, deleted: true });
+    });
+    kbSaveArchive(archive);
+    localStorage.setItem(KB_READ_KEY, JSON.stringify(all.filter(r => validIds.has(r.userId))));
+    return orphaned.length;
 }
 
 function kbSetPassword(username, newPassword) {
