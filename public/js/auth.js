@@ -1,6 +1,6 @@
 /**
  * auth.js — Логика авторизации и управления сессией
- * Реальный запрос к серверу /api/login (не демо!)
+ * Реальный запрос к серверу /api/login
  */
 const SESSION_KEY = 'modular_house_session';
 
@@ -8,8 +8,10 @@ function setSession(user) {
     const session = {
         username: user.username,
         name: user.name,
-        role: user.role,
-        access: user.access,
+        // ВАЖНО: сервер возвращает role='admin', но фронтенд (kb.js) ожидает 'Администратор'.
+        // Используем roleLabel с сервера, если он есть, иначе fallback на role.
+        role: user.roleLabel || user.role,
+        access: user.access || [],
         loginTime: new Date().toISOString()
     };
     sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
@@ -33,6 +35,8 @@ function isAuthenticated() {
 
 function logout() {
     sessionStorage.removeItem(SESSION_KEY);
+    // Также очищаем куки на сервере
+    fetch('/api/logout', { method: 'POST', credentials: 'include' });
 }
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -84,7 +88,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (response.ok && data.ok) {
                 hideError();
-                setSession(data.user);
+                setSession(data.user); // Здесь теперь корректно сохранится roleLabel
                 btn.classList.add('success');
                 btn.querySelector('span').textContent = 'Вход выполнен!';
                 setTimeout(() => {
