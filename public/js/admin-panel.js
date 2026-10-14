@@ -87,10 +87,26 @@ document.addEventListener('DOMContentLoaded', function () {
         e.preventDefault();
         hideError();
 
-        const name = document.getElementById('userName').value.trim();
-        const username = document.getElementById('userLogin').value.trim().toLowerCase();
-        const password = document.getElementById('userPassword').value;
-        const role = document.getElementById('userRole').value;
+        // Защита от дублей id: если getElementById вернул не поле формы (например, <span> из шапки),
+        // ищем элемент строго внутри формы
+        const getField = (id) => {
+            const el = document.getElementById(id);
+            if (el && form.contains(el)) return el;
+            return form.querySelector('#' + id) || form.elements[id] || null;
+        };
+        const nameEl = getField('userName');
+        const loginEl = getField('userLogin');
+        const roleEl = getField('userRole');
+        const passEl = getField('userPassword');
+        if (!nameEl || !loginEl || !roleEl || !passEl) {
+            showError('Не найдены поля формы. Обновите страницу (Ctrl+F5).');
+            return;
+        }
+
+        const name = nameEl.value.trim();
+        const username = loginEl.value.trim().toLowerCase();
+        const password = passEl.value;
+        const role = roleEl.value;
         const sections = Array.from(document.querySelectorAll('input[name="sections"]:checked')).map(cb => cb.value);
 
         if (!name || !username || !password || !role) {
