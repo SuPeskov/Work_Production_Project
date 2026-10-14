@@ -77,11 +77,18 @@ function auth(required = true, roles = null) {
 function sectionsOf(userId) {
   return db.prepare('SELECT section_id FROM user_sections WHERE user_id=?').all(userId).map(r => r.section_id);
 }
+// Разделы, к которым у пользователя есть доступ.
+// Администратор — без ограничений; сотрудник и гость — строго по назначенному
+// в панели управления списку (пустой список = нет доступа ни к одному разделу).
+const ALL_SECTIONS_FALLBACK = ['preparation', 'panels', 'module', 'options', 'installation', 'service'];
+function allowedSectionsFor(user) {
+  if (!user) return [];
+  if (user.role === 'admin') return SECTIONS.length ? SECTIONS : ALL_SECTIONS_FALLBACK;
+  return sectionsOf(user.id);
+}
 function canAccess(user, sectionId) {
   if (!user) return false;
-  if (user.role === 'admin') return true;              // админ — без ограничений
-  if (user.role === 'guest') return true;              // гость видит всё (по ТЗ)
-  return sectionsOf(user.id).includes(sectionId);      // сотрудник — только назначенное
+  return allowedSectionsFor(user).includes(sectionId);
 }
 
 // === Auth API ===
@@ -105,7 +112,9 @@ app.post('/api/logout', (req, res) => { res.clearCookie('kb_token'); res.json({ 
 
 app.get('/api/me', auth(false), (req, res) => {
   if (!req.user) return res.json({ user: null });
-  res.json({ user: publicUser(req.user), sections: req.user.role === 'worker' ? sectionsOf(req.user.id) : '*' });
+  // sections — фактический серверный список доступа (админ — все разделы;
+  // сотрудник/гость — назначенные в панели управления)
+  res.json({ user: publicUser(req.user), sections: allowedSectionsFor(req.user) });
 });
 
 function publicUser(u) {
@@ -117,8 +126,9 @@ app.get('/api/access/:sectionId', auth(), (req, res) => {
   res.json({ allowed: canAccess(req.user, req.params.sectionId) });
 });
 
-// Защита страниц по ролям: запрещённые разделы отдают 403 вместо HTML
-const SECTION_BY_PATH = { preparation: 'preparation', panels: 'panels', module: 'module', options: 'options', assembly: 'assembly', safety: 'safety' };
+// Защита страниц по ролям: запрещённые разделы отдают 403 вместо HTML.
+// id разделов = имена файлов (preparation, panels, module, options, installation, service).
+const SECTION_BY_PATH = { preparation: 'preparation', panels: 'panels', module: 'module', options: 'options', installation: 'installation', service: 'service' };
 app.use((req, res, next) => {
   const m = req.path.match(/^\/pages\/(?:operations|sections)?\/?([\w.-]+)\.html$/i);
   // страницы операций вида /pages/operations/2.1.5.html → раздел по префиксу id
@@ -134,6 +144,24 @@ app.use((req, res, next) => {
     next();
   });
 });
+
+// Демонстрационные аккаунты из прототипа (builder/engineer), не создававшиеся
+// через панель управления, удаляются при первом обращении к админ-API —
+// иначе они «воскресали» после каждого перезапуска сервиса/init-скрипта.
+const DEMO_ACCOUNTS = ['builder', 'engineer'];
+let demoCleaned = false;
+function cleanupDemoAccounts() {
+  if (demoCleaned) return;
+  demoCleaned = true;
+  try {
+    const placeholders = DEMO_ACCOUNTS.map(() => '?').join(',');
+    const rows = db.prepare(`SELECT id, username FROM users WHERE username IN (${placeholders}) AND active=1`).all(...DEMO_ACCOUNTS);
+    if (!rows.length) return;
+    const delU = db.prepare("UPDATE users SET active=0, deleted_at=datetime('now') WHERE id=?");
+    const delS = db.prepare('DELETE FROM user_sections WHERE user_id=?');
+    rows.forEach(r => { delU.run(r.id); delS.run(r.id); console.log(`DEMO-аккаунт удалён: ${r.username}`); });
+  } catch (e) { console.warn('Не удалось убрать демо-аккаунты:', e.message); }
+}
 
 // === Журнал ознакомлений (только сервер пишет!) ===
 app.post('/api/read/:opId', auth(true, ['worker']), (req, res) => {
@@ -163,6 +191,7 @@ app.get('/api/reads', auth(), (req, res) => {
 // === Админ API (CRUD пользователей) ===
 const ROLES = ['admin', 'worker', 'guest'];
 app.get('/api/admin/users', auth(true, ['admin']), (req, res) => {
+  cleanupDemoAccounts(); // убираем «воскресших» после деплоя демо-аккаунтов прототипа
   const users = db.prepare("SELECT id, username, name, role, active FROM users WHERE active=1 ORDER BY username").all();
   users.forEach(u => u.sections = sectionsOf(u.id));
   res.json(users);

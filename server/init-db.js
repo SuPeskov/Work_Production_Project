@@ -24,7 +24,7 @@ if (process.env.KB_DEMO === '1') {
   upsertUser.run('builder', 'Иванов Иван Иванович', 'worker', hash('build456'));
   upsertUser.run('guest1', 'Гость демонстрационный', 'guest', hash('guest123'));
   const uid = db.prepare('SELECT id FROM users WHERE username=?').get('builder').id;
-  ['panels', 'assembly'].forEach(s =>
+  ['panels', 'installation'].forEach(s =>
     db.prepare('INSERT OR IGNORE INTO user_sections (user_id, section_id) VALUES (?,?)').run(uid, s));
   console.log('DEMO-аккаунты созданы (builder/build456, guest1/guest123). НЕ используйте на боевом сервере!');
 }
