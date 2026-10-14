@@ -129,20 +129,27 @@ app.get('/api/access/:sectionId', auth(), (req, res) => {
 // Защита страниц по ролям: запрещённые разделы отдают 403 вместо HTML.
 // id разделов = имена файлов (preparation, panels, module, options, installation, service).
 const SECTION_BY_PATH = { preparation: 'preparation', panels: 'panels', module: 'module', options: 'options', installation: 'installation', service: 'service' };
+// Защита страниц по ролям: запрещённые разделы отдают 403 вместо HTML
+const SECTION_BY_PATH = { preparation: 'preparation', panels: 'panels', module: 'module', options: 'options', assembly: 'assembly', safety: 'safety' };
 app.use((req, res, next) => {
-  const m = req.path.match(/^\/pages\/(?:operations|sections)?\/?([\w.-]+)\.html$/i);
-  // страницы операций вида /pages/operations/2.1.5.html → раздел по префиксу id
-  let sectionId = null;
-  const opMatch = req.path.match(/(\d+\.\d+\.\d+)\.html$/);
-  if (opMatch && OP_MAP[opMatch[1]]) sectionId = OP_MAP[opMatch[1]].section;
-  else for (const key of Object.keys(SECTION_BY_PATH)) if (req.path.includes(key + '.html')) sectionId = key;
-  if (!sectionId) return next();
-  // проверяем токен без обязательности входа
-  auth(false)(req, res, () => {
-    if (!req.user) return res.redirect('/index.html?need_login=1');
-    if (!canAccess(req.user, sectionId)) return res.status(403).sendFile(path.join(PUBLIC_DIR, 'no-access.html'));
-    next();
-  });
+    // Дашборд доступен всем авторизованным пользователям (они сами увидят только свои разделы)
+    if (req.path === '/dashboard.html' || req.path === '/') return next();
+
+    const m = req.path.match(/^/pages/(?:operations|sections)?/?([\w.-]+).html$/i);
+    // страницы операций вида /pages/operations/2.1.5.html → раздел по префиксу id
+    let sectionId = null;
+    const opMatch = req.path.match(/(\d+.\d+.\d+).html$/);
+    if (opMatch && OP_MAP[opMatch[1]]) sectionId = OP_MAP[opMatch[1]].section;
+    else for (const key of Object.keys(SECTION_BY_PATH)) if (req.path.includes(key + '.html')) sectionId = key;
+    
+    if (!sectionId) return next();
+    
+    // проверяем токен без обязательности входа
+    auth(false)(req, res, () => {
+        if (!req.user) return res.redirect('/index.html?need_login=1');
+        if (!canAccess(req.user, sectionId)) return res.status(403).sendFile(path.join(PUBLIC_DIR, 'no-access.html'));
+        next();
+    });
 });
 
 // Демонстрационные аккаунты из прототипа (builder/engineer), не создававшиеся

@@ -501,7 +501,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // --- Dashboard: карточки разделов из реестра с фильтрацией прав ---
+    // --- Dashboard: карточки разделов из реестра с фильтром по правам ---
     const grid = document.getElementById('cardsGrid');
     if (grid && isAuthenticated()) {
         const user = kbGetCurrentUser();
