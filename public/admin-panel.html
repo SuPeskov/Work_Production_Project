@@ -4,31 +4,42 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Панель управления — Скаут Хаус | ППР</title>
+    
+    <!-- Подключение шрифтов и стилей (как в dashboard.html) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Подключаем ЕДИНСТВЕННЫЙ файл стилей -->
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+    <!-- ШАПКА: Идентична dashboard.html -->
     <header class="top-bar">
-        <div class="logo-small">
-            <img src="assets/images/logo.svg" alt="Скаут Хаус" class="logo-small-img">
-            <span>Скаут Хаус — Панель управления</span>
+        <div class="top-bar-left">
+            <!-- Логотип и заголовок -->
+            <a href="dashboard.html" class="logo-link">
+                <img src="assets/images/logo.svg" alt="Логотип" class="logo-img">
+                <span class="logo-text">Скаут Хаус</span>
+            </a>
+            <h1>🛠️ Админ-панель</h1>
         </div>
         <div class="top-bar-right">
-            <!-- Индикатор текущего пользователя (id не должны совпадать с полями формы добавления) -->
-            <span id="currentUserName"></span>
-            <span id="currentUserRole"></span>
-            <a href="dashboard.html" class="btn-admin">В базу знаний</a>
+            <!-- Элементы профиля (заполняются через kb.js/auth.js) -->
+            <div class="user-info">
+                <span id="userName"></span>
+                <span id="userRole" class="user-role-badge"></span>
+            </div>
             <a href="#" id="logoutBtn" class="btn-admin">Выйти</a>
         </div>
     </header>
 
+    <!-- ОСНОВНОЙ КОНТЕНТ -->
     <main class="admin-container">
+        
+        <!-- БЛОК УПРАВЛЕНИЯ ПОЛЬЗОВАТЕЛЯМИ -->
         <section class="admin-section">
-            <h2>👥 Пользователи</h2>
+            <h2> Пользователи</h2>
             
+            <!-- Форма добавления -->
             <form id="addUserForm" class="admin-form">
                 <h3>Добавить пользователя</h3>
                 <div id="formError" class="error-message" style="display: none;"></div>
@@ -36,15 +47,15 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label for="userName">ФИО</label>
-                        <input type="text" id="userName" required>
+                        <input type="text" id="userName" required placeholder="Иванов Иван Иванович">
                     </div>
                     <div class="form-group">
                         <label for="userLogin">Логин</label>
-                        <input type="text" id="userLogin" required>
+                        <input type="text" id="userLogin" required placeholder="ivanov">
                     </div>
                     <div class="form-group">
                         <label for="userPassword">Пароль</label>
-                        <input type="password" id="userPassword" required minlength="6">
+                        <input type="password" id="userPassword" required minlength="6" placeholder="Минимум 6 символов">
                     </div>
                     <div class="form-group">
                         <label for="userRole">Роль</label>
@@ -71,6 +82,7 @@
                 <button type="submit" class="btn-primary">Добавить пользователя</button>
             </form>
 
+            <!-- Таблица пользователей -->
             <h3>Список пользователей</h3>
             <table class="admin-table">
                 <thead>
@@ -88,13 +100,18 @@
             </table>
         </section>
 
+        <!-- БЛОК МОНИТОРИНГА -->
         <section class="admin-section">
             <h2>📊 Мониторинг ознакомления</h2>
+            <p style="color: #64748b; margin-bottom: 15px;">Просмотр матрицы ознакомления сотрудников с операциями.</p>
             <a href="monitoring.html" class="btn-primary">Открыть мониторинг</a>
         </section>
+
     </main>
 
+    <!-- СКРИПТЫ: Порядок важен! Сначала auth/kb, потом логика админки -->
     <script src="js/auth.js"></script>
+    <script src="js/kb.js"></script>
     <script src="js/admin-panel.js"></script>
 </body>
 </html>

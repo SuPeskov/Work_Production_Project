@@ -34,9 +34,17 @@ function isAuthenticated() {
 }
 
 function logout() {
+    // 1. Очищаем локальную сессию
     sessionStorage.removeItem(SESSION_KEY);
-    // Также очищаем куки на сервере
-    fetch('/api/logout', { method: 'POST', credentials: 'include' });
+    
+    // 2. Отправляем запрос на сервер для удаления httpOnly-куки kb_token
+    fetch('/api/logout', { 
+        method: 'POST', 
+        credentials: 'include' 
+    }).finally(() => {
+        // 3. Перенаправляем на главную только после отправки запроса
+        window.location.href = 'index.html';
+    });
 }
 
 document.addEventListener('DOMContentLoaded', function () {
