@@ -1,96 +1,236 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Панель управления — Скаут Хаус | ППР</title>
-    <link rel="stylesheet" href="css/style.css">
-</head>
-<body>
-    <header class="top-bar">
-        <div class="top-bar-left">
-            <h1>🛠️ Админ-панель Скаут Хаус</h1>
-        </div>
-        <div class="top-bar-right">
-            <span id="userName"></span>
-            <span id="userRole"></span>
-            <a href="dashboard.html" class="btn-admin">В базу знаний</a>
-            <a href="#" id="logoutBtn" class="btn-admin">Выйти</a>
-        </div>
-    </header>
+/**
+ * admin-panel.js — Управление пользователями через реальный API сервера
+ */
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('addUserForm');
+    const tableBody = document.getElementById('usersTableBody');
+    const errorDiv = document.getElementById('formError');
 
-    <main class="admin-container">
-        <section class="admin-section">
-            <h2> Пользователи</h2>
+    if (!form || !tableBody) return; // Не на странице админки
+
+    // Загрузка списка пользователей с сервера
+    async function loadUsers() {
+        try {
+            const response = await fetch('/api/admin/users', { credentials: 'include' });
+            if (!response.ok) throw new Error('Ошибка загрузки');
+            const users = await response.json();
+            renderUsers(users);
+        } catch (error) {
+            console.error('Ошибка загрузки пользователей:', error);
+            showError('Не удалось загрузить список пользователей');
+        }
+    }
+
+    // Отрисовка таблицы пользователей
+    function renderUsers(users) {
+        tableBody.innerHTML = '';
+        users.forEach(user => {
+            const tr = document.createElement('tr');
             
-            <!-- Форма создания пользователя -->
-            <form id="addUserForm" class="admin-form">
-                <h3>Добавить пользователя</h3>
-                <div id="formError" class="error-message" style="display: none;"></div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="userName">ФИО</label>
-                        <input type="text" id="userName" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="userLogin">Логин</label>
-                        <input type="text" id="userLogin" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="userPassword">Пароль</label>
-                        <input type="password" id="userPassword" required minlength="6">
-                    </div>
-                    <div class="form-group">
-                        <label for="userRole">Роль</label>
-                        <select id="userRole" required>
-                            <option value="worker">Сотрудник производства</option>
-                            <option value="guest">Гость</option>
-                            <option value="admin">Администратор</option>
-                        </select>
-                    </div>
-                </div>
+            const tdName = document.createElement('td');
+            tdName.textContent = user.name;
+            tr.appendChild(tdName);
 
-                <div class="form-group">
-                    <label>Доступ к разделам базы знаний:</label>
-                    <div class="checkbox-group">
-                        <label><input type="checkbox" name="sections" value="preparation"> Заготовка</label>
-                        <label><input type="checkbox" name="sections" value="panels"> Сборка панелей</label>
-                        <label><input type="checkbox" name="sections" value="module"> Сборка модуля</label>
-                        <label><input type="checkbox" name="sections" value="options"> Сборка опций</label>
-                        <label><input type="checkbox" name="sections" value="installation"> Монтаж</label>
-                        <label><input type="checkbox" name="sections" value="service"> Сервис</label>
-                    </div>
-                </div>
+            const tdLogin = document.createElement('td');
+            tdLogin.textContent = user.username;
+            tr.appendChild(tdLogin);
 
-                <button type="submit" class="btn-primary">Добавить пользователя</button>
-            </form>
+            const tdRole = document.createElement('td');
+            const roleLabel = { admin: 'Администратор', worker: 'Сотрудник производства', guest: 'Гость' }[user.role] || user.role;
+            tdRole.textContent = roleLabel;
+            tr.appendChild(tdRole);
 
-            <!-- Таблица пользователей (очищена от демо-данных) -->
-            <h3>Список пользователей</h3>
-            <table class="admin-table">
-                <thead>
-                    <tr>
-                        <th>ФИО</th>
-                        <th>Логин</th>
-                        <th>Роль</th>
-                        <th>Доступ к разделам</th>
-                        <th>Действия</th>
-                    </tr>
-                </thead>
-                <tbody id="usersTableBody">
-                    <!-- Заполняется через js/admin-panel.js -->
-                </tbody>
-            </table>
-        </section>
+            const tdAccess = document.createElement('td');
+            if (user.role === 'admin') {
+                tdAccess.textContent = 'все разделы';
+            } else if (user.sections && user.sections.length > 0) {
+                tdAccess.textContent = user.sections.join(', ');
+            } else {
+                tdAccess.textContent = '—';
+            }
+            tr.appendChild(tdAccess);
 
-        <section class="admin-section">
-            <h2>📊 Мониторинг ознакомления</h2>
-            <a href="monitoring.html" class="btn-primary">Открыть мониторинг</a>
-        </section>
-    </main>
+            const tdActions = document.createElement('td');
+            
+            // Кнопка изменения пароля
+            const btnPassword = document.createElement('button');
+            btnPassword.textContent = 'Пароль...';
+            btnPassword.className = 'btn-action';
+            btnPassword.onclick = () => changePassword(user.id, user.username);
+            tdActions.appendChild(btnPassword);
 
-    <script src="js/auth.js"></script>
-    <script src="js/admin-panel.js"></script>
-</body>
-</html>
+            // Кнопка изменения доступа (только для не-админов)
+            if (user.role !== 'admin') {
+                const btnAccess = document.createElement('button');
+                btnAccess.textContent = 'Доступ...';
+                btnAccess.className = 'btn-action';
+                btnAccess.onclick = () => changeAccess(user.id, user.username, user.sections);
+                tdActions.appendChild(btnAccess);
+            }
+
+            // Кнопка удаления (СКРЫТА для администратора!)
+            if (user.role !== 'admin') {
+                const btnDelete = document.createElement('button');
+                btnDelete.textContent = 'Удалить';
+                btnDelete.className = 'btn-action btn-delete';
+                btnDelete.onclick = () => deleteUser(user.id, user.username);
+                tdActions.appendChild(btnDelete);
+            }
+
+            tr.appendChild(tdActions);
+            tableBody.appendChild(tr);
+        });
+    }
+
+    // Создание пользователя
+    form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        hideError();
+
+        const name = document.getElementById('userName').value.trim();
+        const username = document.getElementById('userLogin').value.trim().toLowerCase();
+        const password = document.getElementById('userPassword').value;
+        const role = document.getElementById('userRole').value;
+        const sections = Array.from(document.querySelectorAll('input[name="sections"]:checked')).map(cb => cb.value);
+
+        if (!name || !username || !password || !role) {
+            showError('Заполните все обязательные поля');
+            return;
+        }
+
+        if (password.length < 6) {
+            showError('Пароль должен содержать минимум 6 символов');
+            return;
+        }
+
+        const btn = form.querySelector('button[type="submit"]');
+        const originalText = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = 'Добавление...';
+
+        try {
+            const response = await fetch('/api/admin/users', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ username, name, role, password, sections })
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.ok) {
+                form.reset();
+                await loadUsers();
+                alert('Пользователь успешно создан!');
+            } else {
+                showError(data.error || 'Ошибка создания пользователя');
+            }
+        } catch (error) {
+            console.error('Ошибка создания пользователя:', error);
+            showError('Ошибка соединения с сервером');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = originalText;
+        }
+    });
+
+    // Удаление пользователя
+    async function deleteUser(userId, username) {
+        if (!confirm(`Вы уверены, что хотите удалить пользователя "${username}"?`)) return;
+
+        try {
+            const response = await fetch(`/api/admin/users/${userId}`, {
+                method: 'DELETE',
+                credentials: 'include'
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.ok) {
+                await loadUsers();
+                alert('Пользователь удалён');
+            } else {
+                alert(data.error || 'Ошибка удаления');
+            }
+        } catch (error) {
+            console.error('Ошибка удаления:', error);
+            alert('Ошибка соединения с сервером');
+        }
+    }
+
+    // Изменение пароля
+    async function changePassword(userId, username) {
+        const newPassword = prompt(`Введите новый пароль для пользователя "${username}":`);
+        if (!newPassword) return;
+        if (newPassword.length < 6) {
+            alert('Пароль должен содержать минимум 6 символов');
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/admin/users/${userId}/password`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ password: newPassword })
+            });
+
+            const data = await response.json();
+            if (response.ok && data.ok) {
+                alert('Пароль изменён');
+            } else {
+                alert(data.error || 'Ошибка изменения пароля');
+            }
+        } catch (error) {
+            console.error('Ошибка изменения пароля:', error);
+            alert('Ошибка соединения с сервером');
+        }
+    }
+
+    // Изменение доступа
+    async function changeAccess(userId, username, currentSections) {
+        const sections = prompt(
+            `Введите ID разделов через запятую для пользователя "${username}":\n(preparation, panels, module, options, installation, service)\n\nТекущий доступ: ${currentSections ? currentSections.join(', ') : 'нет'}`,
+            currentSections ? currentSections.join(', ') : ''
+        );
+        if (sections === null) return;
+
+        const sectionsList = sections.split(',').map(s => s.trim()).filter(s => s);
+
+        try {
+            const response = await fetch(`/api/admin/users/${userId}/access`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ sections: sectionsList })
+            });
+
+            const data = await response.json();
+            if (response.ok && data.ok) {
+                await loadUsers();
+                alert('Доступ обновлён');
+            } else {
+                alert(data.error || 'Ошибка обновления доступа');
+            }
+        } catch (error) {
+            console.error('Ошибка обновления доступа:', error);
+            alert('Ошибка соединения с сервером');
+        }
+    }
+
+    function showError(msg) {
+        if (errorDiv) {
+            errorDiv.textContent = msg;
+            errorDiv.style.display = 'block';
+        }
+    }
+
+    function hideError() {
+        if (errorDiv) {
+            errorDiv.style.display = 'none';
+        }
+    }
+
+    // Загружаем пользователей при открытии страницы
+    loadUsers();
+});

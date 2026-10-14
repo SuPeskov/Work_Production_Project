@@ -21,8 +21,9 @@
 
     <main class="admin-container">
         <section class="admin-section">
-            <h2>👥 Пользователи</h2>
+            <h2> Пользователи</h2>
             
+            <!-- Форма создания пользователя -->
             <form id="addUserForm" class="admin-form">
                 <h3>Добавить пользователя</h3>
                 <div id="formError" class="error-message" style="display: none;"></div>
@@ -65,6 +66,7 @@
                 <button type="submit" class="btn-primary">Добавить пользователя</button>
             </form>
 
+            <!-- Таблица пользователей (очищена от демо-данных) -->
             <h3>Список пользователей</h3>
             <table class="admin-table">
                 <thead>
@@ -77,7 +79,7 @@
                     </tr>
                 </thead>
                 <tbody id="usersTableBody">
-                    <!-- Заполняется через JavaScript (admin-panel.js) -->
+                    <!-- Заполняется через js/admin-panel.js -->
                 </tbody>
             </table>
         </section>
