@@ -1,3 +1,4 @@
+console.log("=== DB_PATH:", process.env.KB_DB_PATH || "NOT SET", "===");
 /**
  * db.js — SQLite-схема базы знаний Скаут Хаус
  *

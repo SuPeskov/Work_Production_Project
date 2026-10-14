@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Панель управления — Скаут Хаус | ППР</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header class="top-bar">
+        <div class="top-bar-left">
+            <h1>🛠️ Админ-панель Скаут Хаус</h1>
+        </div>
+        <div class="top-bar-right">
+            <span id="userName"></span>
+            <span id="userRole"></span>
+            <a href="dashboard.html" class="btn-admin">В базу знаний</a>
+            <a href="#" id="logoutBtn" class="btn-admin">Выйти</a>
+        </div>
+    </header>
+
+    <main class="admin-container">
+        <section class="admin-section">
+            <h2>👥 Пользователи</h2>
+            
+            <form id="addUserForm" class="admin-form">
+                <h3>Добавить пользователя</h3>
+                <div id="formError" class="error-message" style="display: none;"></div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="userName">ФИО</label>
+                        <input type="text" id="userName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="userLogin">Логин</label>
+                        <input type="text" id="userLogin" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="userPassword">Пароль</label>
+                        <input type="password" id="userPassword" required minlength="6">
+                    </div>
+                    <div class="form-group">
+                        <label for="userRole">Роль</label>
+                        <select id="userRole" required>
+                            <option value="worker">Сотрудник производства</option>
+                            <option value="guest">Гость</option>
+                            <option value="admin">Администратор</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Доступ к разделам базы знаний:</label>
+                    <div class="checkbox-group">
+                        <label><input type="checkbox" name="sections" value="preparation"> Заготовка</label>
+                        <label><input type="checkbox" name="sections" value="panels"> Сборка панелей</label>
+                        <label><input type="checkbox" name="sections" value="module"> Сборка модуля</label>
+                        <label><input type="checkbox" name="sections" value="options"> Сборка опций</label>
+                        <label><input type="checkbox" name="sections" value="installation"> Монтаж</label>
+                        <label><input type="checkbox" name="sections" value="service"> Сервис</label>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-primary">Добавить пользователя</button>
+            </form>
+
+            <h3>Список пользователей</h3>
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>ФИО</th>
+                        <th>Логин</th>
+                        <th>Роль</th>
+                        <th>Доступ к разделам</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody id="usersTableBody">
+                    <!-- Заполняется через js/admin-panel.js -->
+                </tbody>
+            </table>
+        </section>
+
+        <section class="admin-section">
+            <h2>📊 Мониторинг ознакомления</h2>
+            <a href="monitoring.html" class="btn-primary">Открыть мониторинг</a>
+        </section>
+    </main>
+
+    <script src="js/auth.js"></script>
+    <script src="js/admin-panel.js"></script>
+</body>
+</html>
