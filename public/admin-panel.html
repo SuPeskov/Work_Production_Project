@@ -7,17 +7,30 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <!-- ШАПКА ИЗ DASHBOARD.HTML -->
+    <!-- Верхняя навигация -->
     <header class="top-bar">
         <div class="top-bar-left">
-            <img src="assets/images/logo.svg" alt="" class="logo-img">
-            <h1>Скаут Хаус - Панель управления</h1>
+            <div class="logo-small">
+                <img src="assets/images/logo.svg" alt="Скаут Хаус" class="logo-small-img">
+                <span>Скаут Хаус - Панель управления администратора</span>
+            </div>
         </div>
         <div class="top-bar-right">
-            <a href="dashboard.html" class="btn-admin btn-back-kb">← В базу знаний</a>
-            <span id="userName"></span>
-            <span id="userRole"></span>
-            <button id="logoutBtn" class="btn-admin">Выйти</button>
+            <div class="user-info">
+                <div class="user-avatar" id="userAvatar">А</div>
+                <div class="user-details">
+                    <span class="user-name" id="userName">Пользователь</span>
+                    <span class="user-role" id="userRole">Роль</span>
+                </div>
+            </div>
+            <button class="btn-logout" id="logoutBtn" title="Выйти">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                    <polyline points="16 17 21 12 16 7"/>
+                    <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+                <span>Выйти</span>
+            </button>
         </div>
     </header>
 
