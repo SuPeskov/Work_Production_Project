@@ -3267,3 +3267,41 @@ h1, h2, h3, h4, h5, h6 {
 .section-tags { display: flex; flex-wrap: wrap; gap: 4px; }
 .section-tag { display: inline-block; background: #ede9fe; color: #5b21b6; border-radius: 6px; padding: 2px 8px; font-size: 12px; font-weight: 600; }
 @media (max-width: 768px) { .admin-form .form-row { flex-direction: column; } .admin-table { font-size: 12px; } }
+
+/* ============================================
+   Стили для заблокированных разделов (Нет доступа)
+   ============================================ */
+
+.card-disabled {
+    /* Визуальная прозрачность и обесцвечивание */
+    opacity: 0.5;
+    filter: grayscale(100%);
+    
+    /* Курсор "Запрещено" */
+    cursor: not-allowed !important;
+    
+    /* Полное отключение любых интерактивных эффектов */
+    pointer-events: none; 
+    user-select: none;
+    
+    /* Убираем тени и границы, чтобы выглядело "плоским" */
+    box-shadow: none !important;
+    border-color: #e2e8f0 !important;
+}
+
+/* Запрещаем hover-эффекты для заблокированных карточек */
+.card-disabled:hover {
+    transform: none !important;
+    box-shadow: none !important;
+    background-color: inherit !important;
+}
+
+/* Стиль бейджика замка */
+.card-badge-lock {
+    background-color: #fee2e2 !important;
+    color: #dc2626 !important;
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: 12px;
+    margin-left: 8px;
+}

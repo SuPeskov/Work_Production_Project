@@ -501,7 +501,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // --- Dashboard: карточки разделов из реестра с ФИЛЬТРАЦИЕЙ по правам ---
+    // --- Dashboard: карточки разделов из реестра с фильтрацией прав ---
     const grid = document.getElementById('cardsGrid');
     if (grid && isAuthenticated()) {
         const user = kbGetCurrentUser();
@@ -509,18 +509,18 @@ document.addEventListener('DOMContentLoaded', function () {
         let visible = 0;
         
         KB_SECTIONS.forEach(sec => {
-            // ПРОВЕРКА ДОСТУПА ПЕРЕД ОТРИСОВКОЙ
             const allowed = kbUserCanViewSection(user, sec.id);
+            if (allowed) visible++;
             
-            // Если доступ запрещен — ПРОПУСКАЕМ отрисовку этой карточки полностью
-            if (!allowed) return; 
-
-            visible++;
+            // КЛЮЧЕВОЕ ИЗМЕНЕНИЕ: 
+            // Если доступа нет — создаем DIV (не кликабельный), иначе A (ссылка)
+            const card = document.createElement(allowed ? 'a' : 'div');
             
-            // Создаем активную ссылку (теперь все карточки здесь точно доступны)
-            const card = document.createElement('a');
-            card.className = 'card card-section';
-            card.href = prefix + sec.page;
+            // Добавляем класс card-disabled для стилизации
+            card.className = 'card card-section' + (allowed ? '' : ' card-disabled');
+            
+            // Ссылку задаем только разрешенным разделам
+            if (allowed) card.href = prefix + sec.page;
             
             const opsTotal = KB_OPERATIONS.filter(o => o.section === sec.id).length;
             
@@ -531,6 +531,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 <p>${sec.desc}</p>
                 <div class="card-stats">
                     <span class="card-badge">${opsTotal ? opsTotal + ' операций' : 'в разработке'}</span>
+                    ${!allowed ? '<span class="card-badge card-badge-lock">🔒 Нет доступа</span>' : ''}
                 </div>`;
                 
             grid.appendChild(card);
