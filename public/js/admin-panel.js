@@ -1,92 +1,107 @@
 /**
  * admin-panel.js — Управление пользователями через реальный API сервера
  */
+
+// Глобальная функция для диагностики
+async function loadUsers() {
+    const tableBody = document.getElementById('usersTableBody');
+    if (!tableBody) return;
+    
+    try {
+        const response = await fetch('/api/admin/users', { credentials: 'include' });
+        if (!response.ok) throw new Error('Ошибка загрузки');
+        const users = await response.json();
+        renderUsers(users);
+    } catch (error) {
+        console.error('Ошибка загрузки:', error);
+        showError('Не удалось загрузить список пользователей');
+    }
+}
+
+function renderUsers(users) {
+    const tableBody = document.getElementById('usersTableBody');
+    tableBody.innerHTML = '';
+    users.forEach(user => {
+        const tr = document.createElement('tr');
+        
+        const tdName = document.createElement('td');
+        tdName.textContent = user.name;
+        tr.appendChild(tdName);
+
+        const tdLogin = document.createElement('td');
+        tdLogin.textContent = user.username;
+        tr.appendChild(tdLogin);
+
+        const tdRole = document.createElement('td');
+        const roleLabel = { admin: 'Администратор', worker: 'Сотрудник производства', guest: 'Гость' }[user.role] || user.role;
+        tdRole.textContent = roleLabel;
+        tr.appendChild(tdRole);
+
+        const tdAccess = document.createElement('td');
+        if (user.role === 'admin') {
+            tdAccess.textContent = 'все разделы';
+        } else if (user.sections && user.sections.length > 0) {
+            tdAccess.textContent = user.sections.join(', ');
+        } else {
+            tdAccess.textContent = '—';
+        }
+        tr.appendChild(tdAccess);
+
+        const tdActions = document.createElement('td');
+        
+        const btnPassword = document.createElement('button');
+        btnPassword.textContent = 'Пароль...';
+        btnPassword.className = 'btn-action';
+        btnPassword.onclick = () => changePassword(user.id, user.username);
+        tdActions.appendChild(btnPassword);
+
+        if (user.role !== 'admin') {
+            const btnAccess = document.createElement('button');
+            btnAccess.textContent = 'Доступ...';
+            btnAccess.className = 'btn-action';
+            btnAccess.onclick = () => changeAccess(user.id, user.username, user.sections);
+            tdActions.appendChild(btnAccess);
+
+            const btnDelete = document.createElement('button');
+            btnDelete.textContent = 'Удалить';
+            btnDelete.className = 'btn-action btn-delete';
+            btnDelete.onclick = () => deleteUser(user.id, user.username);
+            tdActions.appendChild(btnDelete);
+        }
+
+        tr.appendChild(tdActions);
+        tableBody.appendChild(tr);
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('addUserForm');
-    const tableBody = document.getElementById('usersTableBody');
     const errorDiv = document.getElementById('formError');
 
-    if (!form || !tableBody) return;
-
-    async function loadUsers() {
-        try {
-            const response = await fetch('/api/admin/users', { credentials: 'include' });
-            if (!response.ok) throw new Error('Ошибка загрузки');
-            const users = await response.json();
-            renderUsers(users);
-        } catch (error) {
-            console.error('Ошибка загрузки:', error);
-            showError('Не удалось загрузить список пользователей');
-        }
+    if (!form) {
+        console.error('❌ Форма addUserForm не найдена!');
+        return;
     }
 
-    function renderUsers(users) {
-        tableBody.innerHTML = '';
-        users.forEach(user => {
-            const tr = document.createElement('tr');
-            
-            const tdName = document.createElement('td');
-            tdName.textContent = user.name;
-            tr.appendChild(tdName);
-
-            const tdLogin = document.createElement('td');
-            tdLogin.textContent = user.username;
-            tr.appendChild(tdLogin);
-
-            const tdRole = document.createElement('td');
-            const roleLabel = { admin: 'Администратор', worker: 'Сотрудник производства', guest: 'Гость' }[user.role] || user.role;
-            tdRole.textContent = roleLabel;
-            tr.appendChild(tdRole);
-
-            const tdAccess = document.createElement('td');
-            if (user.role === 'admin') {
-                tdAccess.textContent = 'все разделы';
-            } else if (user.sections && user.sections.length > 0) {
-                tdAccess.textContent = user.sections.join(', ');
-            } else {
-                tdAccess.textContent = '—';
-            }
-            tr.appendChild(tdAccess);
-
-            const tdActions = document.createElement('td');
-            
-            const btnPassword = document.createElement('button');
-            btnPassword.textContent = 'Пароль...';
-            btnPassword.className = 'btn-action';
-            btnPassword.onclick = () => changePassword(user.id, user.username);
-            tdActions.appendChild(btnPassword);
-
-            if (user.role !== 'admin') {
-                const btnAccess = document.createElement('button');
-                btnAccess.textContent = 'Доступ...';
-                btnAccess.className = 'btn-action';
-                btnAccess.onclick = () => changeAccess(user.id, user.username, user.sections);
-                tdActions.appendChild(btnAccess);
-            }
-
-            if (user.role !== 'admin') {
-                const btnDelete = document.createElement('button');
-                btnDelete.textContent = 'Удалить';
-                btnDelete.className = 'btn-action btn-delete';
-                btnDelete.onclick = () => deleteUser(user.id, user.username);
-                tdActions.appendChild(btnDelete);
-            }
-
-            tr.appendChild(tdActions);
-            tableBody.appendChild(tr);
-        });
-    }
+    console.log('✅ admin-panel.js загружен, форма найдена');
 
     form.addEventListener('submit', async function (e) {
         e.preventDefault();
         hideError();
 
-        // ИСПРАВЛЕНО: Используем правильные ID из обновленного HTML
-        const name = document.getElementById('userName').value.trim();
-        const username = document.getElementById('userLogin').value.trim().toLowerCase();
-        const password = document.getElementById('userPassword').value;
-        const role = document.getElementById('userRoleSelect').value; 
+        // ИСПОЛЬЗУЕМ НОВЫЕ ID (без конфликта с шапкой)
+        const nameInput = document.getElementById('userNameInput');
+        const loginInput = document.getElementById('userLoginInput');
+        const passInput = document.getElementById('userPasswordInput');
+        const roleInput = document.getElementById('userRoleSelect');
+
+        const name = nameInput.value.trim();
+        const username = loginInput.value.trim().toLowerCase();
+        const password = passInput.value;
+        const role = roleInput.value;
         const sections = Array.from(document.querySelectorAll('input[name="sections"]:checked')).map(cb => cb.value);
+
+        console.log('📤 Отправка:', { username, name, role, password: '***', sections });
 
         if (!name || !username || !password || !role) {
             showError('Заполните все обязательные поля');
@@ -112,17 +127,18 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
             const data = await response.json();
+            console.log('📥 Ответ сервера:', response.status, data);
 
             if (response.ok && data.ok) {
                 form.reset();
                 await loadUsers();
-                alert('Пользователь успешно создан!');
+                alert('✅ Пользователь успешно создан!');
             } else {
                 showError(data.error || 'Ошибка создания пользователя');
             }
         } catch (error) {
-            console.error('Ошибка создания:', error);
-            showError('Ошибка соединения с сервером');
+            console.error('💥 Ошибка:', error);
+            showError('Ошибка соединения с сервером: ' + error.message);
         } finally {
             btn.disabled = false;
             btn.textContent = originalText;
@@ -130,7 +146,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     async function deleteUser(userId, username) {
-        if (!confirm(`Вы уверены, что хотите удалить пользователя "${username}"?`)) return;
+        if (!confirm(`Удалить пользователя "${username}"?`)) return;
         try {
             const response = await fetch(`/api/admin/users/${userId}`, {
                 method: 'DELETE',
@@ -144,14 +160,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 alert(data.error || 'Ошибка удаления');
             }
         } catch (error) {
-            alert('Ошибка соединения с сервером');
+            alert('Ошибка соединения');
         }
     }
 
     async function changePassword(userId, username) {
-        const newPassword = prompt(`Введите новый пароль для "${username}":`);
+        const newPassword = prompt(`Новый пароль для "${username}":`);
         if (!newPassword || newPassword.length < 6) {
-            if(newPassword) alert('Минимум 6 символов');
+            if (newPassword) alert('Минимум 6 символов');
             return;
         }
         try {
@@ -206,5 +222,6 @@ document.addEventListener('DOMContentLoaded', function () {
         if (errorDiv) errorDiv.style.display = 'none';
     }
 
+    // Загружаем пользователей при открытии страницы
     loadUsers();
 });
