@@ -7,30 +7,34 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <!-- ШАПКА: Очищена от статического текста -->
+    <!-- Верхняя навигация -->
     <header class="top-bar">
         <div class="top-bar-left">
-            <!-- Логотип и заголовок -->
             <div class="logo-small">
                 <img src="assets/images/logo.svg" alt="Скаут Хаус" class="logo-small-img">
-                <span>Скаут Хаус - Панель управления администратора</span>
+                <span>Скаут Хаус</span>
             </div>
         </div>
         <div class="top-bar-right">
-            <!-- Кнопка "В базу знаний" (если нужна статически, иначе kb.js добавит сам) -->
-            <a href="dashboard.html" class="btn-admin btn-back-kb">← В базу знаний</a>
-            
-            <!-- Контейнеры для данных пользователя (ПУСТЫЕ!) -->
-            <span id="userName"></span>
-            <span id="userRole"></span>
-            
-            <!-- Кнопка выхода -->
-            <button id="logoutBtn" class="btn-admin">Выйти</button>
+            <div class="user-info">
+                <div class="user-avatar" id="userAvatar">А</div>
+                <div class="user-details">
+                    <span class="user-name" id="userName">Пользователь</span>
+                    <span class="user-role" id="userRole">Роль</span>
+                </div>
+            </div>
+            <button class="btn-logout" id="logoutBtn" title="Выйти">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                    <polyline points="16 17 21 12 16 7"/>
+                    <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+                <span>Выйти</span>
+            </button>
         </div>
     </header>
 
     <main class="container">
-        <!-- БЛОК ПОЛЬЗОВАТЕЛЕЙ -->
         <section class="card">
             <h2>👥 Пользователи</h2>
             
@@ -40,19 +44,18 @@
                 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="userNameInput">ФИО</label>
-                        <input type="text" id="userNameInput" required placeholder="Иванов Иван Иванович">
+                        <label for="userName">ФИО</label>
+                        <input type="text" id="userName" required placeholder="Иванов Иван Иванович">
                     </div>
                     <div class="form-group">
-                        <label for="userLoginInput">Логин</label>
-                        <input type="text" id="userLoginInput" required placeholder="ivanov">
+                        <label for="userLogin">Логин</label>
+                        <input type="text" id="userLogin" required placeholder="ivanov">
                     </div>
                     <div class="form-group">
-                        <label for="userPasswordInput">Пароль</label>
-                        <input type="password" id="userPasswordInput" required minlength="6">
+                        <label for="userPassword">Пароль</label>
+                        <input type="password" id="userPassword" required minlength="6">
                     </div>
                     <div class="form-group">
-                        <!-- ВАЖНО: ID изменен на userRoleSelect, чтобы не конфликтовать с #userRole в шапке -->
                         <label for="userRoleSelect">Роль</label>
                         <select id="userRoleSelect" required>
                             <option value="worker">Сотрудник производства</option>
@@ -94,15 +97,13 @@
             </table>
         </section>
 
-        <!-- БЛОК МОНИТОРИНГА -->
         <section class="card">
-            <h2>📊 Мониторинг ознакомления</h2>
+            <h2> Мониторинг ознакомления</h2>
             <p>Просмотр матрицы ознакомления сотрудников с операциями.</p>
             <a href="monitoring.html" class="btn-primary">Открыть мониторинг</a>
         </section>
     </main>
 
-    <!-- СКРИПТЫ -->
     <script src="js/auth.js"></script>
     <script src="js/kb.js"></script>
     <script src="js/admin-panel.js"></script>
