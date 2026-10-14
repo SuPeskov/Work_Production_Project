@@ -439,12 +439,15 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // --- Панель пользователя в шапке + выход ---
-    const userNameEl = document.getElementById('userName');
+    // Поддержка обоих id: currentUserName/currentUserRole (предпочтительно, не конфликтует
+    // с полями формы добавления пользователя) и legacy userName/userRole
+    let userNameEl = document.getElementById('currentUserName') || document.getElementById('userName');
+    if (userNameEl && userNameEl.tagName !== 'SPAN') userNameEl = document.getElementById('currentUserName');
     if (userNameEl && isAuthenticated()) {
         const user = kbGetCurrentUser();
-        const roleEl = document.getElementById('userRole');
+        const roleEl = document.getElementById('currentUserRole') || document.getElementById('userRole');
         const avatarEl = document.getElementById('userAvatar');
-        if (roleEl) roleEl.textContent = user.role;
+        if (roleEl && roleEl.tagName === 'SPAN') roleEl.textContent = user.role;
         if (avatarEl) avatarEl.textContent = user.name.charAt(0).toUpperCase();
         if (user.name) userNameEl.textContent = user.name;
         const logoutBtn = document.getElementById('logoutBtn');

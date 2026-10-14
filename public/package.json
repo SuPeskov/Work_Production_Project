@@ -1,0 +1,12 @@
+{
+  "name": "scout-house-kb",
+  "version": "1.0.0",
+  "scripts": {
+    "build-index": "node build-search-index.js"
+  },
+  "dependencies": {
+    "lunr": "^2.3.9",
+    "lunr-languages": "^1.14.0",
+    "cheerio": "^1.0.0-rc.12"
+  }
+}

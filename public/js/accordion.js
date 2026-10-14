@@ -41,12 +41,13 @@ document.addEventListener('DOMContentLoaded', function() {
     
     const user = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
     if (user) {
-        const userNameEl = document.getElementById('userName');
-        const userRoleEl = document.getElementById('userRole');
+        // currentUserName/currentUserRole — чтобы не конфликтовать с полями формы admin-panel
+        const userNameEl = document.getElementById('currentUserName') || document.getElementById('userName');
+        const userRoleEl = document.getElementById('currentUserRole') || document.getElementById('userRole');
         const userAvatarEl = document.getElementById('userAvatar');
         
-        if (userNameEl) userNameEl.textContent = user.name;
-        if (userRoleEl) userRoleEl.textContent = user.role;
+        if (userNameEl && userNameEl.tagName === 'SPAN') userNameEl.textContent = user.name;
+        if (userRoleEl && userRoleEl.tagName === 'SPAN') userRoleEl.textContent = user.role;
         if (userAvatarEl) userAvatarEl.textContent = user.name.charAt(0).toUpperCase();
     }
     
