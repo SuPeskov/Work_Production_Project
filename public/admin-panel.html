@@ -4,61 +4,55 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Панель управления — Скаут Хаус | ППР</title>
-    
-    <!-- Подключение шрифтов и стилей (как в dashboard.html) -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <!-- ШАПКА: Идентична dashboard.html -->
+    <!-- ШАПКА: Очищена от статического текста -->
     <header class="top-bar">
         <div class="top-bar-left">
             <!-- Логотип и заголовок -->
-            <div class="logo-small">
-                <img src="assets/images/logo.svg" alt="Скаут Хаус" class="logo-small-img">
-                <span>Скаут Хаус - Панель управления</span>
-            </div>
+            <img src="assets/images/logo.svg" alt="" class="logo-img">
+            <h1>Скаут Хаус - Панель управления</h1>
         </div>
         <div class="top-bar-right">
-            <!-- Элементы профиля (заполняются через kb.js/auth.js) -->
-            <div class="user-info">
-                <span id="userName"></span>
-                <span id="userRole" class="user-role-badge"></span>
-            </div>
-            <a href="#" id="logoutBtn" class="btn-admin">Выйти</a>
+            <!-- Кнопка "В базу знаний" (если нужна статически, иначе kb.js добавит сам) -->
+            <a href="dashboard.html" class="btn-admin btn-back-kb">← В базу знаний</a>
+            
+            <!-- Контейнеры для данных пользователя (ПУСТЫЕ!) -->
+            <span id="userName"></span>
+            <span id="userRole"></span>
+            
+            <!-- Кнопка выхода -->
+            <button id="logoutBtn" class="btn-admin">Выйти</button>
         </div>
     </header>
 
-    <!-- ОСНОВНОЙ КОНТЕНТ -->
-    <main class="admin-container">
-        
-        <!-- БЛОК УПРАВЛЕНИЯ ПОЛЬЗОВАТЕЛЯМИ -->
-        <section class="admin-section">
-            <h2> Пользователи</h2>
+    <main class="container">
+        <!-- БЛОК ПОЛЬЗОВАТЕЛЕЙ -->
+        <section class="card">
+            <h2>👥 Пользователи</h2>
             
-            <!-- Форма добавления -->
             <form id="addUserForm" class="admin-form">
                 <h3>Добавить пользователя</h3>
-                <div id="formError" class="error-message" style="display: none;"></div>
+                <div id="formError" class="error-message" style="display: none; color: #dc2626;"></div>
                 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="userName">ФИО</label>
-                        <input type="text" id="userName" required placeholder="Иванов Иван Иванович">
+                        <label for="userNameInput">ФИО</label>
+                        <input type="text" id="userNameInput" required placeholder="Иванов Иван Иванович">
                     </div>
                     <div class="form-group">
-                        <label for="userLogin">Логин</label>
-                        <input type="text" id="userLogin" required placeholder="ivanov">
+                        <label for="userLoginInput">Логин</label>
+                        <input type="text" id="userLoginInput" required placeholder="ivanov">
                     </div>
                     <div class="form-group">
-                        <label for="userPassword">Пароль</label>
-                        <input type="password" id="userPassword" required minlength="6" placeholder="Минимум 6 символов">
+                        <label for="userPasswordInput">Пароль</label>
+                        <input type="password" id="userPasswordInput" required minlength="6">
                     </div>
                     <div class="form-group">
-                        <label for="userRole">Роль</label>
-                        <select id="userRole" required>
+                        <!-- ВАЖНО: ID изменен на userRoleSelect, чтобы не конфликтовать с #userRole в шапке -->
+                        <label for="userRoleSelect">Роль</label>
+                        <select id="userRoleSelect" required>
                             <option value="worker">Сотрудник производства</option>
                             <option value="guest">Гость</option>
                             <option value="admin">Администратор</option>
@@ -81,7 +75,6 @@
                 <button type="submit" class="btn-primary">Добавить пользователя</button>
             </form>
 
-            <!-- Таблица пользователей -->
             <h3>Список пользователей</h3>
             <table class="admin-table">
                 <thead>
@@ -100,15 +93,14 @@
         </section>
 
         <!-- БЛОК МОНИТОРИНГА -->
-        <section class="admin-section">
+        <section class="card">
             <h2>📊 Мониторинг ознакомления</h2>
-            <p style="color: #64748b; margin-bottom: 15px;">Просмотр матрицы ознакомления сотрудников с операциями.</p>
+            <p>Просмотр матрицы ознакомления сотрудников с операциями.</p>
             <a href="monitoring.html" class="btn-primary">Открыть мониторинг</a>
         </section>
-
     </main>
 
-    <!-- СКРИПТЫ: Порядок важен! Сначала auth/kb, потом логика админки -->
+    <!-- СКРИПТЫ -->
     <script src="js/auth.js"></script>
     <script src="js/kb.js"></script>
     <script src="js/admin-panel.js"></script>
