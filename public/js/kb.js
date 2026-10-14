@@ -501,19 +501,29 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // --- Dashboard: карточки разделов из реестра с фильтром по правам ---
+    // --- Dashboard: карточки разделов из реестра с ФИЛЬТРАЦИЕЙ по правам ---
     const grid = document.getElementById('cardsGrid');
     if (grid && isAuthenticated()) {
         const user = kbGetCurrentUser();
         grid.innerHTML = '';
         let visible = 0;
+        
         KB_SECTIONS.forEach(sec => {
+            // ПРОВЕРКА ДОСТУПА ПЕРЕД ОТРИСОВКОЙ
             const allowed = kbUserCanViewSection(user, sec.id);
-            if (allowed) visible++;
-            const card = document.createElement(allowed ? 'a' : 'div');
-            card.className = 'card card-section' + (allowed ? '' : ' card-disabled');
-            if (allowed) card.href = prefix + sec.page;
+            
+            // Если доступ запрещен — ПРОПУСКАЕМ отрисовку этой карточки полностью
+            if (!allowed) return; 
+
+            visible++;
+            
+            // Создаем активную ссылку (теперь все карточки здесь точно доступны)
+            const card = document.createElement('a');
+            card.className = 'card card-section';
+            card.href = prefix + sec.page;
+            
             const opsTotal = KB_OPERATIONS.filter(o => o.section === sec.id).length;
+            
             card.innerHTML = `
                 <div class="card-number">${sec.num}</div>
                 <div class="card-icon"><img src="${sec.img}" alt=""></div>
@@ -521,12 +531,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 <p>${sec.desc}</p>
                 <div class="card-stats">
                     <span class="card-badge">${opsTotal ? opsTotal + ' операций' : 'в разработке'}</span>
-                    ${allowed ? '' : '<span class="card-badge card-badge-lock">🔒 Нет доступа</span>'}
                 </div>`;
+                
             grid.appendChild(card);
         });
+
+        // Обновляем счетчики только по ВИДИМЫМ разделам
         const statSec = document.getElementById('stat-sections');
         if (statSec) statSec.textContent = String(visible);
+        
         const statOps = document.getElementById('stat-operations');
         if (statOps) {
             const n = KB_OPERATIONS.filter(o => o.status === 'ready' && kbUserCanViewOperation(user, o)).length;
