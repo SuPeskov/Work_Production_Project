@@ -128,8 +128,6 @@ app.get('/api/access/:sectionId', auth(), (req, res) => {
 
 // Защита страниц по ролям: запрещённые разделы отдают 403 вместо HTML.
 // id разделов = имена файлов (preparation, panels, module, options, installation, service).
-const SECTION_BY_PATH = { preparation: 'preparation', panels: 'panels', module: 'module', options: 'options', installation: 'installation', service: 'service' };
-// Защита страниц по ролям: запрещённые разделы отдают 403 вместо HTML
 const SECTION_BY_PATH = { preparation: 'preparation', panels: 'panels', module: 'module', options: 'options', assembly: 'assembly', safety: 'safety' };
 app.use((req, res, next) => {
     // Дашборд доступен всем авторизованным пользователям (они сами увидят только свои разделы)
