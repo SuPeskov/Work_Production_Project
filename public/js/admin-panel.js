@@ -81,11 +81,11 @@ document.addEventListener('DOMContentLoaded', function () {
         e.preventDefault();
         hideError();
 
-        // Используем правильные ID из обновленного HTML
+        // ИСПРАВЛЕНО: Используем правильные ID из обновленного HTML
         const name = document.getElementById('userName').value.trim();
         const username = document.getElementById('userLogin').value.trim().toLowerCase();
         const password = document.getElementById('userPassword').value;
-        const role = document.getElementById('userRoleSelect').value; // Обратите внимание на Select
+        const role = document.getElementById('userRoleSelect').value; 
         const sections = Array.from(document.querySelectorAll('input[name="sections"]:checked')).map(cb => cb.value);
 
         if (!name || !username || !password || !role) {

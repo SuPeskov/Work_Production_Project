@@ -8,9 +8,9 @@ function setSession(user) {
     const session = {
         username: user.username,
         name: user.name,
-        // ВАЖНО: сервер возвращает role='admin', но фронтенд (kb.js) ожидает 'Администратор'.
-        // Используем roleLabel с сервера, если он есть, иначе fallback на role.
-        role: user.roleLabel || user.role,
+        // ВАЖНО: сервер возвращает role='admin', но kb.js ожидает 'Администратор'
+        // Используем roleLabel с сервера, если он есть
+        role: user.roleLabel || user.role, 
         access: user.access || [],
         loginTime: new Date().toISOString()
     };
