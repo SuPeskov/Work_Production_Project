@@ -6,21 +6,20 @@
     <title>Мониторинг ознакомления — Скаут Хаус | ППР</title>
     <link rel="stylesheet" href="css/style.css">
     <style>
-        /* Дополнительные стили для таблиц мониторинга, если их нет в style.css */
+        /* Локальные стили только для специфичных элементов мониторинга */
         .matrix-table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; }
         .matrix-table th, .matrix-table td { border: 1px solid #e2e8f0; padding: 8px; text-align: left; }
         .matrix-table th { background: #f8fafc; font-weight: 600; }
         .user-cell { white-space: nowrap; }
-        .user-deleted { color: #94a3b8; font-style: italic; }
-        .badge-read { background: #dcfce7; color: #166534; padding: 2px 6px; border-radius: 4px; font-size: 12px; }
         .log-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         .log-table th, .log-table td { border-bottom: 1px solid #e2e8f0; padding: 10px; text-align: left; }
         .pagination { margin-top: 20px; display: flex; gap: 10px; justify-content: center; }
-        .pagination button { padding: 8px 16px; cursor: pointer; }
+        .pagination button { padding: 8px 16px; cursor: pointer; border: 1px solid #cbd5e1; background: #fff; border-radius: 4px; }
+        .pagination button:hover:not(:disabled) { background: #f1f5f9; }
     </style>
 </head>
 <body>
-    <!-- ШАПКА (копия из dashboard/admin для единообразия) -->
+    <!-- ШАПКА -->
     <header class="top-bar">
         <div class="top-bar-left">
             <div class="logo-small">
@@ -67,7 +66,7 @@
                         </tr>
                     </thead>
                     <tbody id="matrixBody">
-                        <tr><td colspan="4" style="text-align:center; padding: 20px;">Загрузка данных с сервера...</td></tr>
+                        <tr><td colspan="4" style="text-align:center; padding: 20px;">Загрузка данных...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -93,164 +92,11 @@
         </section>
     </main>
 
+    <!-- ПОДКЛЮЧЕНИЕ СКРИПТОВ -->
+    <!-- Сначала базовые библиотеки -->
     <script src="js/auth.js"></script>
     <script src="js/kb.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', async () => {
-            // 1. Инициализация шапки (стандартная логика из kb.js/auth.js)
-            const user = kbGetCurrentUser();
-            if (!user) {
-                window.location.href = 'index.html';
-                return;
-            }
-            
-            const userNameEl = document.getElementById('userName');
-            const userRoleEl = document.getElementById('userRole');
-            const userAvatarEl = document.getElementById('userAvatar');
-            const logoutBtn = document.getElementById('logoutBtn');
-
-            if (userNameEl) userNameEl.textContent = user.name || user.username;
-            if (userRoleEl) userRoleEl.textContent = user.role;
-            if (userAvatarEl) userAvatarEl.textContent = (user.name || 'U').charAt(0).toUpperCase();
-            
-            if (logoutBtn) {
-                logoutBtn.onclick = (e) => {
-                    e.preventDefault();
-                    logout();
-                };
-            }
-
-            // 2. Загрузка данных с СЕРВЕРА (а не из localStorage)
-            try {
-                const response = await fetch('/api/reads', { credentials: 'include' });
-                if (!response.ok) throw new Error('Ошибка загрузки данных');
-                const reads = await response.json(); // Массив объектов { id, user_id, username, full_name, op_id, op_title, section_id, version, read_at }
-
-                renderMatrix(reads);
-                renderLog(reads);
-
-            } catch (error) {
-                console.error(error);
-                document.getElementById('matrixBody').innerHTML = `<tr><td colspan="4" style="color:red; text-align:center;">Ошибка загрузки данных: ${error.message}</td></tr>`;
-            }
-
-            // 3. Рендер Матрицы
-            function renderMatrix(reads) {
-                const tbody = document.getElementById('matrixBody');
-                tbody.innerHTML = '';
-
-                // Группируем по операциям
-                // Структура: { "op_id": { title: "...", section: "...", version: "...", users: ["Name1", "Name2"] } }
-                const opsMap = {};
-                
-                // Сначала заполняем всеми известными операциями из KB_OPERATIONS (чтобы показать даже те, где 0 ознакомлений)
-                if (typeof KB_OPERATIONS !== 'undefined') {
-                    KB_OPERATIONS.forEach(op => {
-                        opsMap[op.id] = {
-                            title: op.title,
-                            section: op.section,
-                            version: op.version || '1',
-                            users: new Set()
-                        };
-                    });
-                }
-
-                // Добавляем данные о прочтениях
-                reads.forEach(r => {
-                    if (!opsMap[r.op_id]) {
-                        opsMap[r.op_id] = {
-                            title: r.op_title || r.op_id,
-                            section: r.section_id,
-                            version: r.version,
-                            users: new Set()
-                        };
-                    }
-                    // Используем full_name из серверной записи
-                    opsMap[r.op_id].users.add(r.full_name || r.username);
-                });
-
-                // Сортируем по ID операции
-                const sortedOps = Object.entries(opsMap).sort((a, b) => {
-                    return a[0].localeCompare(b[0], undefined, { numeric: true });
-                });
-
-                if (sortedOps.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Нет данных об операциях</td></tr>';
-                    return;
-                }
-
-                sortedOps.forEach(([opId, data]) => {
-                    const tr = document.createElement('tr');
-                    
-                    // Название раздела (человекочитаемое)
-                    let sectionTitle = data.section;
-                    if (typeof KB_SECTIONS !== 'undefined') {
-                        const sec = KB_SECTIONS.find(s => s.id === data.section);
-                        if (sec) sectionTitle = sec.title;
-                    }
-
-                    const usersList = Array.from(data.users).join(', ') || '—';
-
-                    tr.innerHTML = `
-                        <td>${sectionTitle}</td>
-                        <td><strong>${opId}</strong> ${data.title}</td>
-                        <td>v${data.version}</td>
-                        <td class="user-cell">${usersList}</td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            }
-
-            // 4. Рендер Журнала (с пагинацией)
-            const LOG_PAGE_SIZE = 30;
-            let currentPage = 1;
-
-            function renderLog(reads) {
-                const tbody = document.getElementById('logBody');
-                const pagination = document.getElementById('paginationControls');
-                tbody.innerHTML = '';
-
-                // Сортировка по дате (новые сверху)
-                const sortedReads = [...reads].sort((a, b) => new Date(b.read_at) - new Date(a.read_at));
-                
-                const totalPages = Math.ceil(sortedReads.length / LOG_PAGE_SIZE);
-                const start = (currentPage - 1) * LOG_PAGE_SIZE;
-                const pageData = sortedReads.slice(start, start + LOG_PAGE_SIZE);
-
-                if (pageData.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Журнал пуст</td></tr>';
-                    pagination.innerHTML = '';
-                    return;
-                }
-
-                pageData.forEach(r => {
-                    const tr = document.createElement('tr');
-                    const date = new Date(r.read_at).toLocaleString('ru-RU');
-                    tr.innerHTML = `
-                        <td>${date}</td>
-                        <td>${r.full_name || r.username}</td>
-                        <td>${r.op_title || r.op_id}</td>
-                        <td>v${r.version}</td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-
-                // Пагинация
-                pagination.innerHTML = '';
-                if (totalPages > 1) {
-                    for (let i = 1; i <= totalPages; i++) {
-                        const btn = document.createElement('button');
-                        btn.textContent = i;
-                        btn.disabled = (i === currentPage);
-                        btn.onclick = () => {
-                            currentPage = i;
-                            renderLog(reads); // Перерисовываем с новыми данными
-                        };
-                        pagination.appendChild(btn);
-                    }
-                }
-            }
-        });
-    </script>
+    <!-- Затем наша логика мониторинга -->
+    <script src="js/monitoring.js"></script>
 </body>
 </html>
