@@ -97,15 +97,31 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const data = await response.json();
 
-            if (response.ok && data.ok) {
-                hideError();
-                setSession(data.user); // Здесь теперь корректно сохранится roleLabel
-                btn.classList.add('success');
-                btn.querySelector('span').textContent = 'Вход выполнен!';
-                setTimeout(() => {
-                    window.location.href = 'dashboard.html';
-                }, 800);
-            } else {
+// ... внутри loginForm.addEventListener ...
+if (response.ok && data.ok) {
+    hideError();
+    
+    // Запрашиваем полные данные пользователя (с разделами)
+    const meResponse = await fetch('/api/me', { credentials: 'include' });
+    const meData = await meResponse.json();
+    
+    if (meData.user) {
+        // Сохраняем в сессию данные с сервера (включая sections как access)
+        setSession({
+            ...meData.user,
+            access: meData.sections // Сервер возвращает список разрешенных разделов в поле sections
+        });
+    } else {
+        setSession(data.user); // Fallback
+    }
+
+    btn.classList.add('success');
+    btn.querySelector('span').textContent = 'Вход выполнен!';
+    setTimeout(() => {
+        window.location.href = 'dashboard.html';
+    }, 800);
+}
+ else {
                 showError(data.error || 'Неверный логин или пароль');
                 loginForm.classList.add('shake');
                 setTimeout(() => loginForm.classList.remove('shake'), 500);

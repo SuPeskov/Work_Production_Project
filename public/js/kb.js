@@ -140,14 +140,21 @@ function kbUserCanConfirmRead(user) {
 
 function kbGetCurrentUser() {
     try {
+        // Читаем сессию, которую создал auth.js при входе через /api/login
         const data = sessionStorage.getItem('modular_house_session');
         if (!data) return null;
+        
         const user = JSON.parse(data);
         
-        // Проверка валидности (если роль не сохранена как русская строка, пробуем исправить)
-        // auth.js должен был сохранить roleLabel, но на всякий случай
-        if (!user.role && user.roleLabel) user.role = user.roleLabel;
+        // Критически важно: auth.js должен был сохранить roleLabel (русское название роли)
+        // и access (список разделов). Если их нет — пользователь не авторизован корректно.
+        if (!user.role) return null;
         
+        // Нормализуем роль: если пришла английская (admin), заменяем на русскую для проверки прав
+        if (user.role === 'admin') user.role = 'Администратор';
+        else if (user.role === 'worker') user.role = 'Сотрудник производства';
+        else if (user.role === 'guest') user.role = 'Гость';
+
         return user;
     } catch (e) {
         console.error('Ошибка чтения сессии:', e);
