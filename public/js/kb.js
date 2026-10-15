@@ -138,48 +138,21 @@ function kbUserCanConfirmRead(user) {
     return !!user && user.role === ROLE_WORKER;
 }
 
-/**
- * Актуальный профиль текущего пользователя (для страниц операций, где
- * подключены только users.js + kb.js, без auth.js).
- * 1) Читает сессию из sessionStorage напрямую;
- * 2) Самовосстанавливает роль/доступ из USERS_DB (встроенные аккаунты)
- *    или из локальной БД (созданные администратором);
- * 3) Обновляет сессию в sessionStorage.
- */
 function kbGetCurrentUser() {
-    let user = null;
     try {
         const data = sessionStorage.getItem('modular_house_session');
-        if (data) user = JSON.parse(data);
-    } catch (e) { user = null; }
-    if (!user || !user.username) return null;
-
-    // Гость, созданный администратором через панель управления, хранится только
-    // в локальной БД — проверяем её ПЕРВОЙ. Иначе встроенный демо-гость (guest)
-    // перекрывал бы любого созданного гостя и выдавал ему свой полный доступ ко всем разделам.
-    let fresh = kbReadDbUser(user.username);
-    if (!fresh && typeof USERS_DB !== 'undefined') {
-        fresh = USERS_DB.find(u => u.username === user.username) || null;
-    }
-    if (fresh) {
-        if (fresh.role !== user.role || JSON.stringify(fresh.access) !== JSON.stringify(user.access)) {
-            user.role = fresh.role;
-            user.access = fresh.access;
-            try { sessionStorage.setItem('modular_house_session', JSON.stringify(user)); } catch (e) {}
-        }
-        // Сессия «Гость» без назначенного доступа к разделам не считается авторизованной:
-        // это старый след от убранного быстрого гостевого входа (тогда гость был бесконтрольным).
-        // Сейчас гость создаётся администратором с конкретным списком разделов.
-        if (user.role === ROLE_GUEST && (!Array.isArray(user.access) || user.access.length === 0)) {
-            try { sessionStorage.removeItem('modular_house_session'); } catch (e) {}
-            return null;
-        }
-    } else if (user.role === ROLE_GUEST) {
-        // Старая сессия от убранного быстрого гостевого входа или удалённого аккаунта — не считаем авторизованной
-        try { sessionStorage.removeItem('modular_house_session'); } catch (e) {}
+        if (!data) return null;
+        const user = JSON.parse(data);
+        
+        // Проверка валидности (если роль не сохранена как русская строка, пробуем исправить)
+        // auth.js должен был сохранить roleLabel, но на всякий случай
+        if (!user.role && user.roleLabel) user.role = user.roleLabel;
+        
+        return user;
+    } catch (e) {
+        console.error('Ошибка чтения сессии:', e);
         return null;
     }
-    return user;
 }
 
 // ============================================================
@@ -438,27 +411,31 @@ document.addEventListener('DOMContentLoaded', function () {
             </div>`;
     }
 
-    // --- Панель пользователя в шапке + выход ---
-    // Поддержка обоих id: currentUserName/currentUserRole (предпочтительно, не конфликтует
-    // с полями формы добавления пользователя) и legacy userName/userRole
-    let userNameEl = document.getElementById('currentUserName') || document.getElementById('userName');
-    if (userNameEl && userNameEl.tagName !== 'SPAN') userNameEl = document.getElementById('currentUserName');
-    if (userNameEl && isAuthenticated()) {
-        const user = kbGetCurrentUser();
+// --- Панель пользователя в шапке + выход ---
+let userNameEl = document.getElementById('currentUserName') || document.getElementById('userName');
+// Убираем проверку tagName, так как в новой верстке это всегда SPAN
+if (userNameEl && isAuthenticated()) {
+    const user = kbGetCurrentUser();
+    if (user) {
         const roleEl = document.getElementById('currentUserRole') || document.getElementById('userRole');
         const avatarEl = document.getElementById('userAvatar');
-        if (roleEl && roleEl.tagName === 'SPAN') roleEl.textContent = user.role;
-        if (avatarEl) avatarEl.textContent = user.name.charAt(0).toUpperCase();
-        if (user.name) userNameEl.textContent = user.name;
+        
+        // Заполняем данные
+        if (roleEl) roleEl.textContent = user.role || 'Пользователь';
+        if (avatarEl) avatarEl.textContent = (user.name || user.username || '?').charAt(0).toUpperCase();
+        if (userNameEl) userNameEl.textContent = user.name || user.username;
+
+        // Кнопка выхода
         const logoutBtn = document.getElementById('logoutBtn');
         if (logoutBtn) {
             logoutBtn.onclick = function (e) {
                 e.preventDefault();
-                logout();
-                window.location.href = prefix + 'index.html';
+                logout(); // Вызываем исправленную функцию из auth.js (она сама сделает редирект)
+                // НЕ делаем window.location.href здесь!
             };
         }
     }
+}
 
     // --- Кнопки в шапке по ролям ---
     // Гость: только «В базу знаний» (на любой странице).

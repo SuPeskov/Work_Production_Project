@@ -37,12 +37,15 @@ function logout() {
     // 1. Очищаем локальную сессию
     sessionStorage.removeItem(SESSION_KEY);
     
-    // 2. Отправляем запрос на сервер для удаления httpOnly-куки kb_token
+    // 2. Отправляем запрос на сервер и ЖДЕМ его завершения
     fetch('/api/logout', { 
         method: 'POST', 
         credentials: 'include' 
-    }).finally(() => {
-        // 3. Перенаправляем на главную только после отправки запроса
+    }).then(() => {
+        // 3. Только после ответа сервера переходим на главную
+        window.location.href = 'index.html';
+    }).catch(() => {
+        // Даже если ошибка сети — все равно переходим
         window.location.href = 'index.html';
     });
 }
