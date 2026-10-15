@@ -1,99 +1,194 @@
 /**
  * admin-panel.js — Управление пользователями через реальный API сервера
+ * Исправленная версия: все функции доступны в нужной области видимости
  */
-
-// Глобальная функция для диагностики
-async function loadUsers() {
-    const tableBody = document.getElementById('usersTableBody');
-    if (!tableBody) return;
-    
-    try {
-        const response = await fetch('/api/admin/users', { credentials: 'include' });
-        if (!response.ok) throw new Error('Ошибка загрузки');
-        const users = await response.json();
-        renderUsers(users);
-    } catch (error) {
-        console.error('Ошибка загрузки:', error);
-        showError('Не удалось загрузить список пользователей');
-    }
-}
-
-function renderUsers(users) {
-    const tableBody = document.getElementById('usersTableBody');
-    tableBody.innerHTML = '';
-    users.forEach(user => {
-        const tr = document.createElement('tr');
-        
-        const tdName = document.createElement('td');
-        tdName.textContent = user.name;
-        tr.appendChild(tdName);
-
-        const tdLogin = document.createElement('td');
-        tdLogin.textContent = user.username;
-        tr.appendChild(tdLogin);
-
-        const tdRole = document.createElement('td');
-        const roleLabel = { admin: 'Администратор', worker: 'Сотрудник производства', guest: 'Гость' }[user.role] || user.role;
-        tdRole.textContent = roleLabel;
-        tr.appendChild(tdRole);
-
-        const tdAccess = document.createElement('td');
-        if (user.role === 'admin') {
-            tdAccess.textContent = 'все разделы';
-        } else if (user.sections && user.sections.length > 0) {
-            tdAccess.textContent = user.sections.join(', ');
-        } else {
-            tdAccess.textContent = '—';
-        }
-        tr.appendChild(tdAccess);
-
-        const tdActions = document.createElement('td');
-        
-        const btnPassword = document.createElement('button');
-        btnPassword.textContent = 'Пароль...';
-        btnPassword.className = 'btn-action';
-        btnPassword.onclick = () => changePassword(user.id, user.username);
-        tdActions.appendChild(btnPassword);
-
-        if (user.role !== 'admin') {
-            const btnAccess = document.createElement('button');
-            btnAccess.textContent = 'Доступ...';
-            btnAccess.className = 'btn-action';
-            btnAccess.onclick = () => changeAccess(user.id, user.username, user.sections);
-            tdActions.appendChild(btnAccess);
-
-            const btnDelete = document.createElement('button');
-            btnDelete.textContent = 'Удалить';
-            btnDelete.className = 'btn-action btn-delete';
-            btnDelete.onclick = () => deleteUser(user.id, user.username);
-            tdActions.appendChild(btnDelete);
-        }
-
-        tr.appendChild(tdActions);
-        tableBody.appendChild(tr);
-    });
-}
 
 document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('addUserForm');
+    const tableBody = document.getElementById('usersTableBody');
     const errorDiv = document.getElementById('formError');
 
-    if (!form) {
-        console.error('❌ Форма addUserForm не найдена!');
+    if (!form || !tableBody) {
+        console.error('❌ Форма или таблица не найдены');
         return;
     }
 
     console.log('✅ admin-panel.js загружен, форма найдена');
 
+    // --- Функции действий (объявлены здесь, чтобы быть доступными для renderUsers) ---
+
+    async function deleteUser(userId, username) {
+        if (!confirm(`Вы уверены, что хотите удалить пользователя "${username}"?`)) return;
+        
+        try {
+            const response = await fetch(`/api/admin/users/${userId}`, {
+                method: 'DELETE',
+                credentials: 'include'
+            });
+            const data = await response.json();
+            
+            if (response.ok && data.ok) {
+                alert('Пользователь удален');
+                await loadUsers(); // Перезагружаем список
+            } else {
+                alert('Ошибка: ' + (data.error || 'Не удалось удалить'));
+            }
+        } catch (error) {
+            console.error('Ошибка удаления:', error);
+            alert('Ошибка соединения с сервером');
+        }
+    }
+
+    async function changePassword(userId, username) {
+        const newPassword = prompt(`Введите новый пароль для "${username}":`);
+        if (!newPassword) return;
+        if (newPassword.length < 6) {
+            alert('Пароль должен быть минимум 6 символов');
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/admin/users/${userId}/password`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ password: newPassword })
+            });
+            const data = await response.json();
+            if (response.ok && data.ok) {
+                alert('Пароль изменен');
+            } else {
+                alert('Ошибка: ' + (data.error || 'Не удалось изменить пароль'));
+            }
+        } catch (error) {
+            console.error('Ошибка смены пароля:', error);
+            alert('Ошибка соединения');
+        }
+    }
+
+    async function changeAccess(userId, username, currentSections) {
+        const input = prompt(
+            `Введите ID разделов через запятую для "${username}":\n(preparation, panels, module, options, installation, service)\n\nТекущие: ${currentSections ? currentSections.join(', ') : 'нет'}`,
+            currentSections ? currentSections.join(', ') : ''
+        );
+        if (input === null) return;
+
+        const sectionsList = input.split(',').map(s => s.trim()).filter(s => s);
+
+        try {
+            const response = await fetch(`/api/admin/users/${userId}/access`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ sections: sectionsList })
+            });
+            const data = await response.json();
+            if (response.ok && data.ok) {
+                alert('Доступ обновлен');
+                await loadUsers();
+            } else {
+                alert('Ошибка: ' + (data.error || 'Не удалось обновить доступ'));
+            }
+        } catch (error) {
+            console.error('Ошибка обновления доступа:', error);
+            alert('Ошибка соединения');
+        }
+    }
+
+    // --- Отрисовка таблицы ---
+
+    function renderUsers(users) {
+        tableBody.innerHTML = '';
+        users.forEach(user => {
+            const tr = document.createElement('tr');
+            
+            // ФИО
+            const tdName = document.createElement('td');
+            tdName.textContent = user.name;
+            tr.appendChild(tdName);
+
+            // Логин
+            const tdLogin = document.createElement('td');
+            tdLogin.textContent = user.username;
+            tr.appendChild(tdLogin);
+
+            // Роль
+            const tdRole = document.createElement('td');
+            const roleLabels = { admin: 'Администратор', worker: 'Сотрудник производства', guest: 'Гость' };
+            tdRole.textContent = roleLabels[user.role] || user.role;
+            tr.appendChild(tdRole);
+
+            // Доступ
+            const tdAccess = document.createElement('td');
+            if (user.role === 'admin') {
+                tdAccess.textContent = 'все разделы';
+            } else if (user.sections && user.sections.length > 0) {
+                tdAccess.textContent = user.sections.join(', ');
+            } else {
+                tdAccess.textContent = '—';
+            }
+            tr.appendChild(tdAccess);
+
+            // Действия
+            const tdActions = document.createElement('td');
+            
+            // Кнопка Пароль
+            const btnPass = document.createElement('button');
+            btnPass.textContent = 'Пароль...';
+            btnPass.className = 'btn-action';
+            btnPass.onclick = () => changePassword(user.id, user.username);
+            tdActions.appendChild(btnPass);
+
+            // Кнопки для не-админов
+            if (user.role !== 'admin') {
+                const btnAccess = document.createElement('button');
+                btnAccess.textContent = 'Доступ...';
+                btnAccess.className = 'btn-action';
+                btnAccess.onclick = () => changeAccess(user.id, user.username, user.sections);
+                tdActions.appendChild(btnAccess);
+
+                const btnDel = document.createElement('button');
+                btnDel.textContent = 'Удалить';
+                btnDel.className = 'btn-action btn-delete';
+                // Теперь deleteUser доступна, так как объявлена в той же области видимости
+                btnDel.onclick = () => deleteUser(user.id, user.username);
+                tdActions.appendChild(btnDel);
+            }
+
+            tr.appendChild(tdActions);
+            tableBody.appendChild(tr);
+        });
+    }
+
+    // --- Загрузка пользователей ---
+
+    async function loadUsers() {
+        try {
+            const response = await fetch('/api/admin/users', { credentials: 'include' });
+            if (!response.ok) throw new Error('Ошибка загрузки');
+            const users = await response.json();
+            renderUsers(users);
+        } catch (error) {
+            console.error('Ошибка загрузки пользователей:', error);
+            showError('Не удалось загрузить список пользователей');
+        }
+    }
+
+    // --- Обработка формы создания ---
+
     form.addEventListener('submit', async function (e) {
         e.preventDefault();
         hideError();
 
-        // ИСПОЛЬЗУЕМ НОВЫЕ ID (без конфликта с шапкой)
         const nameInput = document.getElementById('userNameInput');
         const loginInput = document.getElementById('userLoginInput');
         const passInput = document.getElementById('userPasswordInput');
         const roleInput = document.getElementById('userRoleSelect');
+
+        if (!nameInput || !loginInput || !passInput || !roleInput) {
+            showError('Поля формы не найдены');
+            return;
+        }
 
         const name = nameInput.value.trim();
         const username = loginInput.value.trim().toLowerCase();
@@ -101,15 +196,13 @@ document.addEventListener('DOMContentLoaded', function () {
         const role = roleInput.value;
         const sections = Array.from(document.querySelectorAll('input[name="sections"]:checked')).map(cb => cb.value);
 
-        console.log('📤 Отправка:', { username, name, role, password: '***', sections });
-
         if (!name || !username || !password || !role) {
             showError('Заполните все обязательные поля');
             return;
         }
 
         if (password.length < 6) {
-            showError('Пароль должен содержать минимум 6 символов');
+            showError('Пароль минимум 6 символов');
             return;
         }
 
@@ -127,89 +220,24 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
             const data = await response.json();
-            console.log('📥 Ответ сервера:', response.status, data);
 
             if (response.ok && data.ok) {
                 form.reset();
                 await loadUsers();
-                alert('✅ Пользователь успешно создан!');
+                alert('Пользователь создан!');
             } else {
-                showError(data.error || 'Ошибка создания пользователя');
+                showError(data.error || 'Ошибка создания');
             }
         } catch (error) {
-            console.error('💥 Ошибка:', error);
-            showError('Ошибка соединения с сервером: ' + error.message);
+            console.error('Ошибка создания:', error);
+            showError('Ошибка соединения с сервером');
         } finally {
             btn.disabled = false;
             btn.textContent = originalText;
         }
     });
 
-    async function deleteUser(userId, username) {
-        if (!confirm(`Удалить пользователя "${username}"?`)) return;
-        try {
-            const response = await fetch(`/api/admin/users/${userId}`, {
-                method: 'DELETE',
-                credentials: 'include'
-            });
-            const data = await response.json();
-            if (response.ok && data.ok) {
-                await loadUsers();
-                alert('Пользователь удалён');
-            } else {
-                alert(data.error || 'Ошибка удаления');
-            }
-        } catch (error) {
-            alert('Ошибка соединения');
-        }
-    }
-
-    async function changePassword(userId, username) {
-        const newPassword = prompt(`Новый пароль для "${username}":`);
-        if (!newPassword || newPassword.length < 6) {
-            if (newPassword) alert('Минимум 6 символов');
-            return;
-        }
-        try {
-            const response = await fetch(`/api/admin/users/${userId}/password`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify({ password: newPassword })
-            });
-            const data = await response.json();
-            if (response.ok && data.ok) alert('Пароль изменён');
-            else alert(data.error || 'Ошибка');
-        } catch (error) {
-            alert('Ошибка соединения');
-        }
-    }
-
-    async function changeAccess(userId, username, currentSections) {
-        const sections = prompt(
-            `ID разделов через запятую для "${username}":\n(preparation, panels, module, options, installation, service)\n\nТекущий: ${currentSections ? currentSections.join(', ') : 'нет'}`,
-            currentSections ? currentSections.join(', ') : ''
-        );
-        if (sections === null) return;
-        const sectionsList = sections.split(',').map(s => s.trim()).filter(s => s);
-        try {
-            const response = await fetch(`/api/admin/users/${userId}/access`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify({ sections: sectionsList })
-            });
-            const data = await response.json();
-            if (response.ok && data.ok) {
-                await loadUsers();
-                alert('Доступ обновлён');
-            } else {
-                alert(data.error || 'Ошибка');
-            }
-        } catch (error) {
-            alert('Ошибка соединения');
-        }
-    }
+    // --- Вспомогательные функции UI ---
 
     function showError(msg) {
         if (errorDiv) {
@@ -222,6 +250,6 @@ document.addEventListener('DOMContentLoaded', function () {
         if (errorDiv) errorDiv.style.display = 'none';
     }
 
-    // Загружаем пользователей при открытии страницы
+    // Запуск при загрузке
     loadUsers();
 });
