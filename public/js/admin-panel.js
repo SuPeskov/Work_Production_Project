@@ -66,35 +66,82 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    async function changeAccess(userId, username, currentSections) {
-        const input = prompt(
-            `Введите ID разделов через запятую для "${username}":\n(preparation, panels, module, options, installation, service)\n\nТекущие: ${currentSections ? currentSections.join(', ') : 'нет'}`,
-            currentSections ? currentSections.join(', ') : ''
-        );
-        if (input === null) return;
+     // --- Логика Модального Окна Доступа ---
+    const accessModal = document.getElementById('accessModal');
+    const closeAccessModalBtn = document.getElementById('closeAccessModal');
+    const cancelAccessModalBtn = document.getElementById('cancelAccessModal');
+    const saveAccessModalBtn = document.getElementById('saveAccessModal');
+    const modalUserName = document.getElementById('modalUserName');
+    const modalCheckboxes = document.querySelectorAll('input[name="modal_sections"]');
+    
+    let currentEditingUserId = null;
 
-        const sectionsList = input.split(',').map(s => s.trim()).filter(s => s);
+    // Открытие модалки
+    function openAccessModal(userId, username, currentSections) {
+        currentEditingUserId = userId;
+        modalUserName.textContent = username;
+        
+        // Сбрасываем и устанавливаем галочки
+        modalCheckboxes.forEach(cb => {
+            cb.checked = currentSections && currentSections.includes(cb.value);
+        });
+
+        accessModal.style.display = 'flex';
+    }
+
+    // Закрытие модалки
+    function closeAccessModal() {
+        accessModal.style.display = 'none';
+        currentEditingUserId = null;
+    }
+
+    // Сохранение изменений
+    async function saveAccessChanges() {
+        if (!currentEditingUserId) return;
+
+        const selectedSections = Array.from(modalCheckboxes)
+            .filter(cb => cb.checked)
+            .map(cb => cb.value);
 
         try {
-            const response = await fetch(`/api/admin/users/${userId}/access`, {
+            const response = await fetch(`/api/admin/users/${currentEditingUserId}/access`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
-                body: JSON.stringify({ sections: sectionsList })
+                body: JSON.stringify({ sections: selectedSections })
             });
+
             const data = await response.json();
             if (response.ok && data.ok) {
-                alert('Доступ обновлен');
-                await loadUsers();
+                alert('Доступ успешно обновлен');
+                closeAccessModal();
+                await loadUsers(); // Обновляем таблицу
             } else {
-                alert('Ошибка: ' + (data.error || 'Не удалось обновить доступ'));
+                alert('Ошибка: ' + (data.error || 'Не удалось сохранить'));
             }
         } catch (error) {
-            console.error('Ошибка обновления доступа:', error);
-            alert('Ошибка соединения');
+            console.error('Ошибка сохранения доступа:', error);
+            alert('Ошибка соединения с сервером');
         }
     }
 
+    // Обработчики событий для модалки
+    if (closeAccessModalBtn) closeAccessModalBtn.onclick = closeAccessModal;
+    if (cancelAccessModalBtn) cancelAccessModalBtn.onclick = closeAccessModal;
+    if (saveAccessModalBtn) saveAccessModalBtn.onclick = saveAccessChanges;
+    
+    // Закрытие по клику вне окна
+    window.onclick = function(event) {
+        if (event.target == accessModal) {
+            closeAccessModal();
+        }
+    }
+
+    // --- ЗАМЕНА СТАРОЙ ФУНКЦИИ changeAccess ---
+    // Теперь она просто открывает модалку
+    async function changeAccess(userId, username, currentSections) {
+        openAccessModal(userId, username, currentSections);
+    }
     // --- Отрисовка таблицы ---
 
     function renderUsers(users) {
