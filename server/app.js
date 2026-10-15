@@ -266,7 +266,9 @@ function setSections(userId, list) {
     db.prepare('DELETE FROM user_sections WHERE user_id=?').run(userId);
     const ins = db.prepare('INSERT OR IGNORE INTO user_sections (user_id, section_id) VALUES (?,?)');
     (Array.isArray(list) ? list : []).forEach(s => {
-        if (db.prepare('SELECT id FROM sections WHERE id=?').get(s)) ins.run(userId, s);
+        // Сохраняем любой ID, который пришел с фронтенда, без проверки в таблице sections
+        // Так как список разделов фиксирован в kb.js
+        ins.run(userId, s);
     });
 }
 
