@@ -4,10 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Панель управления — Скаут Хаус | ППР</title>
+    
+    <!-- ПОДКЛЮЧЕНИЕ ШРИФТОВ (как в dashboard.html) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- СТИЛИ -->
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <!-- Верхняя навигация (ЗАФИКСИРОВАНА) -->
+    <!-- ШАПКА: Ваша утвержденная версия -->
     <header class="top-bar">
         <div class="top-bar-left">
             <div class="logo-small">
@@ -34,53 +41,58 @@
         </div>
     </header>
 
+    <!-- ОСНОВНОЙ КОНТЕНТ -->
     <main class="container">
+        
+        <!-- СЕКЦИЯ: Пользователи -->
         <section class="card">
             <h2>👥 Пользователи</h2>
             
-<form id="addUserForm" class="admin-form" autocomplete="off">
-    <h3>Добавить пользователя</h3>
-    <div id="formError" class="error-message" style="display: none; color: #dc2626;"></div>
-    
-    <div class="form-row">
-        <div class="form-group">
-            <label for="userNameInput">ФИО</label>
-            <input type="text" id="userNameInput" required placeholder="Иванов Иван Иванович" autocomplete="off">
-        </div>
-        <div class="form-group">
-            <label for="userLoginInput">Логин</label>
-            <input type="text" id="userLoginInput" required placeholder="ivanov" autocomplete="off">
-        </div>
-        <div class="form-group">
-            <label for="userPasswordInput">Пароль</label>
-            <input type="password" id="userPasswordInput" required minlength="6" autocomplete="new-password">
-        </div>
-        <div class="form-group">
-            <label for="userRoleSelect">Роль</label>
-            <select id="userRoleSelect" required>
-                <option value="worker">Сотрудник производства</option>
-                <option value="guest">Гость</option>
-                <option value="admin">Администратор</option>
-            </select>
-        </div>
-    </div>
+            <!-- Форма создания. autocomplete="off" отключает автозаполнение браузера -->
+            <form id="addUserForm" class="admin-form" autocomplete="off">
+                <h3>Добавить пользователя</h3>
+                <div id="formError" class="error-message" style="display: none; color: #dc2626; margin-bottom: 15px;"></div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="userNameInput">ФИО</label>
+                        <!-- ID userNameInput, чтобы не конфликтовать с #userName в шапке -->
+                        <input type="text" id="userNameInput" required placeholder="Иванов Иван Иванович" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label for="userLoginInput">Логин</label>
+                        <input type="text" id="userLoginInput" required placeholder="ivanov" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label for="userPasswordInput">Пароль</label>
+                        <input type="password" id="userPasswordInput" required minlength="6" autocomplete="new-password">
+                    </div>
+                    <div class="form-group">
+                        <label for="userRoleSelect">Роль</label>
+                        <select id="userRoleSelect" required>
+                            <option value="worker">Сотрудник производства</option>
+                            <option value="guest">Гость</option>
+                            <option value="admin">Администратор</option>
+                        </select>
+                    </div>
+                </div>
 
-    <div class="form-group">
-        <label>Доступ к разделам базы знаний:</label>
-        <div class="checkbox-group">
-            <label><input type="checkbox" name="sections" value="preparation"> Заготовка</label>
-            <label><input type="checkbox" name="sections" value="panels"> Сборка панелей</label>
-            <label><input type="checkbox" name="sections" value="module"> Сборка модуля</label>
-            <label><input type="checkbox" name="sections" value="options"> Сборка опций</label>
-            <label><input type="checkbox" name="sections" value="installation"> Монтаж</label>
-            <label><input type="checkbox" name="sections" value="service"> Сервис</label>
-        </div>
-    </div>
+                <div class="form-group">
+                    <label>Доступ к разделам базы знаний:</label>
+                    <div class="checkbox-group">
+                        <label><input type="checkbox" name="sections" value="preparation"> Заготовка</label>
+                        <label><input type="checkbox" name="sections" value="panels"> Сборка панелей</label>
+                        <label><input type="checkbox" name="sections" value="module"> Сборка модуля</label>
+                        <label><input type="checkbox" name="sections" value="options"> Сборка опций</label>
+                        <label><input type="checkbox" name="sections" value="installation"> Монтаж</label>
+                        <label><input type="checkbox" name="sections" value="service"> Сервис</label>
+                    </div>
+                </div>
 
-    <button type="submit" class="btn-primary">Добавить пользователя</button>
-</form>
+                <button type="submit" class="btn-primary">Добавить пользователя</button>
+            </form>
 
-            <h3>Список пользователей</h3>
+            <h3 style="margin-top: 30px;">Список пользователей</h3>
             <table class="admin-table">
                 <thead>
                     <tr>
@@ -97,13 +109,16 @@
             </table>
         </section>
 
+        <!-- СЕКЦИЯ: Мониторинг -->
         <section class="card">
             <h2>📊 Мониторинг ознакомления</h2>
-            <p>Просмотр матрицы ознакомления сотрудников с операциями.</p>
+            <p style="color: #64748b; margin-bottom: 15px;">Просмотр матрицы ознакомления сотрудников с операциями.</p>
             <a href="monitoring.html" class="btn-primary">Открыть мониторинг</a>
         </section>
+
     </main>
 
+    <!-- СКРИПТЫ -->
     <script src="js/auth.js"></script>
     <script src="js/kb.js"></script>
     <script src="js/admin-panel.js"></script>
