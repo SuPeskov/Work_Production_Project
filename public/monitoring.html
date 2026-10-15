@@ -4,316 +4,253 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Мониторинг ознакомления — Скаут Хаус | ППР</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
     <style>
-        .mon-wrap { max-width: 1180px; margin: 0 auto; padding: 32px 20px 80px; }
-        .mon-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,.05); overflow-x: auto; }
-        .mon-card h2 { font-size: 18px; margin: 0 0 6px; }
-        .mon-note { color: #64748b; font-size: 13px; margin: 0 0 16px; }
-        table.mon-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        .mon-table th { text-align: left; padding: 9px 10px; background: #f8fafc; color: #475569; font-weight: 600; border-bottom: 2px solid #e2e8f0; white-space: nowrap; }
-        .mon-table td { padding: 8px 10px; border-bottom: 1px solid #eef2f7; vertical-align: top; }
-        .op-cell { min-width: 260px; }
-        .op-cell a { color: #2563eb; text-decoration: none; font-weight: 600; }
-        .op-cell a:hover { text-decoration: underline; }
-        .read-chip { display: inline-block; background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; border-radius: 6px; padding: 3px 8px; margin: 2px 4px 2px 0; font-size: 12px; }
-        .not-read { color: #cbd5e1; }
-        /* Выпадающий список ознакомившихся (компактная ячейка матрицы) */
-        .roster-wrap { position: relative; display: inline-block; }
-        .roster-btn { display: inline-flex; align-items: center; gap: 8px; background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; border-radius: 8px; padding: 6px 12px; font: 600 13px Inter, sans-serif; cursor: pointer; transition: background .15s, border-color .15s; }
-        .roster-btn:hover { background: #dcfce7; border-color: #86efac; }
-        .roster-btn .caret { font-size: 10px; color: #16a34a; transition: transform .15s; }
-        .roster-wrap.open .roster-btn .caret { transform: rotate(180deg); }
-        .roster-menu { display: none; position: absolute; top: calc(100% + 6px); left: 0; z-index: 60; width: min(430px, calc(100vw - 48px)); max-height: 260px; overflow-y: auto; overscroll-behavior: contain; background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; box-shadow: 0 8px 24px rgba(15,23,42,.14); padding: 6px; }
-        .roster-wrap.open .roster-menu { display: block; }
-        /* Двухстрочная карточка: ФИО сверху, дата/время снизу — ничего не обрезается */
-        .roster-item { padding: 7px 10px; border-radius: 6px; font-size: 13px; color: #1e293b; }
-        .roster-item:hover { background: #f0fdf4; }
-        .roster-item b { display: block; font-weight: 600; }
-        .roster-item span { display: block; margin-top: 2px; color: #64748b; font-size: 12px; font-variant-numeric: tabular-nums; letter-spacing: .01em; }
-        .roster-empty { padding: 8px 10px; color: #94a3b8; font-size: 12px; }
-        .mon-stats { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
-        .mon-stat { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px 22px; min-width: 150px; }
-        .mon-stat b { display: block; font-size: 26px; color: #2563eb; }
-        .mon-stat span { font-size: 13px; color: #64748b; }
-        .btn-admin { display: flex; align-items: center; gap: 8px; background: #6d28d9; color: #fff; border-radius: 8px; padding: 8px 14px; font: 600 14px Inter, sans-serif; text-decoration: none; margin-right: 12px; }
-        .filter-row { display: flex; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
-        .filter-row select { padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font: 400 14px Inter, sans-serif; background: #fff; }
-        .mon-back-row { margin-bottom: 14px; }
-        .btn-back { display: inline-flex; align-items: center; gap: 6px; background: #2563eb; color: #fff; border-radius: 8px; padding: 9px 16px; font: 600 14px Inter, sans-serif; text-decoration: none; transition: background .2s; }
-        .btn-back:hover { background: #1d4ed8; }
+        /* Дополнительные стили для таблиц мониторинга, если их нет в style.css */
+        .matrix-table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; }
+        .matrix-table th, .matrix-table td { border: 1px solid #e2e8f0; padding: 8px; text-align: left; }
+        .matrix-table th { background: #f8fafc; font-weight: 600; }
+        .user-cell { white-space: nowrap; }
+        .user-deleted { color: #94a3b8; font-style: italic; }
+        .badge-read { background: #dcfce7; color: #166534; padding: 2px 6px; border-radius: 4px; font-size: 12px; }
+        .log-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .log-table th, .log-table td { border-bottom: 1px solid #e2e8f0; padding: 10px; text-align: left; }
+        .pagination { margin-top: 20px; display: flex; gap: 10px; justify-content: center; }
+        .pagination button { padding: 8px 16px; cursor: pointer; }
     </style>
 </head>
-<body class="dashboard-page">
-
-<header class="top-bar">
-    <div class="top-bar-left">
-        <div class="logo-small">
-            <img src="assets/images/logo.svg" alt="Скаут Хаус" class="logo-small-img">
-            <span>Скаут Хаус — Мониторинг</span>
-        </div>
-    </div>
-    <div class="top-bar-right">
-        <div class="user-info">
-            <div class="user-avatar" id="userAvatar">Г</div>
-            <div class="user-details">
-                <span class="user-name" id="userName">Гость</span>
-                <span class="user-role" id="userRole">Роль</span>
+<body>
+    <!-- ШАПКА (копия из dashboard/admin для единообразия) -->
+    <header class="top-bar">
+        <div class="top-bar-left">
+            <div class="logo-small">
+                <img src="assets/images/logo.svg" alt="Скаут Хаус" class="logo-small-img">
+                <span>Скаут Хаус — Мониторинг</span>
             </div>
         </div>
-        <button class="btn-logout" id="logoutBtn" title="Выйти из системы">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-            <span>Выйти</span>
-        </button>
-    </div>
-</header>
-
-<main class="mon-wrap">
-    <div class="mon-back-row">
-        <a class="btn-back" href="dashboard.html" id="backToKbBtn">← В базу знаний</a>
-    </div>
-    <h1 style="font-size:26px;">Мониторинг ознакомления сотрудников</h1>
-    <p class="mon-note">Кто из сотрудников производства, с какими операциями базы знаний и когда подтвердил ознакомление. Отметка «Ознакомлен» сбрасывается при публикации новой версии операции.</p>
-
-    <div class="mon-stats" id="monStats"></div>
-
-    <div class="mon-card">
-        <h2>Матрица ознакомления по операциям</h2>
-        <div class="filter-row">
-            <select id="fltSection"></select>
-            <select id="fltUser"></select>
+        <div class="top-bar-right">
+            <div class="user-info">
+                <div class="user-avatar" id="userAvatar">?</div>
+                <div class="user-details">
+                    <span class="user-name" id="userName">...</span>
+                    <span class="user-role" id="userRole">...</span>
+                </div>
+            </div>
+            <button class="btn-logout" id="logoutBtn" title="Выйти">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                <span>Выйти</span>
+            </button>
         </div>
-        <table class="mon-table">
-            <thead><tr><th>Раздел</th><th class="op-cell">Операция</th><th>Версия</th><th>Ознакомились</th></tr></thead>
-            <tbody id="monTbody"></tbody>
-        </table>
-    </div>
+    </header>
 
-    <div class="mon-card">
-        <h2>Журнал отметок (хронология)</h2>
-        <p class="not-read" style="margin:0 0 8px;">Полная история ознакомлений — всегда выводятся все записи, включая удалённых сотрудников. Список разбит на страницы по 30 строк.</p>
-        <table class="mon-table">
-            <thead><tr><th>Дата и время</th><th>Сотрудник</th><th class="op-cell">Операция</th><th>Версия</th></tr></thead>
-            <tbody id="logTbody"></tbody>
-        </table>
-        <div id="logPager" style="display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap;"></div>
-    </div>
-</main>
+    <main class="container">
+        <section class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h1>Мониторинг ознакомления сотрудников</h1>
+                <a href="dashboard.html" class="btn-admin btn-back-kb">← В базу знаний</a>
+            </div>
+            
+            <p style="color: #64748b; margin-bottom: 30px;">
+                Кто из сотрудников производства, с какими операциями базы знаний и когда подтвердил ознакомление. 
+                Данные загружаются с сервера в реальном времени.
+            </p>
 
-<script src="js/users.js"></script>
-<script src="js/auth.js"></script>
-<script src="js/kb.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    // Доступна только Администратору и Гостю
-    if (!isAuthenticated()) { location.href = 'index.html'; return; }
-    const me = (typeof kbGetCurrentUser === 'function') ? kbGetCurrentUser() : getCurrentUser();
-    if (!me) { location.href = 'index.html'; return; }
-    if (me.role !== ROLE_ADMIN && me.role !== ROLE_GUEST) { location.href = 'dashboard.html'; return; }
+            <h2>Матрица ознакомления по операциям</h2>
+            <div style="overflow-x: auto;">
+                <table class="matrix-table" id="matrixTable">
+                    <thead>
+                        <tr>
+                            <th>Раздел</th>
+                            <th>Операция</th>
+                            <th>Версия</th>
+                            <th>Ознакомились</th>
+                        </tr>
+                    </thead>
+                    <tbody id="matrixBody">
+                        <tr><td colspan="4" style="text-align:center; padding: 20px;">Загрузка данных с сервера...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
 
-    document.getElementById('userName').textContent = me.name;
-    document.getElementById('userRole').textContent = me.role;
-    document.getElementById('userAvatar').textContent = me.name.charAt(0).toUpperCase();
-    document.getElementById('logoutBtn').onclick = e => { e.preventDefault(); logout(); location.href = 'index.html'; };
-    if (me.role === ROLE_WORKER || me.role === ROLE_GUEST) {
-        document.getElementById('fltUser').disabled = false; // гостю доступен весь мониторинг по ТЗ
-    }
-    // Кнопки в шапке страницы мониторинга:
-    //  Администратор: «Управление» + «В базу знаний»; Гость: только «В базу знаний».
-    // Удалённые/устаревшие кнопки из kb.js подчищаем.
-    function normalizeHeaderButtons() {
-        const right = document.querySelector('.top-bar-right');
-        if (!right) return;
-        const ICON_BACK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>';
-        const isAdmin = me.role === ROLE_ADMIN;
+        <section class="card" style="margin-top: 30px;">
+            <h2>Журнал отметок (хронология)</h2>
+            <p style="color: #64748b; font-size: 14px;">Полная история ознакомлений с сервера.</p>
+            <table class="log-table">
+                <thead>
+                    <tr>
+                        <th>Дата и время</th>
+                        <th>Сотрудник</th>
+                        <th>Операция</th>
+                        <th>Версия</th>
+                    </tr>
+                </thead>
+                <tbody id="logBody">
+                    <!-- Заполняется JS -->
+                </tbody>
+            </table>
+            <div class="pagination" id="paginationControls"></div>
+        </section>
+    </main>
 
-        // 1) Гарантируем наличие «В базу знаний» (для админа и гостя)
-        let back = right.querySelector('.btn-back-kb');
-        if (!back) {
-            back = document.createElement('a');
-            back.className = 'btn-admin btn-back-kb';
-            right.insertBefore(back, right.firstChild);
-        }
-        back.href = 'dashboard.html';
-        back.title = 'Вернуться к разделам базы знаний';
-        back.innerHTML = ICON_BACK + '<span>В базу знаний</span>';
-
-        // 2) Убираем лишние кнопки: гостю — любые «Управление»; админу — дубликаты
-        //    (kb.js на мониторинге добавляет только одну кнопку, но подчищаем и legacy-состояния)
-        let seenBack = false, seenManage = false;
-        right.querySelectorAll('.btn-admin').forEach(b => {
-            const label = (b.textContent || '').trim();
-            const isBack = b.classList.contains('btn-back-kb') || label === 'В базу знаний' || b.getAttribute('href') === 'dashboard.html';
-            const isManage = b.classList.contains('btn-manage') || label === 'Управление' || (b.getAttribute('href') || '').includes('admin-panel.html');
-            if (isBack) {
-                b.classList.add('btn-back-kb');
-                if (seenBack) { b.remove(); return; }
-                seenBack = true;
+    <script src="js/auth.js"></script>
+    <script src="js/kb.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // 1. Инициализация шапки (стандартная логика из kb.js/auth.js)
+            const user = kbGetCurrentUser();
+            if (!user) {
+                window.location.href = 'index.html';
                 return;
             }
-            if (isManage) {
-                b.classList.add('btn-manage');
-                if (!isAdmin || seenManage) { b.remove(); return; }
-                seenManage = true;
-                return;
+            
+            const userNameEl = document.getElementById('userName');
+            const userRoleEl = document.getElementById('userRole');
+            const userAvatarEl = document.getElementById('userAvatar');
+            const logoutBtn = document.getElementById('logoutBtn');
+
+            if (userNameEl) userNameEl.textContent = user.name || user.username;
+            if (userRoleEl) userRoleEl.textContent = user.role;
+            if (userAvatarEl) userAvatarEl.textContent = (user.name || 'U').charAt(0).toUpperCase();
+            
+            if (logoutBtn) {
+                logoutBtn.onclick = (e) => {
+                    e.preventDefault();
+                    logout();
+                };
             }
-            // неизвестная кнопка справа — не трогаем (например, «Выйти»)
+
+            // 2. Загрузка данных с СЕРВЕРА (а не из localStorage)
+            try {
+                const response = await fetch('/api/reads', { credentials: 'include' });
+                if (!response.ok) throw new Error('Ошибка загрузки данных');
+                const reads = await response.json(); // Массив объектов { id, user_id, username, full_name, op_id, op_title, section_id, version, read_at }
+
+                renderMatrix(reads);
+                renderLog(reads);
+
+            } catch (error) {
+                console.error(error);
+                document.getElementById('matrixBody').innerHTML = `<tr><td colspan="4" style="color:red; text-align:center;">Ошибка загрузки данных: ${error.message}</td></tr>`;
+            }
+
+            // 3. Рендер Матрицы
+            function renderMatrix(reads) {
+                const tbody = document.getElementById('matrixBody');
+                tbody.innerHTML = '';
+
+                // Группируем по операциям
+                // Структура: { "op_id": { title: "...", section: "...", version: "...", users: ["Name1", "Name2"] } }
+                const opsMap = {};
+                
+                // Сначала заполняем всеми известными операциями из KB_OPERATIONS (чтобы показать даже те, где 0 ознакомлений)
+                if (typeof KB_OPERATIONS !== 'undefined') {
+                    KB_OPERATIONS.forEach(op => {
+                        opsMap[op.id] = {
+                            title: op.title,
+                            section: op.section,
+                            version: op.version || '1',
+                            users: new Set()
+                        };
+                    });
+                }
+
+                // Добавляем данные о прочтениях
+                reads.forEach(r => {
+                    if (!opsMap[r.op_id]) {
+                        opsMap[r.op_id] = {
+                            title: r.op_title || r.op_id,
+                            section: r.section_id,
+                            version: r.version,
+                            users: new Set()
+                        };
+                    }
+                    // Используем full_name из серверной записи
+                    opsMap[r.op_id].users.add(r.full_name || r.username);
+                });
+
+                // Сортируем по ID операции
+                const sortedOps = Object.entries(opsMap).sort((a, b) => {
+                    return a[0].localeCompare(b[0], undefined, { numeric: true });
+                });
+
+                if (sortedOps.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Нет данных об операциях</td></tr>';
+                    return;
+                }
+
+                sortedOps.forEach(([opId, data]) => {
+                    const tr = document.createElement('tr');
+                    
+                    // Название раздела (человекочитаемое)
+                    let sectionTitle = data.section;
+                    if (typeof KB_SECTIONS !== 'undefined') {
+                        const sec = KB_SECTIONS.find(s => s.id === data.section);
+                        if (sec) sectionTitle = sec.title;
+                    }
+
+                    const usersList = Array.from(data.users).join(', ') || '—';
+
+                    tr.innerHTML = `
+                        <td>${sectionTitle}</td>
+                        <td><strong>${opId}</strong> ${data.title}</td>
+                        <td>v${data.version}</td>
+                        <td class="user-cell">${usersList}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            // 4. Рендер Журнала (с пагинацией)
+            const LOG_PAGE_SIZE = 30;
+            let currentPage = 1;
+
+            function renderLog(reads) {
+                const tbody = document.getElementById('logBody');
+                const pagination = document.getElementById('paginationControls');
+                tbody.innerHTML = '';
+
+                // Сортировка по дате (новые сверху)
+                const sortedReads = [...reads].sort((a, b) => new Date(b.read_at) - new Date(a.read_at));
+                
+                const totalPages = Math.ceil(sortedReads.length / LOG_PAGE_SIZE);
+                const start = (currentPage - 1) * LOG_PAGE_SIZE;
+                const pageData = sortedReads.slice(start, start + LOG_PAGE_SIZE);
+
+                if (pageData.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Журнал пуст</td></tr>';
+                    pagination.innerHTML = '';
+                    return;
+                }
+
+                pageData.forEach(r => {
+                    const tr = document.createElement('tr');
+                    const date = new Date(r.read_at).toLocaleString('ru-RU');
+                    tr.innerHTML = `
+                        <td>${date}</td>
+                        <td>${r.full_name || r.username}</td>
+                        <td>${r.op_title || r.op_id}</td>
+                        <td>v${r.version}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+                // Пагинация
+                pagination.innerHTML = '';
+                if (totalPages > 1) {
+                    for (let i = 1; i <= totalPages; i++) {
+                        const btn = document.createElement('button');
+                        btn.textContent = i;
+                        btn.disabled = (i === currentPage);
+                        btn.onclick = () => {
+                            currentPage = i;
+                            renderLog(reads); // Перерисовываем с новыми данными
+                        };
+                        pagination.appendChild(btn);
+                    }
+                }
+            }
         });
-
-        // 3) Админу гарантируем «Управление» рядом с «В базу знаний»
-        if (isAdmin && !right.querySelector('.btn-manage')) {
-            const m = document.createElement('a');
-            m.className = 'btn-admin btn-manage';
-            m.href = 'admin-panel.html';
-            m.title = 'Панель управления';
-            m.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06-.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l-.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>Управление</span>';
-            right.appendChild(m);
-        }
-    }
-    normalizeHeaderButtons();
-    // Страховка: kb.js может добавить свои кнопки позже — нормализуем повторно
-    new MutationObserver(normalizeHeaderButtons).observe(document.querySelector('.top-bar-right'), { childList: true });
-    setTimeout(normalizeHeaderButtons, 300);
-    // Нижняя ссылка «← В базу знаний» скрыта — дублирует правую кнопку в шапке
-    const backBtn = document.getElementById('backToKbBtn');
-    if (backBtn) backBtn.parentElement.style.display = 'none';
-
-    // Санитизация: отметки удалённых пользователей переносятся в архивный журнал
-    // (сохраняются в хронологии) и убираются из активного реестра (матрицы).
-    kbSanitizeReads();
-    const workers = kbGetUsers().filter(u => u.role === ROLE_WORKER);
-    const reads = kbGetReads();
-    const readyOps = KB_OPERATIONS.filter(o => o.status === 'ready');
-
-    // Статистика
-    const confirmed = new Set(reads.map(r => r.userId + '|' + r.opId)).size;
-    const total = workers.length * readyOps.length;
-    document.getElementById('monStats').innerHTML = `
-        <div class="mon-stat"><b>${workers.length}</b><span>сотрудников производства</span></div>
-        <div class="mon-stat"><b>${readyOps.length}</b><span>операций в базе</span></div>
-        <div class="mon-stat"><b>${confirmed}</b><span>подтверждений ознакомления</span></div>
-        <div class="mon-stat"><b>${total ? Math.round(confirmed / total * 100) : 0}%</b><span>полнота ознакомления*</span></div>`;
-
-    // Фильтры
-    const fltSection = document.getElementById('fltSection');
-    fltSection.innerHTML = '<option value="">Все разделы</option>' +
-        KB_SECTIONS.map(s => `<option value="${s.id}">${s.title}</option>`).join('');
-    const fltUser = document.getElementById('fltUser');
-    const LOG_PAGE_SIZE = 30;
-    let logPage = 1;
-    // В фильтре — все сотрудники, когда-либо подтверждавшие ознакомление
-    // (включая удалённых: их отметки остаются в журнале хронологии)
-    const logIds = [...new Set([...workers.map(u => u.username), ...kbGetArchive().map(r => r.userId)])];
-    // В фильтре матрицы — только активные пользователи со статусом «Сотрудник производства» (без удалённых)
-    fltUser.innerHTML = '<option value="">Все сотрудники</option>' +
-        workers.map(u => `<option value="${u.username}">${u.name}</option>`).join('');
-
-    function fmt(ts) { return new Date(ts).toLocaleString('ru-RU', { day:'2-digit', month:'2-digit', year:'2-digit', hour:'2-digit', minute:'2-digit' }); }
-
-    // Компактный выпадающий список ознакомившихся (ячейка матрицы не растёт по вертикали)
-    function rosterHtml(recs) {
-        if (!recs.length) return '<span class="not-read">— никто не ознакомлен —</span>';
-        const items = recs.map(r => {
-            const w = kbFindUser(r.userId);
-            const dt = fmt(r.timestamp);
-            return `<div class="roster-item"><b>${w ? w.name : r.userId}</b><span>Ознакомлен: ${dt}</span></div>`;
-        }).join('');
-        return `<div class="roster-wrap">
-            <button type="button" class="roster-btn" aria-expanded="false" title="Показать список">👥 Ознакомились: ${recs.length} <span class="caret">▼</span></button>
-            <div class="roster-menu">${items}</div>
-        </div>`;
-    }
-
-    // Единовременно открыт только один список; закрытие по клику вне, по Escape и при прокрутке страницы
-    document.addEventListener('click', e => {
-        const wrap = e.target.closest('.roster-wrap');
-        document.querySelectorAll('.roster-wrap.open').forEach(w => { if (w !== wrap) closeRoster(w); });
-        if (wrap && !e.target.closest('.roster-menu')) toggleRoster(wrap);
-    });
-    document.addEventListener('keydown', e => {
-        if (e.key === 'Escape') document.querySelectorAll('.roster-wrap.open').forEach(closeRoster);
-    });
-    window.addEventListener('scroll', () => document.querySelectorAll('.roster-wrap.open').forEach(closeRoster), { passive: true });
-    function toggleRoster(w) {
-        const open = w.classList.toggle('open');
-        w.querySelector('.roster-btn').setAttribute('aria-expanded', open ? 'true' : 'false');
-    }
-    function closeRoster(w) {
-        w.classList.remove('open');
-        w.querySelector('.roster-btn').setAttribute('aria-expanded', 'false');
-    }
-
-    function render() {
-        const sec = fltSection.value, usr = fltUser.value;
-        const tbody = document.getElementById('monTbody');
-        tbody.innerHTML = '';
-        readyOps
-            .filter(o => !sec || o.section === sec)
-            // При выборе конкретного сотрудника показываем только те операции, с которыми он ознакомлен
-            .filter(o => !usr || reads.some(r => r.opId === o.id && r.version === o.version && r.userId === usr))
-            .forEach(o => {
-                const section = kbGetSectionById(o.section);
-                const recs = reads.filter(r => r.opId === o.id && r.version === o.version && (!usr || r.userId === usr));
-                // Сортировка: свежие отметки сверху; один человек — одна строка (последняя отметка)
-                const byUser = {};
-                recs.forEach(r => { if (!byUser[r.userId] || r.timestamp > byUser[r.userId].timestamp) byUser[r.userId] = r; });
-                const latest = Object.values(byUser).sort((a, b) => b.timestamp.localeCompare(a.timestamp));
-                const chips = rosterHtml(latest);
-                const tr = document.createElement('tr');
-                tr.innerHTML = `<td>${section ? section.title : o.section}</td>
-                    <td class="op-cell"><a href="${o.url}">${o.id}</a> — ${o.title}</td>
-                    <td>v${o.version}</td><td>${chips}</td>`;
-                tbody.appendChild(tr);
-            });
-        if (!tbody.children.length) {
-            tbody.innerHTML = `<tr><td colspan="4" class="not-read">${usr ? 'Этот сотрудник пока не подтвердил ознакомление ни с одной операцией' : 'Нет данных'}</td></tr>`;
-        }
-
-        const log = document.getElementById('logTbody');
-        log.innerHTML = '';
-        // Хронология = ВСЕГДА полная история: активные отметки + архив удалённых пользователей.
-        // Фильтр по сотруднику влияет только на матрицу, но не на журнал.
-        const allLog = [...reads, ...kbGetArchive()]
-            .sort((a, b) => b.timestamp.localeCompare(a.timestamp));
-        const totalPages = Math.max(1, Math.ceil(allLog.length / LOG_PAGE_SIZE));
-        if (logPage > totalPages) logPage = totalPages;
-        if (logPage < 1) logPage = 1;
-        allLog.slice((logPage - 1) * LOG_PAGE_SIZE, logPage * LOG_PAGE_SIZE).forEach(r => {
-            const op = kbGetOperationById(r.opId);
-            const w = kbFindUser(r.userId);
-            const nameCell = w ? w.name : (r.name || r.userId) + ' <i style="color:#94a3b8;">(удалён)</i>';
-            const tr = document.createElement('tr');
-            tr.innerHTML = `<td style="white-space:nowrap;">${fmt(r.timestamp)}</td>
-                <td>${nameCell}</td>
-                <td class="op-cell">${op ? `<a href="${op.url}">${r.opId}</a> — ${op.title}` : r.opId}</td>
-                <td>v${r.version}</td>`;
-            log.appendChild(tr);
-        });
-        if (!allLog.length) log.innerHTML = '<tr><td colspan="4" class="not-read">Отметок пока нет</td></tr>';
-
-        // Постраничная навигация журнала (по 30 строк)
-        const pager = document.getElementById('logPager');
-        if (totalPages > 1) {
-            pager.innerHTML = `
-                <button type="button" id="logPrev" ${logPage === 1 ? 'disabled' : ''} style="padding:6px 12px;border:1px solid #cbd5e1;border-radius:8px;background:#fff;cursor:pointer;">← Назад</button>
-                <span>Страница ${logPage} из ${totalPages} · всего записей: ${allLog.length}</span>
-                <button type="button" id="logNext" ${logPage === totalPages ? 'disabled' : ''} style="padding:6px 12px;border:1px solid #cbd5e1;border-radius:8px;background:#fff;cursor:pointer;">Вперёд →</button>`;
-            pager.style.display = 'flex';
-            document.getElementById('logPrev').onclick = () => { if (logPage > 1) { logPage--; render(); } };
-            document.getElementById('logNext').onclick = () => { if (logPage < totalPages) { logPage++; render(); } };
-        } else {
-            pager.innerHTML = allLog.length ? `<span>Всего записей: ${allLog.length}</span>` : '';
-            pager.style.display = allLog.length ? 'flex' : 'none';
-        }
-    }
-
-    fltSection.addEventListener('change', render);
-    fltUser.addEventListener('change', () => { logPage = 1; render(); });
-    render();
-});
-</script>
+    </script>
 </body>
 </html>
