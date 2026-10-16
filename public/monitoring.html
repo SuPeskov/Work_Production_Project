@@ -16,6 +16,14 @@
         .pagination { margin-top: 20px; display: flex; gap: 10px; justify-content: center; }
         .pagination button { padding: 8px 16px; cursor: pointer; border: 1px solid #cbd5e1; background: #fff; border-radius: 4px; }
         .pagination button:hover:not(:disabled) { background: #f1f5f9; }
+            /* Отменяем обрезку контента для карточки мониторинга */
+    .monitoring-card {
+        overflow: visible !important;
+    }
+    /* Также убедимся, что main не обрезает */
+    main.container {
+        overflow: visible !important;
+    }
     </style>
 </head>
 <body>
@@ -43,7 +51,7 @@
     </header>
 
     <main class="container">
-        <section class="card">
+        <section class="card monitoring-card">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <h1>Мониторинг ознакомления сотрудников</h1>
                 <a href="dashboard.html" class="btn-admin btn-back-kb">← В базу знаний</a>
