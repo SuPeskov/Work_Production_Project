@@ -266,10 +266,8 @@ function setSections(userId, list) {
     db.prepare('DELETE FROM user_sections WHERE user_id=?').run(userId);
     const ins = db.prepare('INSERT OR IGNORE INTO user_sections (user_id, section_id) VALUES (?,?)');
     (Array.isArray(list) ? list : []).forEach(s => {
-        // Сохраняем любой ID, который пришел с фронтенда.
-        // Убираем проверку SELECT, так как она вызывает ошибку 500, 
-        // если таблицы sections нет или в ней нет нужных записей.
-        // INSERT OR IGNORE защитит от дубликатов, если они вдруг возникнут.
+        // Сохраняем любой ID, который пришел с фронтенда, без проверки в таблице sections.
+        // Таблицы sections может не быть, но список разделов фиксирован в kb.js.
         try {
             ins.run(userId, s);
         } catch (e) {
