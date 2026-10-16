@@ -57,55 +57,40 @@ document.addEventListener('DOMContentLoaded', async () => {
         const container = document.getElementById('matrixBody');
         if (!container) return;
         
-        // Очищаем контейнер
         container.innerHTML = '';
         
-        // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Убираем overflow:hidden у всех родителей,
-        // чтобы аккордеон не обрезался при раскрытии.
+        // Принудительно сбрасываем overflow у родителей, чтобы карточка не резала контент
         let parent = container.parentElement;
         while (parent && parent.tagName !== 'BODY') {
             parent.style.overflow = 'visible';
-            parent.style.height = 'auto';
             parent = parent.parentElement;
         }
-        container.style.overflow = 'visible';
-        container.style.height = 'auto';
 
         // 1. Группируем данные
         const tree = {};
-
         if (typeof KB_OPERATIONS !== 'undefined') {
             KB_OPERATIONS.forEach(op => {
                 const parts = op.id.split('.');
                 if (parts.length < 3) return;
-
                 const secId = parts[0];
                 const subId = `${parts[0]}.${parts[1]}`;
-
+                
                 let secTitle = `Раздел ${secId}`;
                 let secNum = secId.padStart(2, '0');
                 if (typeof KB_SECTIONS !== 'undefined') {
                     const secObj = KB_SECTIONS.find(s => s.num === secNum || s.id === op.section);
-                    if (secObj) {
-                        secTitle = secObj.title;
-                        secNum = secObj.num;
-                    }
+                    if (secObj) { secTitle = secObj.title; secNum = secObj.num; }
                 }
-
+                
+                // Название подраздела (берем из первой операции или генерируем заглушку)
                 let subTitle = `Подраздел ${subId}`;
-
-                if (!tree[secId]) {
-                    tree[secId] = { title: secTitle, num: secNum, subsections: {} };
-                }
-                if (!tree[secId].subsections[subId]) {
-                    tree[secId].subsections[subId] = { title: subTitle, ops: [] };
-                }
-
+                // Можно улучшить, если добавить реестр подразделов в kb.js
+                
+                if (!tree[secId]) tree[secId] = { title: secTitle, num: secNum, subsections: {} };
+                if (!tree[secId].subsections[subId]) tree[secId].subsections[subId] = { title: subTitle, ops: [] };
+                
                 tree[secId].subsections[subId].ops.push({
-                    id: op.id,
-                    title: op.title,
-                    version: op.version || '1',
-                    users: new Set()
+                    id: op.id, title: op.title, version: op.version || '1', users: new Set()
                 });
             });
         }
@@ -115,152 +100,117 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (parts.length < 3) return;
             const secId = parts[0];
             const subId = `${parts[0]}.${parts[1]}`;
-
             if (tree[secId] && tree[secId].subsections[subId]) {
                 const opObj = tree[secId].subsections[subId].ops.find(o => o.id === r.op_id);
-                if (opObj) {
-                    opObj.users.add(r.full_name || r.username);
-                }
+                if (opObj) opObj.users.add(r.full_name || r.username);
             }
         });
 
         const sortedSections = Object.keys(tree).sort((a, b) => Number(a) - Number(b));
-
         if (sortedSections.length === 0) {
-            container.innerHTML = '<div style="padding: 20px; text-align: center; color: #64748b;">Нет данных об операциях</div>';
+            container.innerHTML = '<div style="padding: 20px; text-align: center; color: #64748b;">Нет данных</div>';
             return;
         }
+
+        // Создаем общий контейнер аккордеона (как в примере)
+        const accordionContainer = document.createElement('div');
+        accordionContainer.className = 'accordion-container';
+        // Убираем overflow:hidden у контейнера, если он есть в стилях
+        accordionContainer.style.overflow = 'visible'; 
 
         sortedSections.forEach(secId => {
             const section = tree[secId];
             
-            // --- Блок Раздела ---
+            // --- Блок Раздела (Уровень 1) ---
             const sectionDiv = document.createElement('div');
-            sectionDiv.className = 'accordion-section';
-            sectionDiv.style.marginBottom = '15px';
-            sectionDiv.style.border = '1px solid #e2e8f0';
-            sectionDiv.style.borderRadius = '12px';
-            sectionDiv.style.background = '#fff';
-            sectionDiv.style.overflow = 'visible'; // Важно
-
+            sectionDiv.className = 'accordion-section'; // Используем класс из style.css
+            sectionDiv.style.borderBottom = '1px solid var(--border)';
+            
             const sectionHeader = document.createElement('div');
             sectionHeader.className = 'accordion-header';
-            sectionHeader.style.cssText = 'display: flex; align-items: center; padding: 16px 20px; cursor: pointer; background: #f8fafc; border-radius: 12px; transition: background 0.2s;';
-            
-            // ЗЕЛЕНЫЙ ФОН ДЛЯ НОМЕРА (как в примере)
+            // Зеленый фон для номера, как в примере
             sectionHeader.innerHTML = `
-                <div class="section-number" style="font-size: 20px; font-weight: 700; color: #ffffff; margin-right: 16px; min-width: 40px; background: #16a34a; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 8px;">${section.num}</div>
-                <div class="section-info" style="flex: 1;">
-                    <h2 style="margin: 0; font-size: 18px; color: #1e293b;">${section.title}</h2>
-                    <span class="subsection-count" style="font-size: 13px; color: #64748b;">${Object.keys(section.subsections).length} подразделов</span>
+                <div class="section-number" style="background: #16a34a; color: white;">${section.num}</div>
+                <div class="section-info">
+                    <h2>${section.title}</h2>
+                    <span class="subsection-count">${Object.keys(section.subsections).length} подразделов</span>
                 </div>
-                <div class="accordion-icon" style="transition: transform 0.3s; color: #64748b;">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24">
-                        <polyline points="6 9 12 15 18 9"/>
-                    </svg>
+                <div class="accordion-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
                 </div>
             `;
 
             const sectionContent = document.createElement('div');
-            sectionContent.className = 'accordion-content';
-            sectionContent.style.display = 'none';
-            sectionContent.style.padding = '10px 20px 20px 20px';
-            sectionContent.style.background = '#fff';
-            sectionContent.style.borderTop = '1px solid #e2e8f0';
-
+            sectionContent.className = 'accordion-content'; // Класс из style.css (max-height: 0)
+            
+            // Обработчик клика: переключаем класс .active
             sectionHeader.onclick = () => {
-                const isOpen = sectionContent.style.display === 'block';
-                sectionContent.style.display = isOpen ? 'none' : 'block';
-                const icon = sectionHeader.querySelector('.accordion-icon');
-                icon.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
-                sectionHeader.style.borderRadius = isOpen ? '12px' : '12px 12px 0 0';
+                sectionDiv.classList.toggle('active');
             };
 
-            // --- Подразделы ---
+            // --- Подразделы (Уровень 2) ---
+            const subListContainer = document.createElement('div');
+            subListContainer.style.padding = '16px 24px'; // Отступы как в .subsections-list
+            
             const sortedSubsections = Object.keys(section.subsections).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
-
+            
             sortedSubsections.forEach(subId => {
                 const subsection = section.subsections[subId];
                 
-                const subDiv = document.createElement('div');
-                subDiv.style.marginBottom = '10px';
-                subDiv.style.border = '1px solid #f1f5f9';
-                subDiv.style.borderRadius = '8px';
-                subDiv.style.background = '#fff';
-                subDiv.style.overflow = 'visible';
-
-                const subHeader = document.createElement('div');
-                subHeader.style.cssText = 'display: flex; align-items: center; padding: 12px 16px; cursor: pointer; background: #f8fafc; border-radius: 8px; transition: background 0.2s;';
+                const subItem = document.createElement('div');
+                subItem.className = 'subsection-item'; // Класс из style.css
+                subItem.style.marginBottom = '12px';
                 
-                // Для подразделов можно оставить серый или сделать светло-зеленым
+                const subHeader = document.createElement('div');
+                subHeader.className = 'subsection-header';
                 subHeader.innerHTML = `
-                    <div class="section-number" style="font-size: 16px; font-weight: 600; color: #475569; margin-right: 12px; min-width: 30px;">${subId}</div>
-                    <div class="section-info" style="flex: 1;">
-                        <h3 style="margin: 0; font-size: 15px; color: #334155;">${subsection.title}</h3>
-                        <span style="font-size: 12px; color: #94a3b8;">${subsection.ops.length} операций</span>
-                    </div>
-                    <div class="accordion-icon" style="transition: transform 0.3s; color: #94a3b8;">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-                            <polyline points="6 9 12 15 18 9"/>
-                        </svg>
+                    <div class="subsection-number">${subId}</div>
+                    <div class="subsection-title">${subsection.title}</div>
+                    <div class="subsection-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polyline points="6 9 12 15 18 9"/></svg>
                     </div>
                 `;
-
+                
                 const subContent = document.createElement('div');
-                subContent.style.display = 'none';
-                subContent.style.padding = '10px 16px';
-                subContent.style.borderTop = '1px solid #f1f5f9';
-
+                subContent.className = 'subsection-content'; // Класс из style.css
+                
                 subHeader.onclick = (e) => {
                     e.stopPropagation();
-                    const isOpen = subContent.style.display === 'block';
-                    subContent.style.display = isOpen ? 'none' : 'block';
-                    const icon = subHeader.querySelector('.accordion-icon');
-                    icon.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
-                    subHeader.style.borderRadius = isOpen ? '8px' : '8px 8px 0 0';
+                    subItem.classList.toggle('active');
                 };
 
                 // Список операций
                 const ul = document.createElement('ul');
-                ul.style.listStyle = 'none';
-                ul.style.padding = '0';
-                ul.style.margin = '0';
-
+                ul.className = 'operations-list';
+                
                 subsection.ops.forEach(op => {
                     const li = document.createElement('li');
-                    li.style.padding = '8px 0';
-                    li.style.borderBottom = '1px solid #f1f5f9';
-                    li.style.display = 'flex';
-                    li.style.justifyContent = 'space-between';
-                    li.style.alignItems = 'center';
-                    li.style.flexWrap = 'wrap';
-                    li.style.gap = '10px';
-
                     const usersList = Array.from(op.users).join(', ') || '—';
                     const usersColor = op.users.size > 0 ? '#16a34a' : '#94a3b8';
-
+                    
+                    // Используем структуру ссылки, но добавляем span для пользователей
                     li.innerHTML = `
-                        <div style="flex: 1; min-width: 200px;">
-                            <strong style="color: #1e293b; margin-right: 8px;">${op.id}</strong>
-                            <span style="color: #475569;">${op.title}</span>
-                        </div>
-                        <div style="font-size: 13px; color: ${usersColor}; font-weight: 500; text-align: right; max-width: 300px;">
-                            ${usersList}
+                        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 6px 0;">
+                            <span><strong>${op.id}</strong> — ${op.title}</span>
+                            <span style="font-size: 0.85rem; color: ${usersColor}; font-weight: 500; margin-left: 10px;">${usersList}</span>
                         </div>
                     `;
                     ul.appendChild(li);
                 });
-
+                
                 subContent.appendChild(ul);
-                subDiv.appendChild(subHeader);
-                subDiv.appendChild(subContent);
-                sectionContent.appendChild(subDiv);
+                subItem.appendChild(subHeader);
+                subItem.appendChild(subContent);
+                subListContainer.appendChild(subItem);
             });
 
+            sectionContent.appendChild(subListContainer);
             sectionDiv.appendChild(sectionHeader);
             sectionDiv.appendChild(sectionContent);
-            container.appendChild(sectionDiv);
+            accordionContainer.appendChild(sectionDiv);
         });
+
+        container.appendChild(accordionContainer);
     }
 
     // --- 4. Рендер Журнала (хронология) с пагинацией ---
