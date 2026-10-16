@@ -143,9 +143,19 @@ document.addEventListener('DOMContentLoaded', function () {
         openAccessModal(userId, username, currentSections);
     }
     // --- Отрисовка таблицы ---
-
     function renderUsers(users) {
         tableBody.innerHTML = '';
+        
+        // Словарь для перевода технических ID в русские названия
+        const sectionNames = {
+            'preparation': 'Заготовка',
+            'panels': 'Сборка панелей',
+            'module': 'Сборка модуля',
+            'options': 'Сборка опций',
+            'installation': 'Монтаж',
+            'service': 'Сервис'
+        };
+
         users.forEach(user => {
             const tr = document.createElement('tr');
             
@@ -165,12 +175,14 @@ document.addEventListener('DOMContentLoaded', function () {
             tdRole.textContent = roleLabels[user.role] || user.role;
             tr.appendChild(tdRole);
 
-            // Доступ
+            // Доступ (ИСПРАВЛЕНО: перевод ID в русский текст)
             const tdAccess = document.createElement('td');
             if (user.role === 'admin') {
                 tdAccess.textContent = 'все разделы';
             } else if (user.sections && user.sections.length > 0) {
-                tdAccess.textContent = user.sections.join(', ');
+                // Переводим каждый ID раздела в русское название
+                const translatedSections = user.sections.map(id => sectionNames[id] || id);
+                tdAccess.textContent = translatedSections.join(', ');
             } else {
                 tdAccess.textContent = '—';
             }
@@ -197,7 +209,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 const btnDel = document.createElement('button');
                 btnDel.textContent = 'Удалить';
                 btnDel.className = 'btn-action btn-delete';
-                // Теперь deleteUser доступна, так как объявлена в той же области видимости
                 btnDel.onclick = () => deleteUser(user.id, user.username);
                 tdActions.appendChild(btnDel);
             }
