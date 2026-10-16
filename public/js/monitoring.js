@@ -57,9 +57,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         const container = document.getElementById('matrixBody');
         if (!container) return;
         
-        // Очищаем контейнер и сбрасываем возможные ограничения стилей
+        // Очищаем контейнер
         container.innerHTML = '';
-        container.style.overflow = 'visible'; 
+        
+        // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Убираем overflow:hidden у всех родителей,
+        // чтобы аккордеон не обрезался при раскрытии.
+        let parent = container.parentElement;
+        while (parent && parent.tagName !== 'BODY') {
+            parent.style.overflow = 'visible';
+            parent.style.height = 'auto';
+            parent = parent.parentElement;
+        }
+        container.style.overflow = 'visible';
         container.style.height = 'auto';
 
         // 1. Группируем данные
@@ -132,15 +141,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             sectionDiv.style.border = '1px solid #e2e8f0';
             sectionDiv.style.borderRadius = '12px';
             sectionDiv.style.background = '#fff';
-            // ВАЖНО: overflow visible, чтобы контент не обрезался
-            sectionDiv.style.overflow = 'visible'; 
+            sectionDiv.style.overflow = 'visible'; // Важно
 
             const sectionHeader = document.createElement('div');
             sectionHeader.className = 'accordion-header';
             sectionHeader.style.cssText = 'display: flex; align-items: center; padding: 16px 20px; cursor: pointer; background: #f8fafc; border-radius: 12px; transition: background 0.2s;';
             
+            // ЗЕЛЕНЫЙ ФОН ДЛЯ НОМЕРА (как в примере)
             sectionHeader.innerHTML = `
-                <div class="section-number" style="font-size: 20px; font-weight: 700; color: #6366f1; margin-right: 16px; min-width: 40px; background: #e0e7ff; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 8px;">${section.num}</div>
+                <div class="section-number" style="font-size: 20px; font-weight: 700; color: #ffffff; margin-right: 16px; min-width: 40px; background: #16a34a; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 8px;">${section.num}</div>
                 <div class="section-info" style="flex: 1;">
                     <h2 style="margin: 0; font-size: 18px; color: #1e293b;">${section.title}</h2>
                     <span class="subsection-count" style="font-size: 13px; color: #64748b;">${Object.keys(section.subsections).length} подразделов</span>
@@ -154,7 +163,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const sectionContent = document.createElement('div');
             sectionContent.className = 'accordion-content';
-            sectionContent.style.display = 'none'; // Скрыто по умолчанию
+            sectionContent.style.display = 'none';
             sectionContent.style.padding = '10px 20px 20px 20px';
             sectionContent.style.background = '#fff';
             sectionContent.style.borderTop = '1px solid #e2e8f0';
@@ -164,7 +173,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 sectionContent.style.display = isOpen ? 'none' : 'block';
                 const icon = sectionHeader.querySelector('.accordion-icon');
                 icon.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
-                // Меняем фон заголовка при открытии
                 sectionHeader.style.borderRadius = isOpen ? '12px' : '12px 12px 0 0';
             };
 
@@ -179,10 +187,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 subDiv.style.border = '1px solid #f1f5f9';
                 subDiv.style.borderRadius = '8px';
                 subDiv.style.background = '#fff';
+                subDiv.style.overflow = 'visible';
 
                 const subHeader = document.createElement('div');
                 subHeader.style.cssText = 'display: flex; align-items: center; padding: 12px 16px; cursor: pointer; background: #f8fafc; border-radius: 8px; transition: background 0.2s;';
                 
+                // Для подразделов можно оставить серый или сделать светло-зеленым
                 subHeader.innerHTML = `
                     <div class="section-number" style="font-size: 16px; font-weight: 600; color: #475569; margin-right: 12px; min-width: 30px;">${subId}</div>
                     <div class="section-info" style="flex: 1;">
