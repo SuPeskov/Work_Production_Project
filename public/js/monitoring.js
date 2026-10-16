@@ -1,6 +1,6 @@
 /**
  * monitoring.js — Логика страницы мониторинга ознакомления
- * Версия с группировкой по разделам и подразделам (Аккордеон)
+ * Версия с группировкой по разделам и подразделам (Аккордеон в стиле dashboard)
  */
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -41,14 +41,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!response.ok) throw new Error('Ошибка загрузки данных с сервера');
         const reads = await response.json();
 
-        renderMatrixAccordion(reads); // Новая функция отрисовки
+        renderMatrixAccordion(reads);
         renderLog(reads);
 
     } catch (error) {
         console.error('Monitoring Error:', error);
         const matrixBody = document.getElementById('matrixBody');
         if (matrixBody) {
-            matrixBody.innerHTML = `<tr><td colspan="4" style="color:red; text-align:center; padding: 20px;">Ошибка: ${error.message}</td></tr>`;
+            matrixBody.innerHTML = `<div style="color:red; text-align:center; padding: 20px;">Ошибка: ${error.message}</div>`;
         }
     }
 
@@ -58,11 +58,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!container) return;
         container.innerHTML = '';
 
-        // 1. Группируем данные
-        // Структура: { sectionId: { title: "...", subsections: { subId: { title: "...", ops: [...] } } } }
+        // 1. Группируем данные в дерево: Section -> Subsection -> Operations
+        // Структура: { sectionId: { title: "...", num: "01", subsections: { subId: { title: "...", ops: [...] } } } }
         const tree = {};
 
-        // Сначала заполняем всеми известными операциями из KB_OPERATIONS
+        // Заполняем всеми известными операциями из KB_OPERATIONS
         if (typeof KB_OPERATIONS !== 'undefined') {
             KB_OPERATIONS.forEach(op => {
                 const parts = op.id.split('.'); // ['2', '1', '1']
@@ -70,26 +70,27 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 const secId = parts[0]; // '2'
                 const subId = `${parts[0]}.${parts[1]}`; // '2.1'
-                
+
                 // Находим название раздела из KB_SECTIONS
                 let secTitle = `Раздел ${secId}`;
+                let secNum = secId.padStart(2, '0');
                 if (typeof KB_SECTIONS !== 'undefined') {
-                    const secObj = KB_SECTIONS.find(s => s.id === op.section);
-                    if (secObj) secTitle = `${secObj.num}. ${secObj.title}`;
+                    const secObj = KB_SECTIONS.find(s => s.num === secNum || s.id === op.section);
+                    if (secObj) {
+                        secTitle = secObj.title;
+                        secNum = secObj.num;
+                    }
                 }
 
-                // Название подраздела (берем из первой операции или генерируем)
-                // В реальном проекте лучше иметь реестр подразделов, но пока возьмем из title операции
-                // Упростим: "2.1 Сборка панели пола" (берем часть title до первого слова или хардкодим, если нужно)
-                // Для универсальности просто используем ID подраздела как заголовок, если нет другого источника
+                // Название подраздела (эвристика: берем из первой операции или генерируем)
+                // В реальном проекте лучше иметь реестр подразделов. Пока используем ID.
                 let subTitle = `Подраздел ${subId}`;
-                // Попытка вытащить название подраздела из title операции (эвристика)
-                // Например "Сборка каркаса панели" -> не дает названия подраздела.
-                // Оставим заглушку, которую можно улучшить позже, если добавить массив KB_SUBSECTIONS в kb.js
-                // Пока просто ID.
+                // Попытка улучшить: если есть операция 2.1.1, можно попробовать вытащить контекст, 
+                // но проще оставить заглушку или хардкод для известных подразделов.
+                // Для универсальности оставим "Подраздел X.Y".
 
                 if (!tree[secId]) {
-                    tree[secId] = { title: secTitle, subsections: {} };
+                    tree[secId] = { title: secTitle, num: secNum, subsections: {} };
                 }
                 if (!tree[secId].subsections[subId]) {
                     tree[secId].subsections[subId] = { title: subTitle, ops: [] };
@@ -120,7 +121,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         // 2. Отрисовка HTML
-        // Сортируем разделы по ID
         const sortedSections = Object.keys(tree).sort((a, b) => Number(a) - Number(b));
 
         if (sortedSections.length === 0) {
@@ -131,35 +131,52 @@ document.addEventListener('DOMContentLoaded', async () => {
         sortedSections.forEach(secId => {
             const section = tree[secId];
             
-            // Блок Раздела
+            // --- Блок Раздела (Уровень 1) ---
             const sectionDiv = document.createElement('div');
-            sectionDiv.className = 'monitor-section';
-            sectionDiv.style.marginBottom = '10px';
+            sectionDiv.className = 'accordion-section';
+            sectionDiv.dataset.section = secId;
+            sectionDiv.style.marginBottom = '15px';
             sectionDiv.style.border = '1px solid #e2e8f0';
-            sectionDiv.style.borderRadius = '8px';
+            sectionDiv.style.borderRadius = '12px';
             sectionDiv.style.overflow = 'hidden';
+            sectionDiv.style.background = '#fff';
 
-            // Заголовок Раздела (кнопка)
+            // Заголовок Раздела
             const sectionHeader = document.createElement('div');
-            sectionHeader.className = 'monitor-header';
-            sectionHeader.style.cssText = 'background: #f8fafc; padding: 12px 16px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-weight: 600; color: #1e293b;';
-            sectionHeader.innerHTML = `<span>${section.title}</span> <span class="arrow">▼</span>`;
-            
-            // Контент Раздела (скрыт по умолчанию)
+            sectionHeader.className = 'accordion-header';
+            sectionHeader.style.cssText = 'display: flex; align-items: center; padding: 16px 20px; cursor: pointer; background: #f8fafc; transition: background 0.2s;';
+            sectionHeader.onmouseenter = () => sectionHeader.style.background = '#f1f5f9';
+            sectionHeader.onmouseleave = () => sectionHeader.style.background = '#f8fafc';
+
+            sectionHeader.innerHTML = `
+                <div class="section-number" style="font-size: 20px; font-weight: 700; color: #6366f1; margin-right: 16px; min-width: 40px;">${section.num}</div>
+                <div class="section-info" style="flex: 1;">
+                    <h2 style="margin: 0; font-size: 18px; color: #1e293b;">${section.title}</h2>
+                    <span class="subsection-count" style="font-size: 13px; color: #64748b;">${Object.keys(section.subsections).length} подразделов</span>
+                </div>
+                <div class="accordion-icon" style="transition: transform 0.3s; color: #64748b;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24">
+                        <polyline points="6 9 12 15 18 9"/>
+                    </svg>
+                </div>
+            `;
+
+            // Контент Раздела (скрыт)
             const sectionContent = document.createElement('div');
-            sectionContent.className = 'monitor-content';
+            sectionContent.className = 'accordion-content';
             sectionContent.style.display = 'none';
-            sectionContent.style.padding = '10px';
+            sectionContent.style.padding = '10px 20px 20px 20px';
             sectionContent.style.background = '#fff';
 
             // Обработчик клика по разделу
             sectionHeader.onclick = () => {
                 const isOpen = sectionContent.style.display === 'block';
                 sectionContent.style.display = isOpen ? 'none' : 'block';
-                sectionHeader.querySelector('.arrow').textContent = isOpen ? '▼' : '▲';
+                const icon = sectionHeader.querySelector('.accordion-icon');
+                icon.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
             };
 
-            // Подразделы
+            // --- Подразделы (Уровень 2) ---
             const sortedSubsections = Object.keys(section.subsections).sort((a, b) => {
                 return a.localeCompare(b, undefined, { numeric: true });
             });
@@ -168,53 +185,78 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const subsection = section.subsections[subId];
                 
                 const subDiv = document.createElement('div');
-                subDiv.className = 'monitor-subsection';
-                subDiv.style.marginBottom = '8px';
+                subDiv.className = 'accordion-section'; // Используем тот же класс для вложенности
+                subDiv.style.marginBottom = '10px';
                 subDiv.style.border = '1px solid #f1f5f9';
-                subDiv.style.borderRadius = '6px';
+                subDiv.style.borderRadius = '8px';
+                subDiv.style.overflow = 'hidden';
 
                 const subHeader = document.createElement('div');
-                subHeader.className = 'monitor-subheader';
-                subHeader.style.cssText = 'background: #f1f5f9; padding: 8px 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 14px; font-weight: 500; color: #475569;';
-                subHeader.innerHTML = `<span>${subsection.title}</span> <span class="arrow">▼</span>`;
+                subHeader.className = 'accordion-header';
+                subHeader.style.cssText = 'display: flex; align-items: center; padding: 12px 16px; cursor: pointer; background: #f8fafc; transition: background 0.2s;';
+                subHeader.onmouseenter = () => subHeader.style.background = '#f1f5f9';
+                subHeader.onmouseleave = () => subHeader.style.background = '#f8fafc';
+
+                subHeader.innerHTML = `
+                    <div class="section-number" style="font-size: 16px; font-weight: 600; color: #475569; margin-right: 12px; min-width: 30px;">${subId}</div>
+                    <div class="section-info" style="flex: 1;">
+                        <h3 style="margin: 0; font-size: 15px; color: #334155;">${subsection.title}</h3>
+                        <span style="font-size: 12px; color: #94a3b8;">${subsection.ops.length} операций</span>
+                    </div>
+                    <div class="accordion-icon" style="transition: transform 0.3s; color: #94a3b8;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                    </div>
+                `;
 
                 const subContent = document.createElement('div');
-                subContent.className = 'monitor-subcontent';
+                subContent.className = 'accordion-content';
                 subContent.style.display = 'none';
-                subContent.style.padding = '8px';
+                subContent.style.padding = '10px 16px';
+                subContent.style.background = '#fff';
 
                 subHeader.onclick = (e) => {
-                    e.stopPropagation(); // Чтобы не срабатывал клик по родителю
+                    e.stopPropagation();
                     const isOpen = subContent.style.display === 'block';
                     subContent.style.display = isOpen ? 'none' : 'block';
-                    subHeader.querySelector('.arrow').textContent = isOpen ? '▼' : '▲';
+                    const icon = subHeader.querySelector('.accordion-icon');
+                    icon.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
                 };
 
-                // Таблица операций внутри подраздела
-                const table = document.createElement('table');
-                table.className = 'matrix-table'; // Используем существующие стили
-                table.style.width = '100%';
-                table.style.fontSize = '13px';
-                
-                const thead = document.createElement('thead');
-                thead.innerHTML = `<tr><th style="width: 100px;">Операция</th><th>Название</th><th style="width: 80px;">Версия</th><th>Ознакомились</th></tr>`;
-                table.appendChild(thead);
+                // Список операций
+                const ul = document.createElement('ul');
+                ul.className = 'operations-list';
+                ul.style.listStyle = 'none';
+                ul.style.padding = '0';
+                ul.style.margin = '0';
 
-                const tbody = document.createElement('tbody');
                 subsection.ops.forEach(op => {
-                    const tr = document.createElement('tr');
-                    const usersList = Array.from(op.users).join(', ') || '—';
-                    tr.innerHTML = `
-                        <td><strong>${op.id}</strong></td>
-                        <td>${op.title}</td>
-                        <td>v${op.version}</td>
-                        <td class="user-cell">${usersList}</td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-                table.appendChild(tbody);
-                subContent.appendChild(table);
+                    const li = document.createElement('li');
+                    li.style.padding = '8px 0';
+                    li.style.borderBottom = '1px solid #f1f5f9';
+                    li.style.display = 'flex';
+                    li.style.justifyContent = 'space-between';
+                    li.style.alignItems = 'center';
+                    li.style.flexWrap = 'wrap';
+                    li.style.gap = '10px';
 
+                    const usersList = Array.from(op.users).join(', ') || '—';
+                    const usersColor = op.users.size > 0 ? '#16a34a' : '#94a3b8';
+
+                    li.innerHTML = `
+                        <div style="flex: 1; min-width: 200px;">
+                            <strong style="color: #1e293b; margin-right: 8px;">${op.id}</strong>
+                            <span style="color: #475569;">${op.title}</span>
+                        </div>
+                        <div style="font-size: 13px; color: ${usersColor}; font-weight: 500; text-align: right; max-width: 300px;">
+                            ${usersList}
+                        </div>
+                    `;
+                    ul.appendChild(li);
+                });
+
+                subContent.appendChild(ul);
                 subDiv.appendChild(subHeader);
                 subDiv.appendChild(subContent);
                 sectionContent.appendChild(subDiv);
@@ -265,9 +307,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const btn = document.createElement('button');
                     btn.textContent = i;
                     btn.className = 'btn-page';
+                    btn.style.cssText = 'padding: 8px 16px; cursor: pointer; border: 1px solid #cbd5e1; background: #fff; border-radius: 4px; margin: 0 2px;';
                     if (i === currentPage) {
                         btn.disabled = true;
                         btn.style.fontWeight = 'bold';
+                        btn.style.background = '#f1f5f9';
                     }
                     btn.onclick = () => {
                         currentPage = i;
