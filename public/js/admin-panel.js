@@ -175,13 +175,40 @@ document.addEventListener('DOMContentLoaded', function () {
             tdRole.textContent = roleLabels[user.role] || user.role;
             tr.appendChild(tdRole);
 
-            // Доступ (ИСПРАВЛЕНО: перевод ID в русский текст)
+            // Доступ (ИСПРАВЛЕНО: перевод ID в русский текст + СОРТИРОВКА)
             const tdAccess = document.createElement('td');
+            
+            // 1. Словарь переводов
+            const sectionNames = {
+                'preparation': 'Заготовка',
+                'panels': 'Сборка панелей',
+                'module': 'Сборка модуля',
+                'options': 'Сборка опций',
+                'installation': 'Монтаж',
+                'service': 'Сервис'
+            };
+
+            // 2. Правильный порядок разделов (согласно нумерации в kb.js)
+            const sectionOrder = [
+                'preparation', 
+                'panels', 
+                'module', 
+                'options', 
+                'installation', 
+                'service'
+            ];
+
             if (user.role === 'admin') {
                 tdAccess.textContent = 'все разделы';
             } else if (user.sections && user.sections.length > 0) {
-                // Переводим каждый ID раздела в русское название
-                const translatedSections = user.sections.map(id => sectionNames[id] || id);
+                // 3. Сортируем массив разделов пользователя согласно sectionOrder
+                const sortedSections = user.sections.sort((a, b) => {
+                    return sectionOrder.indexOf(a) - sectionOrder.indexOf(b);
+                });
+
+                // 4. Переводим в русские названия
+                const translatedSections = sortedSections.map(id => sectionNames[id] || id);
+                
                 tdAccess.textContent = translatedSections.join(', ');
             } else {
                 tdAccess.textContent = '—';
