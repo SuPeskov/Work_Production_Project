@@ -56,22 +56,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     function renderMatrixAccordion(reads) {
         const container = document.getElementById('matrixBody');
         if (!container) return;
+        
+        // Очищаем контейнер и сбрасываем возможные ограничения стилей
         container.innerHTML = '';
+        container.style.overflow = 'visible'; 
+        container.style.height = 'auto';
 
-        // 1. Группируем данные в дерево: Section -> Subsection -> Operations
-        // Структура: { sectionId: { title: "...", num: "01", subsections: { subId: { title: "...", ops: [...] } } } }
+        // 1. Группируем данные
         const tree = {};
 
-        // Заполняем всеми известными операциями из KB_OPERATIONS
         if (typeof KB_OPERATIONS !== 'undefined') {
             KB_OPERATIONS.forEach(op => {
-                const parts = op.id.split('.'); // ['2', '1', '1']
+                const parts = op.id.split('.');
                 if (parts.length < 3) return;
 
-                const secId = parts[0]; // '2'
-                const subId = `${parts[0]}.${parts[1]}`; // '2.1'
+                const secId = parts[0];
+                const subId = `${parts[0]}.${parts[1]}`;
 
-                // Находим название раздела из KB_SECTIONS
                 let secTitle = `Раздел ${secId}`;
                 let secNum = secId.padStart(2, '0');
                 if (typeof KB_SECTIONS !== 'undefined') {
@@ -82,12 +83,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
                 }
 
-                // Название подраздела (эвристика: берем из первой операции или генерируем)
-                // В реальном проекте лучше иметь реестр подразделов. Пока используем ID.
                 let subTitle = `Подраздел ${subId}`;
-                // Попытка улучшить: если есть операция 2.1.1, можно попробовать вытащить контекст, 
-                // но проще оставить заглушку или хардкод для известных подразделов.
-                // Для универсальности оставим "Подраздел X.Y".
 
                 if (!tree[secId]) {
                     tree[secId] = { title: secTitle, num: secNum, subsections: {} };
@@ -105,7 +101,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         }
 
-        // Накладываем данные о прочтениях
         reads.forEach(r => {
             const parts = r.op_id.split('.');
             if (parts.length < 3) return;
@@ -120,7 +115,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
 
-        // 2. Отрисовка HTML
         const sortedSections = Object.keys(tree).sort((a, b) => Number(a) - Number(b));
 
         if (sortedSections.length === 0) {
@@ -131,25 +125,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         sortedSections.forEach(secId => {
             const section = tree[secId];
             
-            // --- Блок Раздела (Уровень 1) ---
+            // --- Блок Раздела ---
             const sectionDiv = document.createElement('div');
             sectionDiv.className = 'accordion-section';
-            sectionDiv.dataset.section = secId;
             sectionDiv.style.marginBottom = '15px';
             sectionDiv.style.border = '1px solid #e2e8f0';
             sectionDiv.style.borderRadius = '12px';
-            sectionDiv.style.overflow = 'hidden';
             sectionDiv.style.background = '#fff';
+            // ВАЖНО: overflow visible, чтобы контент не обрезался
+            sectionDiv.style.overflow = 'visible'; 
 
-            // Заголовок Раздела
             const sectionHeader = document.createElement('div');
             sectionHeader.className = 'accordion-header';
-            sectionHeader.style.cssText = 'display: flex; align-items: center; padding: 16px 20px; cursor: pointer; background: #f8fafc; transition: background 0.2s;';
-            sectionHeader.onmouseenter = () => sectionHeader.style.background = '#f1f5f9';
-            sectionHeader.onmouseleave = () => sectionHeader.style.background = '#f8fafc';
-
+            sectionHeader.style.cssText = 'display: flex; align-items: center; padding: 16px 20px; cursor: pointer; background: #f8fafc; border-radius: 12px; transition: background 0.2s;';
+            
             sectionHeader.innerHTML = `
-                <div class="section-number" style="font-size: 20px; font-weight: 700; color: #6366f1; margin-right: 16px; min-width: 40px;">${section.num}</div>
+                <div class="section-number" style="font-size: 20px; font-weight: 700; color: #6366f1; margin-right: 16px; min-width: 40px; background: #e0e7ff; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 8px;">${section.num}</div>
                 <div class="section-info" style="flex: 1;">
                     <h2 style="margin: 0; font-size: 18px; color: #1e293b;">${section.title}</h2>
                     <span class="subsection-count" style="font-size: 13px; color: #64748b;">${Object.keys(section.subsections).length} подразделов</span>
@@ -161,42 +152,37 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </div>
             `;
 
-            // Контент Раздела (скрыт)
             const sectionContent = document.createElement('div');
             sectionContent.className = 'accordion-content';
-            sectionContent.style.display = 'none';
+            sectionContent.style.display = 'none'; // Скрыто по умолчанию
             sectionContent.style.padding = '10px 20px 20px 20px';
             sectionContent.style.background = '#fff';
+            sectionContent.style.borderTop = '1px solid #e2e8f0';
 
-            // Обработчик клика по разделу
             sectionHeader.onclick = () => {
                 const isOpen = sectionContent.style.display === 'block';
                 sectionContent.style.display = isOpen ? 'none' : 'block';
                 const icon = sectionHeader.querySelector('.accordion-icon');
                 icon.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+                // Меняем фон заголовка при открытии
+                sectionHeader.style.borderRadius = isOpen ? '12px' : '12px 12px 0 0';
             };
 
-            // --- Подразделы (Уровень 2) ---
-            const sortedSubsections = Object.keys(section.subsections).sort((a, b) => {
-                return a.localeCompare(b, undefined, { numeric: true });
-            });
+            // --- Подразделы ---
+            const sortedSubsections = Object.keys(section.subsections).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
 
             sortedSubsections.forEach(subId => {
                 const subsection = section.subsections[subId];
                 
                 const subDiv = document.createElement('div');
-                subDiv.className = 'accordion-section'; // Используем тот же класс для вложенности
                 subDiv.style.marginBottom = '10px';
                 subDiv.style.border = '1px solid #f1f5f9';
                 subDiv.style.borderRadius = '8px';
-                subDiv.style.overflow = 'hidden';
+                subDiv.style.background = '#fff';
 
                 const subHeader = document.createElement('div');
-                subHeader.className = 'accordion-header';
-                subHeader.style.cssText = 'display: flex; align-items: center; padding: 12px 16px; cursor: pointer; background: #f8fafc; transition: background 0.2s;';
-                subHeader.onmouseenter = () => subHeader.style.background = '#f1f5f9';
-                subHeader.onmouseleave = () => subHeader.style.background = '#f8fafc';
-
+                subHeader.style.cssText = 'display: flex; align-items: center; padding: 12px 16px; cursor: pointer; background: #f8fafc; border-radius: 8px; transition: background 0.2s;';
+                
                 subHeader.innerHTML = `
                     <div class="section-number" style="font-size: 16px; font-weight: 600; color: #475569; margin-right: 12px; min-width: 30px;">${subId}</div>
                     <div class="section-info" style="flex: 1;">
@@ -211,10 +197,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 `;
 
                 const subContent = document.createElement('div');
-                subContent.className = 'accordion-content';
                 subContent.style.display = 'none';
                 subContent.style.padding = '10px 16px';
-                subContent.style.background = '#fff';
+                subContent.style.borderTop = '1px solid #f1f5f9';
 
                 subHeader.onclick = (e) => {
                     e.stopPropagation();
@@ -222,11 +207,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                     subContent.style.display = isOpen ? 'none' : 'block';
                     const icon = subHeader.querySelector('.accordion-icon');
                     icon.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+                    subHeader.style.borderRadius = isOpen ? '8px' : '8px 8px 0 0';
                 };
 
                 // Список операций
                 const ul = document.createElement('ul');
-                ul.className = 'operations-list';
                 ul.style.listStyle = 'none';
                 ul.style.padding = '0';
                 ul.style.margin = '0';
