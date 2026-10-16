@@ -167,10 +167,23 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // Доступ
             const tdAccess = document.createElement('td');
+            
+            // Словарь для перевода ID в русские названия
+            const sectionLabels = {
+                'preparation': 'Заготовка',
+                'panels': 'Сборка панелей',
+                'module': 'Сборка модуля',
+                'options': 'Сборка опций',
+                'installation': 'Монтаж',
+                'service': 'Сервис'
+            };
+
             if (user.role === 'admin') {
                 tdAccess.textContent = 'все разделы';
             } else if (user.sections && user.sections.length > 0) {
-                tdAccess.textContent = user.sections.join(', ');
+                // Переводим каждый ID в русское название
+                const translatedSections = user.sections.map(id => sectionLabels[id] || id);
+                tdAccess.textContent = translatedSections.join(', ');
             } else {
                 tdAccess.textContent = '—';
             }
