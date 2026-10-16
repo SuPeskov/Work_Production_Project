@@ -1,15 +1,14 @@
 /**
  * monitoring.js — Логика страницы мониторинга ознакомления
- * Работает с серверным API (/api/reads), а не с localStorage.
+ * Версия с группировкой по разделам и подразделам (Аккордеон)
  */
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // --- Константы (объявлены в начале, чтобы избежать ошибок инициализации) ---
+    // --- Константы ---
     const LOG_PAGE_SIZE = 30;
     let currentPage = 1;
 
     // --- 1. Инициализация шапки и проверка авторизации ---
-    // Используем функции из auth.js и kb.js
     if (typeof isAuthenticated === 'function' && !isAuthenticated()) {
         window.location.href = 'index.html';
         return;
@@ -42,7 +41,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!response.ok) throw new Error('Ошибка загрузки данных с сервера');
         const reads = await response.json();
 
-        renderMatrix(reads);
+        renderMatrixAccordion(reads); // Новая функция отрисовки
         renderLog(reads);
 
     } catch (error) {
@@ -53,71 +52,177 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // --- 3. Рендер Матрицы ознакомления ---
-    function renderMatrix(reads) {
-        const tbody = document.getElementById('matrixBody');
-        if (!tbody) return;
-        tbody.innerHTML = '';
+    // --- 3. Рендер Матрицы (Аккордеон) ---
+    function renderMatrixAccordion(reads) {
+        const container = document.getElementById('matrixBody');
+        if (!container) return;
+        container.innerHTML = '';
 
-        // Группируем данные по операциям
-        const opsMap = {};
-        
-        // Берем список всех операций из kb.js (глобальная переменная KB_OPERATIONS)
+        // 1. Группируем данные
+        // Структура: { sectionId: { title: "...", subsections: { subId: { title: "...", ops: [...] } } } }
+        const tree = {};
+
+        // Сначала заполняем всеми известными операциями из KB_OPERATIONS
         if (typeof KB_OPERATIONS !== 'undefined') {
             KB_OPERATIONS.forEach(op => {
-                opsMap[op.id] = {
+                const parts = op.id.split('.'); // ['2', '1', '1']
+                if (parts.length < 3) return;
+
+                const secId = parts[0]; // '2'
+                const subId = `${parts[0]}.${parts[1]}`; // '2.1'
+                
+                // Находим название раздела из KB_SECTIONS
+                let secTitle = `Раздел ${secId}`;
+                if (typeof KB_SECTIONS !== 'undefined') {
+                    const secObj = KB_SECTIONS.find(s => s.id === op.section);
+                    if (secObj) secTitle = `${secObj.num}. ${secObj.title}`;
+                }
+
+                // Название подраздела (берем из первой операции или генерируем)
+                // В реальном проекте лучше иметь реестр подразделов, но пока возьмем из title операции
+                // Упростим: "2.1 Сборка панели пола" (берем часть title до первого слова или хардкодим, если нужно)
+                // Для универсальности просто используем ID подраздела как заголовок, если нет другого источника
+                let subTitle = `Подраздел ${subId}`;
+                // Попытка вытащить название подраздела из title операции (эвристика)
+                // Например "Сборка каркаса панели" -> не дает названия подраздела.
+                // Оставим заглушку, которую можно улучшить позже, если добавить массив KB_SUBSECTIONS в kb.js
+                // Пока просто ID.
+
+                if (!tree[secId]) {
+                    tree[secId] = { title: secTitle, subsections: {} };
+                }
+                if (!tree[secId].subsections[subId]) {
+                    tree[secId].subsections[subId] = { title: subTitle, ops: [] };
+                }
+
+                tree[secId].subsections[subId].ops.push({
+                    id: op.id,
                     title: op.title,
-                    section: op.section,
                     version: op.version || '1',
                     users: new Set()
-                };
+                });
             });
         }
 
-        // Накладываем данные о прочтениях с сервера
+        // Накладываем данные о прочтениях
         reads.forEach(r => {
-            if (!opsMap[r.op_id]) {
-                // Если операция есть в логах, но нет в реестре (редкий случай)
-                opsMap[r.op_id] = {
-                    title: r.op_title || r.op_id,
-                    section: r.section_id,
-                    version: r.version,
-                    users: new Set()
-                };
+            const parts = r.op_id.split('.');
+            if (parts.length < 3) return;
+            const secId = parts[0];
+            const subId = `${parts[0]}.${parts[1]}`;
+
+            if (tree[secId] && tree[secId].subsections[subId]) {
+                const opObj = tree[secId].subsections[subId].ops.find(o => o.id === r.op_id);
+                if (opObj) {
+                    opObj.users.add(r.full_name || r.username);
+                }
             }
-            // Добавляем имя пользователя в набор (Set гарантирует уникальность)
-            opsMap[r.op_id].users.add(r.full_name || r.username);
         });
 
-        // Сортируем по ID операции (1.1.1, 1.1.2...)
-        const sortedOps = Object.entries(opsMap).sort((a, b) => {
-            return a[0].localeCompare(b[0], undefined, { numeric: true });
-        });
+        // 2. Отрисовка HTML
+        // Сортируем разделы по ID
+        const sortedSections = Object.keys(tree).sort((a, b) => Number(a) - Number(b));
 
-        if (sortedOps.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 20px;">Нет данных об операциях</td></tr>';
+        if (sortedSections.length === 0) {
+            container.innerHTML = '<div style="padding: 20px; text-align: center; color: #64748b;">Нет данных об операциях</div>';
             return;
         }
 
-        sortedOps.forEach(([opId, data]) => {
-            const tr = document.createElement('tr');
+        sortedSections.forEach(secId => {
+            const section = tree[secId];
             
-            // Получаем читаемое название раздела из KB_SECTIONS
-            let sectionTitle = data.section;
-            if (typeof KB_SECTIONS !== 'undefined') {
-                const sec = KB_SECTIONS.find(s => s.id === data.section);
-                if (sec) sectionTitle = sec.title;
-            }
+            // Блок Раздела
+            const sectionDiv = document.createElement('div');
+            sectionDiv.className = 'monitor-section';
+            sectionDiv.style.marginBottom = '10px';
+            sectionDiv.style.border = '1px solid #e2e8f0';
+            sectionDiv.style.borderRadius = '8px';
+            sectionDiv.style.overflow = 'hidden';
 
-            const usersList = Array.from(data.users).join(', ') || '—';
+            // Заголовок Раздела (кнопка)
+            const sectionHeader = document.createElement('div');
+            sectionHeader.className = 'monitor-header';
+            sectionHeader.style.cssText = 'background: #f8fafc; padding: 12px 16px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-weight: 600; color: #1e293b;';
+            sectionHeader.innerHTML = `<span>${section.title}</span> <span class="arrow">▼</span>`;
+            
+            // Контент Раздела (скрыт по умолчанию)
+            const sectionContent = document.createElement('div');
+            sectionContent.className = 'monitor-content';
+            sectionContent.style.display = 'none';
+            sectionContent.style.padding = '10px';
+            sectionContent.style.background = '#fff';
 
-            tr.innerHTML = `
-                <td>${sectionTitle}</td>
-                <td><strong>${opId}</strong> ${data.title}</td>
-                <td>v${data.version}</td>
-                <td class="user-cell">${usersList}</td>
-            `;
-            tbody.appendChild(tr);
+            // Обработчик клика по разделу
+            sectionHeader.onclick = () => {
+                const isOpen = sectionContent.style.display === 'block';
+                sectionContent.style.display = isOpen ? 'none' : 'block';
+                sectionHeader.querySelector('.arrow').textContent = isOpen ? '▼' : '▲';
+            };
+
+            // Подразделы
+            const sortedSubsections = Object.keys(section.subsections).sort((a, b) => {
+                return a.localeCompare(b, undefined, { numeric: true });
+            });
+
+            sortedSubsections.forEach(subId => {
+                const subsection = section.subsections[subId];
+                
+                const subDiv = document.createElement('div');
+                subDiv.className = 'monitor-subsection';
+                subDiv.style.marginBottom = '8px';
+                subDiv.style.border = '1px solid #f1f5f9';
+                subDiv.style.borderRadius = '6px';
+
+                const subHeader = document.createElement('div');
+                subHeader.className = 'monitor-subheader';
+                subHeader.style.cssText = 'background: #f1f5f9; padding: 8px 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 14px; font-weight: 500; color: #475569;';
+                subHeader.innerHTML = `<span>${subsection.title}</span> <span class="arrow">▼</span>`;
+
+                const subContent = document.createElement('div');
+                subContent.className = 'monitor-subcontent';
+                subContent.style.display = 'none';
+                subContent.style.padding = '8px';
+
+                subHeader.onclick = (e) => {
+                    e.stopPropagation(); // Чтобы не срабатывал клик по родителю
+                    const isOpen = subContent.style.display === 'block';
+                    subContent.style.display = isOpen ? 'none' : 'block';
+                    subHeader.querySelector('.arrow').textContent = isOpen ? '▼' : '▲';
+                };
+
+                // Таблица операций внутри подраздела
+                const table = document.createElement('table');
+                table.className = 'matrix-table'; // Используем существующие стили
+                table.style.width = '100%';
+                table.style.fontSize = '13px';
+                
+                const thead = document.createElement('thead');
+                thead.innerHTML = `<tr><th style="width: 100px;">Операция</th><th>Название</th><th style="width: 80px;">Версия</th><th>Ознакомились</th></tr>`;
+                table.appendChild(thead);
+
+                const tbody = document.createElement('tbody');
+                subsection.ops.forEach(op => {
+                    const tr = document.createElement('tr');
+                    const usersList = Array.from(op.users).join(', ') || '—';
+                    tr.innerHTML = `
+                        <td><strong>${op.id}</strong></td>
+                        <td>${op.title}</td>
+                        <td>v${op.version}</td>
+                        <td class="user-cell">${usersList}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                table.appendChild(tbody);
+                subContent.appendChild(table);
+
+                subDiv.appendChild(subHeader);
+                subDiv.appendChild(subContent);
+                sectionContent.appendChild(subDiv);
+            });
+
+            sectionDiv.appendChild(sectionHeader);
+            sectionDiv.appendChild(sectionContent);
+            container.appendChild(sectionDiv);
         });
     }
 
@@ -129,7 +234,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         tbody.innerHTML = '';
 
-        // Сортировка: новые сверху
         const sortedReads = [...reads].sort((a, b) => new Date(b.read_at) - new Date(a.read_at));
         
         const totalPages = Math.ceil(sortedReads.length / LOG_PAGE_SIZE);
@@ -154,7 +258,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             tbody.appendChild(tr);
         });
 
-        // Отрисовка кнопок пагинации
         if (pagination) {
             pagination.innerHTML = '';
             if (totalPages > 1) {
@@ -168,7 +271,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
                     btn.onclick = () => {
                         currentPage = i;
-                        renderLog(reads); // Перерисовываем таблицу
+                        renderLog(reads);
                     };
                     pagination.appendChild(btn);
                 }
