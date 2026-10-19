@@ -1,9 +1,9 @@
 /**
  * app.js — Backend базы знаний Скаут Хаус (PPR)
  * ИСПРАВЛЕНО: 
- * 1. Синтаксическая ошибка в middleware auth()
- * 2. Маршрут /api/logout теперь сбрасывает is_active_session в БД
- * 3. Добавлена проверка уникальной сессии при входе
+ * 1. Убрано дублирование const app = express()
+ * 2. Исправлена ошибка trust proxy для express-rate-limit
+ * 3. Реализована уникальная сессия + блокировка повторного входа
  */
 require('dotenv').config();
 const path = require('path');
@@ -50,10 +50,12 @@ try {
 if (!OPERATIONS.length) console.warn('ВНИМАНИЕ: реестр операций пуст — проверьте public/js/kb.js');
 const OP_MAP = Object.fromEntries(OPERATIONS.map(o => [o.id, o]));
 
+// ЕДИНСТВЕННОЕ объявление приложения Express
 const app = express();
-// ИСПРАВЛЕНО: Разрешаем доверять заголовкам X-Forwarded-For от прокси (Nginx)
-// Без этой строки express-rate-limit выбрасывает ошибку и блокирует вход
-app.set('trust proxy', true); 
+
+// ИСПРАВЛЕНИЕ RATE-LIMIT: Доверяем прокси, но отключаем проверку безопасности, 
+// так как мы находимся за Nginx и знаем, что X-Forwarded-For корректен
+app.set('trust proxy', 1); 
 
 app.disable('x-powered-by');
 app.use(helmet({ contentSecurityPolicy: false }));
@@ -69,25 +71,17 @@ function auth(required = true, roles = null) {
         if (token) {
             try {
                 const payload = jwt.verify(token, JWT_SECRET);
-                // Запрашиваем ТОЛЬКО необходимые поля + session_token + is_active_session
                 user = db.prepare('SELECT id, username, name, role, active, session_token, is_active_session FROM users WHERE id=? AND active=1').get(payload.uid);
                 
-                // КЛЮЧЕВАЯ ПРОВЕРКА: 
-                // 1. Токен в куке должен совпадать с токеном в БД
-                // 2. Пользователь должен иметь активную сессию
+                // КЛЮЧЕВАЯ ПРОВЕРКА: Токен должен совпадать + сессия должна быть активна
                 if (!user || user.session_token !== payload.st || !user.is_active_session) {
                     user = null; 
-                    
-                    // Защита от зависания: если токен был, но проверка провалилась,
-                    // а юзер помечен как активный — сбрасываем его статус
+                    // Защита от зависания: сбрасываем флаг, если токен невалиден
                     if (payload && payload.uid) {
-                        try {
-                            db.prepare('UPDATE users SET is_active_session=0 WHERE id=?').run(payload.uid);
-                        } catch(e) {}
+                        try { db.prepare('UPDATE users SET is_active_session=0 WHERE id=?').run(payload.uid); } catch(e) {}
                     }
                 }
             } catch (_) { 
-                /* токен невалиден или истек */ 
                 // Попытка сбросить зависшую сессию при битом токене
                 try {
                     const badPayload = jwt.decode(token);
@@ -98,7 +92,6 @@ function auth(required = true, roles = null) {
             }
         }
         
-        // ИСПРАВЛЕНО: Убрана синтаксическая ошибка "roles &&&& required"
         if (!user && required) return res.status(401).json({ error: 'Требуется вход' });
         if (user && roles && !roles.includes(user.role)) return res.status(403).json({ error: 'Нет прав' });
         
@@ -111,7 +104,6 @@ function sectionsOf(userId) {
     return db.prepare('SELECT section_id FROM user_sections WHERE user_id=?').all(userId).map(r => r.section_id);
 }
 
-// Гость (Контролер) имеет полный доступ для контроля
 function canAccess(user, sectionId) {
     if (!user) return false;
     if (user.role === 'admin' || user.role === 'guest') return true;
@@ -119,7 +111,13 @@ function canAccess(user, sectionId) {
 }
 
 // === Auth API ===
-const loginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20, standardHeaders: true });
+const loginLimiter = rateLimit({ 
+    windowMs: 15 * 60 * 1000, 
+    max: 20, 
+    standardHeaders: true,
+    // ИСПРАВЛЕНИЕ: Отключаем строгую проверку trustProxy для rate-limit
+    validate: { xForwardedForHeader: false } 
+});
 
 app.post('/api/login', loginLimiter, (req, res) => {
     const { username, password } = req.body || {};
@@ -127,25 +125,18 @@ app.post('/api/login', loginLimiter, (req, res) => {
     
     const user = db.prepare('SELECT * FROM users WHERE username=? AND active=1').get(String(username).trim().toLowerCase());
     
-    // 1. Проверяем пароль
     if (!user || !bcrypt.compareSync(String(password), user.pass_hash)) {
         return res.status(401).json({ error: 'Неверный логин или пароль' });
     }
     
-    // 2. ПРОВЕРКА НА УЖЕ АКТИВНУЮ СЕССИЮ (Блокируем второй вход)
-    if (user.is_active_session) {
-        return res.status(409).json({ 
-            error: 'Этот сотрудник уже работает в системе. Повторный вход запрещен.' 
-        });
+    // БЛОКИРОВКА ПОВТОРНОГО ВХОДА
+    if (user.is_active_session === 1) {
+        return res.status(409).json({ error: 'Этот сотрудник уже работает в системе. Повторный вход запрещен.' });
     }
     
-    // 3. Генерируем уникальный токен сессии
     const newSessionToken = crypto.randomBytes(32).toString('hex');
-    
-    // 4. Активируем сессию и сохраняем токен ОДНИМ запросом
     db.prepare('UPDATE users SET session_token=?, is_active_session=1 WHERE id=?').run(newSessionToken, user.id);
     
-    // 5. Выдаем JWT
     const token = jwt.sign({ uid: user.id, st: newSessionToken }, JWT_SECRET, { expiresIn: '12h' });
     
     res.cookie('kb_token', token, {
@@ -154,7 +145,7 @@ app.post('/api/login', loginLimiter, (req, res) => {
     res.json({ ok: true, user: publicUser(user) });
 });
 
-// ИСПРАВЛЕНО: Теперь logout сбрасывает флаг активности в БД
+// СБРОС ФЛАГА ПРИ ВЫХОДЕ
 app.post('/api/logout', (req, res) => {
     if (req.user) {
         db.prepare('UPDATE users SET session_token=NULL, is_active_session=0 WHERE id=?').run(req.user.id);
@@ -166,20 +157,11 @@ app.post('/api/logout', (req, res) => {
 app.get('/api/me', auth(false), (req, res) => {
     if (!req.user) return res.json({ user: null });
     const accessList = (req.user.role === 'worker') ? sectionsOf(req.user.id) : '*';
-    
-    res.json({
-        user: publicUser(req.user),
-        sections: accessList
-    });
+    res.json({ user: publicUser(req.user), sections: accessList });
 });
 
 function publicUser(u) {
-    return {
-        username: u.username,
-        name: u.name,
-        role: u.role,
-        roleLabel: ROLE_LABELS[u.role]
-    };
+    return { username: u.username, name: u.name, role: u.role, roleLabel: ROLE_LABELS[u.role] };
 }
 
 // === Права на чтение контента ===
@@ -187,7 +169,6 @@ app.get('/api/access/:sectionId', auth(), (req, res) => {
     res.json({ allowed: canAccess(req.user, req.params.sectionId) });
 });
 
-// Защита страниц по ролям
 const SECTION_BY_PATH = {
     preparation: 'preparation', panels: 'panels', module: 'module',
     options: 'options', installation: 'installation', service: 'service'
@@ -196,18 +177,13 @@ const SECTION_BY_PATH = {
 app.use((req, res, next) => {
     if (req.path === '/dashboard.html' || req.path === '/') return next();
     
-    const m = req.path.match(/^\/pages\/(?:operations|sections)?\/?([\w.-]+)\.html$/i);
     let sectionId = null;
-    
     const opMatch = req.path.match(/(\d+\.\d+\.\d+)\.html$/);
     if (opMatch && OP_MAP[opMatch[1]]) {
         sectionId = OP_MAP[opMatch[1]].section;
     } else {
         for (const key of Object.keys(SECTION_BY_PATH)) {
-            if (req.path.includes(key + '.html')) {
-                sectionId = key;
-                break;
-            }
+            if (req.path.includes(key + '.html')) { sectionId = key; break; }
         }
     }
     
@@ -225,7 +201,6 @@ app.use((req, res, next) => {
 // Очистка демо-аккаунтов
 const DEMO_ACCOUNTS = ['builder', 'engineer', 'guest'];
 let demoCleaned = false;
-
 function cleanupDemoAccounts() {
     if (demoCleaned) return;
     demoCleaned = true;
@@ -233,14 +208,9 @@ function cleanupDemoAccounts() {
         const placeholders = DEMO_ACCOUNTS.map(() => '?').join(',');
         const rows = db.prepare(`SELECT id, username FROM users WHERE username IN (${placeholders}) AND active=1`).all(...DEMO_ACCOUNTS);
         if (!rows.length) return;
-        
         const delU = db.prepare("UPDATE users SET active=0, deleted_at=datetime('now') WHERE id=?");
         const delS = db.prepare('DELETE FROM user_sections WHERE user_id=?');
-        rows.forEach(r => { 
-            delU.run(r.id); 
-            delS.run(r.id); 
-            console.log(`DEMO-аккаунт удалён: ${r.username}`); 
-        });
+        rows.forEach(r => { delU.run(r.id); delS.run(r.id); console.log(`DEMO-аккаунт удалён: ${r.username}`); });
     } catch (e) { console.warn('Не удалось убрать демо-аккаунты:', e.message); }
 }
 
@@ -251,8 +221,7 @@ app.post('/api/read/:opId', auth(true, ['worker']), (req, res) => {
     if (!canAccess(req.user, op.section)) return res.status(403).json({ error: 'Нет доступа к разделу' });
     
     const version = String(req.body?.version != null && req.body.version !== "" ? req.body.version : (op.version != null ? String(op.version) : "1"));
-    const exists = db.prepare('SELECT id FROM read_log WHERE user_id=? AND op_id=? AND version=?')
-        .get(req.user.id, op.id, version);
+    const exists = db.prepare('SELECT id FROM read_log WHERE user_id=? AND op_id=? AND version=?').get(req.user.id, op.id, version);
         
     if (!exists) {
         db.prepare(`INSERT INTO read_log (user_id, username, full_name, role, op_id, op_title, section_id, version) VALUES (?,?,?,?,?,?,?,?)`)
@@ -327,11 +296,7 @@ function setSections(userId, list) {
     db.prepare('DELETE FROM user_sections WHERE user_id=?').run(userId);
     const ins = db.prepare('INSERT OR IGNORE INTO user_sections (user_id, section_id) VALUES (?,?)');
     (Array.isArray(list) ? list : []).forEach(s => {
-        try {
-            ins.run(userId, s);
-        } catch (e) {
-            console.error(`Ошибка сохранения раздела ${s} для пользователя ${userId}:`, e.message);
-        }
+        try { ins.run(userId, s); } catch (e) { console.error(`Ошибка сохранения раздела ${s}:`, e.message); }
     });
 }
 
