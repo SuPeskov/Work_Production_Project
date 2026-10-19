@@ -146,13 +146,38 @@ app.post('/api/login', loginLimiter, (req, res) => {
     res.json({ ok: true, user: publicUser(user) });
 });
 
-app.post('/api/logout', (req, res) => {
-    // Сбрасываем ТОКЕН И ФЛАГ АКТИВНОСТИ при явном выходе
-    if (req.user) {
-        db.prepare('UPDATE users SET session_token=NULL, is_active_session=0 WHERE id=?').run(req.user.id);
+app.post('/api/login', loginLimiter, (req, res) => {
+    const { username, password } = req.body || {};
+    if (!username || !password) return res.status(400).json({ error: 'Укажите логин и пароль' });
+    
+    // 1. Находим пользователя
+    const user = db.prepare('SELECT * FROM users WHERE username=? AND active=1').get(String(username).trim().toLowerCase());
+    
+    // 2. Проверяем пароль
+    if (!user || !bcrypt.compareSync(String(password), user.pass_hash)) {
+        return res.status(401).json({ error: 'Неверный логин или пароль' });
     }
-    res.clearCookie('kb_token');
-    res.json({ ok: true });
+    
+    // 3. 🔒 КЛЮЧЕВАЯ ПРОВЕРКА: Если сессия уже активна — БЛОКИРУЕМ ВХОД
+    if (user.is_active_session === 1) {
+        return res.status(409).json({ 
+            error: 'Этот сотрудник уже работает в системе. Повторный вход запрещен.' 
+        });
+    }
+    
+    // 4. Генерируем уникальный токен сессии
+    const newSessionToken = crypto.randomBytes(32).toString('hex');
+    
+    // 5. Активируем сессию и сохраняем токен ОДНИМ запросом
+    db.prepare('UPDATE users SET session_token=?, is_active_session=1 WHERE id=?').run(newSessionToken, user.id);
+    
+    // 6. Выдаем JWT
+    const token = jwt.sign({ uid: user.id, st: newSessionToken }, JWT_SECRET, { expiresIn: '12h' });
+    
+    res.cookie('kb_token', token, {
+        httpOnly: true, sameSite: 'lax', secure: process.env.KB_SECURE_COOKIE === '1', maxAge: 12 * 3600 * 1000,
+    });
+    res.json({ ok: true, user: publicUser(user) });
 });
 
 app.get('/api/me', auth(false), (req, res) => {
