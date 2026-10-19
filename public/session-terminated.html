@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Внимание! Сессия завершена</title>
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #fef2f2; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; }
+        .alert-box { background: white; border-radius: 16px; padding: 48px; max-width: 560px; text-align: center; box-shadow: 0 10px 40px rgba(220, 38, 38, 0.15); border-top: 6px solid #dc2626; }
+        .icon { font-size: 64px; color: #dc2626; margin-bottom: 24px; line-height: 1; }
+        h1 { color: #991b1b; font-size: 28px; margin: 0 0 16px; }
+        p { color: #7f1d1d; font-size: 16px; line-height: 1.6; margin: 0 0 32px; }
+        .login-link { display: inline-block; background: #dc2626; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; transition: background 0.2s; }
+        .login-link:hover { background: #b91c1c; }
+    </style>
+</head>
+<body>
+    <div class="alert-box">
+        <div class="icon">⚠️</div>
+        <h1>Внимание!</h1>
+        <p id="message">Совершен новый вход под логином <strong>...</strong>.<br>Если это не ваше действие, немедленно сообщите Администратору.</p>
+        <a href="/index.html" class="login-link">На страницу входа</a>
+    </div>
+    <script>
+        // Подставляем логин из URL параметра ?user=...
+        const params = new URLSearchParams(window.location.search);
+        const user = params.get('user');
+        if (user) document.getElementById('message').innerHTML = 
+            `Совершен новый вход под логином <strong>${user}</strong>.<br>Если это не ваше действие, немедленно сообщите Администратору.`;
+    </script>
+</body>
+</html>

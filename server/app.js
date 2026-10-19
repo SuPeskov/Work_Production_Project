@@ -1,12 +1,11 @@
 /**
-app.js — Backend базы знаний Скаут Хаус (PPR)
-Защищённый верифицированный вход (bcrypt + JWT в httpOnly-cookie),
-серверная проверка прав доступа к разделам, неизменяемый журнал
-ознакомлений. Статика сайта раздаётся из ../public.
-*/
+ * app.js — Backend базы знаний Скаут Хаус (PPR)
+ * Реализована защита от одновременных входов (unique session token).
+ */
 require('dotenv').config();
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto'); // Для генерации токенов сессии
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -22,7 +21,7 @@ if (!JWT_SECRET) { console.error('ОБЯЗАТЕЛЬНО задайте пере
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
 const ROLE_LABELS = { admin: 'Администратор', worker: 'Сотрудник производства', guest: 'Гость' };
 
-// Реестр операций берём из единого источника kb.js
+// === Парсинг реестра операций из kb.js ===
 function extractLiteral(src, name) {
     const start = src.indexOf(`const ${name} = [`);
     if (start === -1) return [];
@@ -54,19 +53,29 @@ app.use(helmet({ contentSecurityPolicy: false }));
 app.use(express.json());
 app.use(cookieParser());
 
-// === Middleware: аутентификация и права ===
+// === Middleware: Аутентификация с проверкой уникальной сессии ===
 function auth(required = true, roles = null) {
     return (req, res, next) => {
         const token = req.cookies.kb_token;
         let user = null;
+        
         if (token) {
             try {
                 const payload = jwt.verify(token, JWT_SECRET);
-                user = db.prepare('SELECT * FROM users WHERE id=? AND active=1').get(payload.uid);
-            } catch (_) { /* токен невалиден */ }
+                // Запрашиваем ТОЛЬКО необходимые поля + session_token
+                user = db.prepare('SELECT id, username, name, role, active, session_token FROM users WHERE id=? AND active=1').get(payload.uid);
+                
+                // КЛЮЧЕВАЯ ПРОВЕРКА: Токен в куке должен совпадать с токеном в БД
+                // Если кто-то вошел заново, session_token в БД изменился, и эта проверка провалится
+                if (!user || user.session_token !== payload.st) {
+                    user = null; 
+                }
+            } catch (_) { /* токен невалиден или истек */ }
         }
+        
         if (!user && required) return res.status(401).json({ error: 'Требуется вход' });
         if (user && roles && !roles.includes(user.role)) return res.status(403).json({ error: 'Нет прав' });
+        
         req.user = user;
         next();
     };
@@ -76,10 +85,10 @@ function sectionsOf(userId) {
     return db.prepare('SELECT section_id FROM user_sections WHERE user_id=?').all(userId).map(r => r.section_id);
 }
 
-// ИСПРАВЛЕНИЕ: Гость (Контролер) теперь имеет доступ ко ВСЕМ разделам
+// ИСПРАВЛЕНИЕ: Гость (Контролер) имеет полный доступ для контроля
 function canAccess(user, sectionId) {
     if (!user) return false;
-    // Админ и Гость имеют полный доступ для контроля
+    // Админ и Гость имеют доступ ко всем разделам
     if (user.role === 'admin' || user.role === 'guest') return true;
     // Сотрудник производства — строго по назначенному списку
     return sectionsOf(user.id).includes(sectionId);
@@ -97,18 +106,33 @@ app.post('/api/login', loginLimiter, (req, res) => {
         return res.status(401).json({ error: 'Неверный логин или пароль' });
     }
     
-    const token = jwt.sign({ uid: user.id }, JWT_SECRET, { expiresIn: '12h' });
+    // 1. Генерируем уникальный токен сессии
+    const newSessionToken = crypto.randomBytes(32).toString('hex');
+    
+    // 2. Сохраняем его в БД (старая сессия автоматически становится недействительной)
+    db.prepare('UPDATE users SET session_token=? WHERE id=?').run(newSessionToken, user.id);
+    
+    // 3. Добавляем токен в payload JWT
+    const token = jwt.sign({ uid: user.id, st: newSessionToken }, JWT_SECRET, { expiresIn: '12h' });
+    
     res.cookie('kb_token', token, {
         httpOnly: true, sameSite: 'lax', secure: process.env.KB_SECURE_COOKIE === '1', maxAge: 12 * 3600 * 1000,
     });
     res.json({ ok: true, user: publicUser(user) });
 });
 
-app.post('/api/logout', (req, res) => { res.clearCookie('kb_token'); res.json({ ok: true }); });
+app.post('/api/logout', (req, res) => {
+    // Очищаем токен в БД при выходе
+    if (req.user) {
+        db.prepare('UPDATE users SET session_token=NULL WHERE id=?').run(req.user.id);
+    }
+    res.clearCookie('kb_token');
+    res.json({ ok: true });
+});
 
 app.get('/api/me', auth(false), (req, res) => {
     if (!req.user) return res.json({ user: null });
-    // Гость получает список '*' (все разделы), сотрудник — конкретный список
+    // Гость и Админ получают '*', сотрудник — конкретный список
     const accessList = (req.user.role === 'worker') ? sectionsOf(req.user.id) : '*';
     
     res.json({
@@ -131,20 +155,18 @@ app.get('/api/access/:sectionId', auth(), (req, res) => {
     res.json({ allowed: canAccess(req.user, req.params.sectionId) });
 });
 
-// Защита страниц по ролям: запрещённые разделы отдают 403 вместо HTML
+// Защита страниц по ролям
 const SECTION_BY_PATH = {
     preparation: 'preparation', panels: 'panels', module: 'module',
     options: 'options', installation: 'installation', service: 'service'
 };
 
 app.use((req, res, next) => {
-    // Дашборд доступен всем авторизованным пользователям
     if (req.path === '/dashboard.html' || req.path === '/') return next();
     
     const m = req.path.match(/^\/pages\/(?:operations|sections)?\/?([\w.-]+)\.html$/i);
     let sectionId = null;
     
-    // страницы операций вида /pages/operations/2.1.5.html → раздел по префиксу id
     const opMatch = req.path.match(/(\d+\.\d+\.\d+)\.html$/);
     if (opMatch && OP_MAP[opMatch[1]]) {
         sectionId = OP_MAP[opMatch[1]].section;
@@ -159,18 +181,16 @@ app.use((req, res, next) => {
     
     if (!sectionId) return next();
     
-    // проверяем токен без обязательности входа
     auth(false)(req, res, () => {
         if (!req.user) return res.redirect('/index.html?need_login=1');
         if (!canAccess(req.user, sectionId)) {
-            // Отдаем статическую страницу "нет доступа" вместо редиректа на логин
             return res.status(403).sendFile(path.join(PUBLIC_DIR, 'no-access.html'));
         }
         next();
     });
 });
 
-// Очистка демо-аккаунтов при первом обращении к админ-API
+// Очистка демо-аккаунтов
 const DEMO_ACCOUNTS = ['builder', 'engineer', 'guest'];
 let demoCleaned = false;
 
@@ -192,7 +212,7 @@ function cleanupDemoAccounts() {
     } catch (e) { console.warn('Не удалось убрать демо-аккаунты:', e.message); }
 }
 
-// === Журнал ознакомлений (только сервер пишет!) ===
+// === Журнал ознакомлений ===
 app.post('/api/read/:opId', auth(true, ['worker']), (req, res) => {
     const op = OP_MAP[req.params.opId];
     if (!op) return res.status(404).json({ error: 'Неизвестная операция' });
@@ -209,10 +229,8 @@ app.post('/api/read/:opId', auth(true, ['worker']), (req, res) => {
     res.json({ ok: true, already: !!exists });
 });
 
-// ИСПРАВЛЕНИЕ: Гость (Контролер) видит ВСЕ отметки, как Администратор
+// ИСПРАВЛЕНИЕ: Гость (Контролер) видит ВСЕ отметки
 app.get('/api/reads', auth(), (req, res) => {
-    // Если роль worker — показываем только свои отметки
-    // Если роль guest или admin — показываем все отметки в системе
     if (req.user.role === 'worker') {
         const rows = db.prepare('SELECT * FROM read_log WHERE user_id=? ORDER BY read_at DESC').all(req.user.id);
         res.json(rows);
@@ -278,8 +296,6 @@ function setSections(userId, list) {
     db.prepare('DELETE FROM user_sections WHERE user_id=?').run(userId);
     const ins = db.prepare('INSERT OR IGNORE INTO user_sections (user_id, section_id) VALUES (?,?)');
     (Array.isArray(list) ? list : []).forEach(s => {
-        // Сохраняем любой ID без проверки в таблице sections.
-        // Таблицы sections может не быть, но список разделов фиксирован в kb.js.
         try {
             ins.run(userId, s);
         } catch (e) {
@@ -288,7 +304,7 @@ function setSections(userId, list) {
     });
 }
 
-// === Статика (после API-маршрутов) ===
+// === Статика ===
 app.use(express.static(PUBLIC_DIR, { extensions: ['html'] }));
 app.get('/', (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'index.html')));
 
