@@ -22,7 +22,6 @@
         <a href="/index.html" class="login-link">На страницу входа</a>
     </div>
     <script>
-        // Подставляем логин из URL параметра ?user=...
         const params = new URLSearchParams(window.location.search);
         const user = params.get('user');
         if (user) document.getElementById('message').innerHTML = 
