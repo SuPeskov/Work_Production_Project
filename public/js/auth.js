@@ -1,6 +1,7 @@
 /**
  * auth.js — Логика авторизации и управления сессией
  * Включает защиту от параллельных входов (перехват 401 -> session-terminated)
+ * и обработку ошибки 409 (пользователь уже активен).
  */
 const SESSION_KEY = 'modular_house_session';
 
@@ -124,7 +125,15 @@ document.addEventListener('DOMContentLoaded', function () {
                     window.location.href = 'dashboard.html';
                 }, 800);
             } else {
-                showError(data.error || 'Неверный логин или пароль');
+                // ОБРАБОТКА ОШИБОК
+                let errorMsg = data.error || 'Неверный логин или пароль';
+                
+                // Специальная обработка для занятой сессии (код 409)
+                if (response.status === 409) {
+                    errorMsg = '⚠️ Этот сотрудник уже работает в системе!\nПовторный вход под одним логином запрещен.';
+                }
+                
+                showError(errorMsg);
                 loginForm.classList.add('shake');
                 setTimeout(() => loginForm.classList.remove('shake'), 500);
             }

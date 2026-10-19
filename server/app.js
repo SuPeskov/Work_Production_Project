@@ -1,11 +1,11 @@
 /**
  * app.js — Backend базы знаний Скаут Хаус (PPR)
- * Реализована защита от одновременных входов (unique session token).
+ * Реализована защита от одновременных входов (unique session token + active flag).
  */
 require('dotenv').config();
 const path = require('path');
 const fs = require('fs');
-const crypto = require('crypto'); // <--- ДОБАВЛЕНО: Для генерации токенов сессии
+const crypto = require('crypto'); // Для генерации токенов сессии
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -62,15 +62,33 @@ function auth(required = true, roles = null) {
         if (token) {
             try {
                 const payload = jwt.verify(token, JWT_SECRET);
-                // Запрашиваем ТОЛЬКО необходимые поля + session_token
-                user = db.prepare('SELECT id, username, name, role, active, session_token FROM users WHERE id=? AND active=1').get(payload.uid);
+                // Запрашиваем ТОЛЬКО необходимые поля + session_token + is_active_session
+                user = db.prepare('SELECT id, username, name, role, active, session_token, is_active_session FROM users WHERE id=? AND active=1').get(payload.uid);
                 
-                // КЛЮЧЕВАЯ ПРОВЕРКА: Токен в куке должен совпадать с токеном в БД
-                // Если кто-то вошел заново, session_token в БД изменился, и эта проверка провалится
-                if (!user || user.session_token !== payload.st) {
+                // КЛЮЧЕВАЯ ПРОВЕРКА: 
+                // 1. Токен в куке должен совпадать с токеном в БД
+                // 2. Пользователь должен иметь активную сессию
+                if (!user || user.session_token !== payload.st || !user.is_active_session) {
                     user = null; 
+                    
+                    // Защита от зависания: если токен был, но проверка провалилась (истек/подделан),
+                    // а юзер помечен как активный — сбрасываем его статус
+                    if (payload && payload.uid) {
+                        try {
+                            db.prepare('UPDATE users SET is_active_session=0 WHERE id=?').run(payload.uid);
+                        } catch(e) {}
+                    }
                 }
-            } catch (_) { /* токен невалиден или истек */ }
+            } catch (_) { 
+                /* токен невалиден или истек */ 
+                // Попытка сбросить зависшую сессию при битом токене
+                try {
+                    const badPayload = jwt.decode(token);
+                    if(badPayload && badPayload.uid) {
+                        db.prepare('UPDATE users SET is_active_session=0 WHERE id=?').run(badPayload.uid);
+                    }
+                } catch(e) {}
+            }
         }
         
         if (!user && required) return res.status(401).json({ error: 'Требуется вход' });
@@ -102,17 +120,24 @@ app.post('/api/login', loginLimiter, (req, res) => {
     if (!username || !password) return res.status(400).json({ error: 'Укажите логин и пароль' });
     
     const user = db.prepare('SELECT * FROM users WHERE username=? AND active=1').get(String(username).trim().toLowerCase());
+    
+    // 1. Проверяем пароль
     if (!user || !bcrypt.compareSync(String(password), user.pass_hash)) {
         return res.status(401).json({ error: 'Неверный логин или пароль' });
     }
     
-    // 1. Генерируем уникальный токен сессии
+    // 2. ПРОВЕРКА НА УЖЕ АКТИВНУЮ СЕССИЮ (Блокируем второй вход)
+    if (user.is_active_session) {
+        return res.status(409).json({ error: 'Этот пользователь уже работает в системе. Дождитесь его выхода или обратитесь к администратору.' });
+    }
+    
+    // 3. Генерируем уникальный токен сессии
     const newSessionToken = crypto.randomBytes(32).toString('hex');
     
-    // 2. Сохраняем его в БД (старая сессия автоматически становится недействительной)
-    db.prepare('UPDATE users SET session_token=? WHERE id=?').run(newSessionToken, user.id);
+    // 4. Сохраняем токен и активируем сессию в БД
+    db.prepare('UPDATE users SET session_token=?, is_active_session=1 WHERE id=?').run(newSessionToken, user.id);
     
-    // 3. Добавляем токен в payload JWT
+    // 5. Добавляем токен в payload JWT
     const token = jwt.sign({ uid: user.id, st: newSessionToken }, JWT_SECRET, { expiresIn: '12h' });
     
     res.cookie('kb_token', token, {
@@ -122,9 +147,9 @@ app.post('/api/login', loginLimiter, (req, res) => {
 });
 
 app.post('/api/logout', (req, res) => {
-    // Очищаем токен в БД при выходе
+    // Сбрасываем флаг активности и очищаем токен при явном выходе
     if (req.user) {
-        db.prepare('UPDATE users SET session_token=NULL WHERE id=?').run(req.user.id);
+        db.prepare('UPDATE users SET is_active_session=0, session_token=NULL WHERE id=?').run(req.user.id);
     }
     res.clearCookie('kb_token');
     res.json({ ok: true });
