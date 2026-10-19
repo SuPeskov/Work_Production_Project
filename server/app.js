@@ -147,9 +147,9 @@ app.post('/api/login', loginLimiter, (req, res) => {
 });
 
 app.post('/api/logout', (req, res) => {
-    // Сбрасываем флаг активности и очищаем токен при явном выходе
+    // Сбрасываем ТОКЕН И ФЛАГ АКТИВНОСТИ при явном выходе
     if (req.user) {
-        db.prepare('UPDATE users SET is_active_session=0, session_token=NULL WHERE id=?').run(req.user.id);
+        db.prepare('UPDATE users SET session_token=NULL, is_active_session=0 WHERE id=?').run(req.user.id);
     }
     res.clearCookie('kb_token');
     res.json({ ok: true });
