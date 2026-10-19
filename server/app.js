@@ -52,11 +52,9 @@ const OP_MAP = Object.fromEntries(OPERATIONS.map(o => [o.id, o]));
 
 // ЕДИНСТВЕННОЕ объявление приложения Express
 const app = express();
-
 // ИСПРАВЛЕНИЕ RATE-LIMIT: Доверяем прокси, но отключаем проверку безопасности, 
 // так как мы находимся за Nginx и знаем, что X-Forwarded-For корректен
-app.set('trust proxy', 1); 
-
+app.set('trust proxy', true); 
 app.disable('x-powered-by');
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(express.json());
