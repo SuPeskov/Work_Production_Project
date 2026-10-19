@@ -1,9 +1,9 @@
 /**
  * kb.js — Реестр разделов и операций базы знаний + клиентская логика
  * ИСПРАВЛЕНО: 
- * 1. Убраны пробелы в URL операций.
- * 2. Дашборд рисуется только после получения актуальных прав с сервера.
- * 3. Исправлен редирект при блокировке доступа.
+ * 1. Добавлена кнопка "Мониторинг" для ролей Гость и Сотрудник производства.
+ * 2. Убраны пробелы в URL операций.
+ * 3. Исправлен редирект при блокировке доступа (абсолютный путь).
  */
 
 // === Роли ===
@@ -25,7 +25,7 @@ const KB_SECTIONS = [
     { id: 'service',     num: '06', title: 'Сервис',           img: 'assets/images/icons/section-6-service.svg', desc: 'Сезонное обслуживание, гарантийный ремонт и диагностика систем', page: 'pages/service.html' }
 ];
 
-// === Реестр операций (ИСПРАВЛЕНО: убраны лишние пробелы в url) ===
+// === Реестр операций (ИСПРАВЛЕНО: убраны лишние пробелы в url и title) ===
 const KB_OPERATIONS = [
     { id: '2.1.1',  section: 'panels', title: 'Сборка каркаса панели',            version: 1, status: 'ready',   url: 'pages/operations/2.1.1.html' },
     { id: '2.1.2',  section: 'panels', title: 'Монтаж листового материала на каркас',              version: 1, status: 'ready',   url: 'pages/operations/2.1.2.html' },
@@ -193,7 +193,7 @@ document.addEventListener('DOMContentLoaded', function () {
         // ИСПРАВЛЕНО: Абсолютный путь /dashboard.html
         main.innerHTML = `
             <div style="max-width:560px;margin:120px auto;text-align:center;font-family:Inter,sans-serif;padding:0 20px;">
-                <div style="font-size:56px;"></div>
+                <div style="font-size:56px;">🔒</div>
                 <h1 style="font-size:24px;margin:16px 0 8px;">Нет доступа к разделу</h1>
                 <p style="color:#64748b;line-height:1.6;">Пользователю «${user.name}» (${user.role}) не назначен доступ к этому разделу базы знаний. Обратитесь к администратору.</p>
                 <a href="/dashboard.html" style="display:inline-block;margin-top:24px;background:#2563eb;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Вернуться в базу знаний</a>
@@ -230,6 +230,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (right && user) {
             const ICON_BACK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>';
             const ICON_GEAR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06-.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l-.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
+            const ICON_CHART = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>';
             
             const mkBtn = (cls, href, title, html) => {
                 const a = document.createElement('a');
@@ -241,11 +242,17 @@ document.addEventListener('DOMContentLoaded', function () {
                 return a;
             };
 
-            if (user.role === ROLE_GUEST) {
+            // ИСПРАВЛЕНО: Добавлена кнопка мониторинга для Гостя и Сотрудника производства
+            if (user.role === ROLE_GUEST || user.role === ROLE_WORKER) {
+                if (!right.querySelector('.btn-monitoring')) {
+                    mkBtn('btn-admin btn-monitoring', 'monitoring.html', 'Мониторинг ознакомления', ICON_CHART + '<span>Мониторинг</span>');
+                }
                 if (!right.querySelector('.btn-back-kb')) {
                     mkBtn('btn-admin btn-back-kb', 'dashboard.html', 'Вернуться к разделам базы знаний', ICON_BACK + '<span>В базу знаний</span>');
                 }
-            } else if (user.role === ROLE_ADMIN) {
+            } 
+            // Логика для Администратора
+            else if (user.role === ROLE_ADMIN) {
                 const onAdminPanel = /admin-panel\.html/.test(window.location.pathname);
                 const onMonitoring = /monitoring\.html/.test(window.location.pathname);
                 
@@ -255,83 +262,50 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (!onAdminPanel && !right.querySelector('.btn-manage')) {
                     mkBtn('btn-admin btn-manage', 'admin-panel.html', 'Панель управления', ICON_GEAR + '<span>Управление</span>');
                 }
+                // Админу тоже нужна кнопка мониторинга, если он не на ней
+                if (!onMonitoring && !right.querySelector('.btn-monitoring')) {
+                    mkBtn('btn-admin btn-monitoring', 'monitoring.html', 'Мониторинг ознакомления', ICON_CHART + '<span>Мониторинг</span>');
+                }
             }
         }
     }
 
-    // --- Dashboard: карточки разделов (АСИНХРОННАЯ ОТРИСОВКА) ---
+    // --- Dashboard: карточки разделов ---
     const grid = document.getElementById('cardsGrid');
-    
-    // Функция отрисовки дашборда
-    function renderDashboard(user) {
-        if (!grid || !user) return;
-        
-        grid.innerHTML = '';
-        let visible = 0;
-        
-        KB_SECTIONS.forEach(sec => {
-            const allowed = kbUserCanViewSection(user, sec.id);
-            if (allowed) visible++;
-            
-            const card = document.createElement(allowed ? 'a' : 'div');
-            card.className = 'card card-section' + (allowed ? '' : ' card-disabled');
-            if (allowed) card.href = prefix + sec.page;
-            
-            const opsTotal = KB_OPERATIONS.filter(o => o.section === sec.id).length;
-            card.innerHTML = `
-                <div class="card-number">${sec.num}</div>
-                <div class="card-icon"><img src="${sec.img}" alt=""></div>
-                <h3>${sec.title}</h3>
-                <p>${sec.desc}</p>
-                <div class="card-stats">
-                    <span class="card-badge">${opsTotal ? opsTotal + ' операций' : 'в разработке'}</span>
-                    ${!allowed ? '<span class="card-badge card-badge-lock">🔒 Нет доступа</span>' : ''}
-                </div>`;
-            grid.appendChild(card);
-        });
-        
-        const statSec = document.getElementById('stat-sections');
-        if (statSec) statSec.textContent = String(visible);
-        const statOps = document.getElementById('stat-operations');
-        if (statOps) {
-            const n = KB_OPERATIONS.filter(o => o.status === 'ready' && kbUserCanViewOperation(user, o)).length;
-            statOps.textContent = String(n);
-        }
-    }
-
-    // Проверяем, находимся ли мы на дашборде
     if (grid && typeof isAuthenticated === 'function' && isAuthenticated()) {
-        // Сначала пробуем получить актуальные данные с сервера
-        fetch('/api/me', { credentials: 'include' })
-            .then(res => res.ok ? res.json() : null)
-            .then(data => {
-                if (data && data.user) {
-                    // Обновляем sessionStorage свежими данными
-                    try {
-                        const sessionData = JSON.parse(sessionStorage.getItem('modular_house_session') || '{}');
-                        
-                        let roleLabel = data.user.role;
-                        if (roleLabel === 'admin') roleLabel = 'Администратор';
-                        else if (roleLabel === 'worker') roleLabel = 'Сотрудник производства';
-                        else if (roleLabel === 'guest') roleLabel = 'Гость';
-
-                        sessionData.role = roleLabel;
-                        sessionData.access = Array.isArray(data.sections) ? data.sections : [];
-                        
-                        sessionStorage.setItem('modular_house_session', JSON.stringify(sessionData));
-                    } catch (e) { console.error(e); }
-                }
+        const user = kbGetCurrentUser();
+        if (user) {
+            grid.innerHTML = '';
+            let visible = 0;
+            KB_SECTIONS.forEach(sec => {
+                const allowed = kbUserCanViewSection(user, sec.id);
+                if (allowed) visible++;
                 
-                // Получаем пользователя (уже с обновленными правами) и рисуем дашборд
-                const user = kbGetCurrentUser();
-                renderDashboard(user);
-            })
-            .catch(err => {
-                console.warn('Не удалось обновить права с сервера, используем локальные:', err);
-                // Если сервер недоступен, рисуем по тому, что есть в sessionStorage
-                const user = kbGetCurrentUser();
-                renderDashboard(user);
+                const card = document.createElement(allowed ? 'a' : 'div');
+                card.className = 'card card-section' + (allowed ? '' : ' card-disabled');
+                if (allowed) card.href = prefix + sec.page;
+                
+                const opsTotal = KB_OPERATIONS.filter(o => o.section === sec.id).length;
+                card.innerHTML = `
+                    <div class="card-number">${sec.num}</div>
+                    <div class="card-icon"><img src="${sec.img}" alt=""></div>
+                    <h3>${sec.title}</h3>
+                    <p>${sec.desc}</p>
+                    <div class="card-stats">
+                        <span class="card-badge">${opsTotal ? opsTotal + ' операций' : 'в разработке'}</span>
+                        ${!allowed ? '<span class="card-badge card-badge-lock">🔒 Нет доступа</span>' : ''}
+                    </div>`;
+                grid.appendChild(card);
             });
+            
+            const statSec = document.getElementById('stat-sections');
+            if (statSec) statSec.textContent = String(visible);
+            const statOps = document.getElementById('stat-operations');
+            if (statOps) {
+                const n = KB_OPERATIONS.filter(o => o.status === 'ready' && kbUserCanViewOperation(user, o)).length;
+                statOps.textContent = String(n);
+            }
+        }
     }
 
     // --- Страницы раздела: скрыть ссылки на операции без права ---
@@ -355,7 +329,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (op && op.status === 'draft' && user.role === ROLE_ADMIN && !link.querySelector('.op-draft-badge')) {
                     const b = document.createElement('span');
                     b.className = 'op-draft-badge';
-                    b.textContent = '  черновик';
+                    b.textContent = ' ✎ черновик';
                     b.style.cssText = 'font-size:11px;color:#b45309;background:#fef3c7;padding:2px 6px;border-radius:6px;margin-left:6px;white-space:nowrap;';
                     link.appendChild(b);
                 }
