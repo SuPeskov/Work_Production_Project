@@ -29,9 +29,30 @@ function isAuthenticated() {
 }
 
 function logout() {
-    sessionStorage.removeItem(SESSION_KEY);
-    fetch('/api/logout', { method: 'POST', credentials: 'include' })
-        .finally(() => { window.location.href = 'index.html'; });
+    // Сначала отправляем запрос на сервер и ЖДЕМ ответа
+    fetch('/api/logout', { 
+        method: 'POST', 
+        credentials: 'include' 
+    })
+    .then(response => {
+        if (response.ok) {
+            // Только после успешного ответа сервера очищаем локальную сессию
+            sessionStorage.removeItem(SESSION_KEY);
+            // И переходим на страницу входа
+            window.location.href = '/index.html';
+        } else {
+            console.error('Ошибка выхода:', response.status);
+            // Даже при ошибке сервера — выходим локально, чтобы пользователь не застрял
+            sessionStorage.removeItem(SESSION_KEY);
+            window.location.href = '/index.html';
+        }
+    })
+    .catch(error => {
+        console.error('Сетевая ошибка при выходе:', error);
+        // При сетевой ошибке тоже выходим локально
+        sessionStorage.removeItem(SESSION_KEY);
+        window.location.href = '/index.html';
+    });
 }
 
 // === Перехватчик завершения сессии из-за нового входа ===
