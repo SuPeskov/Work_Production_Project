@@ -1,6 +1,9 @@
 /**
  * kb.js — Реестр разделов и операций базы знаний + клиентская логика
- * ИСПРАВЛЕНО: Убраны пробелы в URL операций, добавлена актуализация прав на дашборде.
+ * ИСПРАВЛЕНО: 
+ * 1. Убраны пробелы в URL операций.
+ * 2. Дашборд рисуется только после получения актуальных прав с сервера.
+ * 3. Исправлен редирект при блокировке доступа.
  */
 
 // === Роли ===
@@ -22,7 +25,7 @@ const KB_SECTIONS = [
     { id: 'service',     num: '06', title: 'Сервис',           img: 'assets/images/icons/section-6-service.svg', desc: 'Сезонное обслуживание, гарантийный ремонт и диагностика систем', page: 'pages/service.html' }
 ];
 
-// === Реестр операций (ИСПРАВЛЕНО: убраны пробелы в url и title) ===
+// === Реестр операций (ИСПРАВЛЕНО: убраны лишние пробелы в url) ===
 const KB_OPERATIONS = [
     { id: '2.1.1',  section: 'panels', title: 'Сборка каркаса панели',            version: 1, status: 'ready',   url: 'pages/operations/2.1.1.html' },
     { id: '2.1.2',  section: 'panels', title: 'Монтаж листового материала на каркас',              version: 1, status: 'ready',   url: 'pages/operations/2.1.2.html' },
@@ -58,7 +61,7 @@ function kbUserCanConfirmRead(user) {
 
 /**
  * Актуальный профиль текущего пользователя.
- * ИСПРАВЛЕНО: Читает ТОЛЬКО из sessionStorage.
+ * Читает ТОЛЬКО из sessionStorage (обновляется access-guard.js).
  */
 function kbGetCurrentUser() {
     try {
@@ -66,9 +69,9 @@ function kbGetCurrentUser() {
         if (!data) return null;
         
         const user = JSON.parse(data);
-        
         if (!user.role) return null;
         
+        // Нормализуем роль для проверки прав
         if (user.role === 'admin') user.role = 'Администратор';
         else if (user.role === 'worker') user.role = 'Сотрудник производства';
         else if (user.role === 'guest') user.role = 'Гость';
@@ -125,7 +128,7 @@ function kbUserCanViewOperation(user, op) {
 }
 
 function kbCanViewPageByFile(user, fileName) {
-    const opMatch = fileName.match(/^(\d+.\d+.\d+).html$/);
+    const opMatch = fileName.match(/^(\d+\.\d+\.\d+)\.html$/);
     if (opMatch) {
         const op = kbGetOperationById(opMatch[1]);
         if (op && op.status === 'draft' && user.role !== ROLE_ADMIN) return false;
@@ -155,36 +158,6 @@ function kbRootPrefix() {
 // ============================================================
 document.addEventListener('DOMContentLoaded', function () {
     const prefix = kbRootPrefix();
-
-    // --- ПРИНУДИТЕЛЬНОЕ ОБНОВЛЕНИЕ ПРАВ НА ДАШБОРДЕ ---
-    // Дашборд пропущен в access-guard.js, поэтому обновляем сессию здесь
-    if (window.location.pathname.endsWith('dashboard.html') || window.location.pathname === '/') {
-        fetch('/api/me', { credentials: 'include' })
-            .then(res => res.ok ? res.json() : null)
-            .then(data => {
-                if (data && data.user) {
-                    try {
-                        const sessionData = JSON.parse(sessionStorage.getItem('modular_house_session') || '{}');
-                        
-                        // Обновляем роль и доступ актуальными данными с сервера
-                        let roleLabel = data.user.role;
-                        if (roleLabel === 'admin') roleLabel = 'Администратор';
-                        else if (roleLabel === 'worker') roleLabel = 'Сотрудник производства';
-                        else if (roleLabel === 'guest') roleLabel = 'Гость';
-
-                        sessionData.role = roleLabel;
-                        sessionData.access = Array.isArray(data.sections) ? data.sections : [];
-                        
-                        sessionStorage.setItem('modular_house_session', JSON.stringify(sessionData));
-                        
-                        console.log('🔄 Дашборд: Сессия обновлена актуальными правами:', sessionData.access);
-                    } catch (e) {
-                        console.error('Ошибка обновления сессии на дашборде:', e);
-                    }
-                }
-            })
-            .catch(err => console.error('Ошибка проверки прав на дашборде:', err));
-    }
 
     // --- Защита контентных страниц ---
     const isContentPage = window.location.pathname.includes('/pages/');
@@ -217,10 +190,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function blockPage(user) {
         const main = document.querySelector('main') || document.body;
-        // ИСПРАВЛЕНО: Используем абсолютный путь /dashboard.html
+        // ИСПРАВЛЕНО: Абсолютный путь /dashboard.html
         main.innerHTML = `
             <div style="max-width:560px;margin:120px auto;text-align:center;font-family:Inter,sans-serif;padding:0 20px;">
-                <div style="font-size:56px;">🔒</div>
+                <div style="font-size:56px;"></div>
                 <h1 style="font-size:24px;margin:16px 0 8px;">Нет доступа к разделу</h1>
                 <p style="color:#64748b;line-height:1.6;">Пользователю «${user.name}» (${user.role}) не назначен доступ к этому разделу базы знаний. Обратитесь к администратору.</p>
                 <a href="/dashboard.html" style="display:inline-block;margin-top:24px;background:#2563eb;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Вернуться в базу знаний</a>
@@ -286,42 +259,79 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // --- Dashboard: карточки разделов ---
+    // --- Dashboard: карточки разделов (АСИНХРОННАЯ ОТРИСОВКА) ---
     const grid = document.getElementById('cardsGrid');
-    if (grid && typeof isAuthenticated === 'function' && isAuthenticated()) {
-        const user = kbGetCurrentUser();
-        if (user) {
-            grid.innerHTML = '';
-            let visible = 0;
-            KB_SECTIONS.forEach(sec => {
-                const allowed = kbUserCanViewSection(user, sec.id);
-                if (allowed) visible++;
-                
-                const card = document.createElement(allowed ? 'a' : 'div');
-                card.className = 'card card-section' + (allowed ? '' : ' card-disabled');
-                if (allowed) card.href = prefix + sec.page;
-                
-                const opsTotal = KB_OPERATIONS.filter(o => o.section === sec.id).length;
-                card.innerHTML = `
-                    <div class="card-number">${sec.num}</div>
-                    <div class="card-icon"><img src="${sec.img}" alt=""></div>
-                    <h3>${sec.title}</h3>
-                    <p>${sec.desc}</p>
-                    <div class="card-stats">
-                        <span class="card-badge">${opsTotal ? opsTotal + ' операций' : 'в разработке'}</span>
-                        ${!allowed ? '<span class="card-badge card-badge-lock">🔒 Нет доступа</span>' : ''}
-                    </div>`;
-                grid.appendChild(card);
-            });
+    
+    // Функция отрисовки дашборда
+    function renderDashboard(user) {
+        if (!grid || !user) return;
+        
+        grid.innerHTML = '';
+        let visible = 0;
+        
+        KB_SECTIONS.forEach(sec => {
+            const allowed = kbUserCanViewSection(user, sec.id);
+            if (allowed) visible++;
             
-            const statSec = document.getElementById('stat-sections');
-            if (statSec) statSec.textContent = String(visible);
-            const statOps = document.getElementById('stat-operations');
-            if (statOps) {
-                const n = KB_OPERATIONS.filter(o => o.status === 'ready' && kbUserCanViewOperation(user, o)).length;
-                statOps.textContent = String(n);
-            }
+            const card = document.createElement(allowed ? 'a' : 'div');
+            card.className = 'card card-section' + (allowed ? '' : ' card-disabled');
+            if (allowed) card.href = prefix + sec.page;
+            
+            const opsTotal = KB_OPERATIONS.filter(o => o.section === sec.id).length;
+            card.innerHTML = `
+                <div class="card-number">${sec.num}</div>
+                <div class="card-icon"><img src="${sec.img}" alt=""></div>
+                <h3>${sec.title}</h3>
+                <p>${sec.desc}</p>
+                <div class="card-stats">
+                    <span class="card-badge">${opsTotal ? opsTotal + ' операций' : 'в разработке'}</span>
+                    ${!allowed ? '<span class="card-badge card-badge-lock">🔒 Нет доступа</span>' : ''}
+                </div>`;
+            grid.appendChild(card);
+        });
+        
+        const statSec = document.getElementById('stat-sections');
+        if (statSec) statSec.textContent = String(visible);
+        const statOps = document.getElementById('stat-operations');
+        if (statOps) {
+            const n = KB_OPERATIONS.filter(o => o.status === 'ready' && kbUserCanViewOperation(user, o)).length;
+            statOps.textContent = String(n);
         }
+    }
+
+    // Проверяем, находимся ли мы на дашборде
+    if (grid && typeof isAuthenticated === 'function' && isAuthenticated()) {
+        // Сначала пробуем получить актуальные данные с сервера
+        fetch('/api/me', { credentials: 'include' })
+            .then(res => res.ok ? res.json() : null)
+            .then(data => {
+                if (data && data.user) {
+                    // Обновляем sessionStorage свежими данными
+                    try {
+                        const sessionData = JSON.parse(sessionStorage.getItem('modular_house_session') || '{}');
+                        
+                        let roleLabel = data.user.role;
+                        if (roleLabel === 'admin') roleLabel = 'Администратор';
+                        else if (roleLabel === 'worker') roleLabel = 'Сотрудник производства';
+                        else if (roleLabel === 'guest') roleLabel = 'Гость';
+
+                        sessionData.role = roleLabel;
+                        sessionData.access = Array.isArray(data.sections) ? data.sections : [];
+                        
+                        sessionStorage.setItem('modular_house_session', JSON.stringify(sessionData));
+                    } catch (e) { console.error(e); }
+                }
+                
+                // Получаем пользователя (уже с обновленными правами) и рисуем дашборд
+                const user = kbGetCurrentUser();
+                renderDashboard(user);
+            })
+            .catch(err => {
+                console.warn('Не удалось обновить права с сервера, используем локальные:', err);
+                // Если сервер недоступен, рисуем по тому, что есть в sessionStorage
+                const user = kbGetCurrentUser();
+                renderDashboard(user);
+            });
     }
 
     // --- Страницы раздела: скрыть ссылки на операции без права ---
