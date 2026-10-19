@@ -1,6 +1,6 @@
 /**
  * kb.js — Реестр разделов и операций базы знаний + клиентская логика
- * ИСПРАВЛЕНО: Убраны пробелы в URL операций, исправлен blockPage (абсолютный путь).
+ * ИСПРАВЛЕНО: Убраны пробелы в URL операций, добавлена актуализация прав на дашборде.
  */
 
 // === Роли ===
@@ -8,8 +8,8 @@ const ROLE_ADMIN   = 'Администратор';
 const ROLE_WORKER  = 'Сотрудник производства';
 const ROLE_GUEST   = 'Гость';
 
-// === Ключи хранилища ===
-const KB_READ_KEY  = 'kb_reads_v1';
+// === Ключи хранилища (используются для отметок ознакомления) ===
+const KB_READ_KEY  = 'kb_reads_v1'; 
 const KB_ARCHIVE_KEY = 'kb_reads_archive_v1';
 
 // === Разделы базы знаний ===
@@ -39,9 +39,11 @@ const KB_OPERATIONS = [
     { id: '2.2.1',  section: 'panels', title: 'Сборка каркаса кровельной панели',                    version: 1, status: 'ready',   url: 'pages/operations/2.2.1.html' },
     { id: '2.2.2',  section: 'panels', title: 'Укладка листового материала на каркас панели',                      version: 1, status: 'ready',   url: 'pages/operations/2.2.2.html' },
     { id: '2.2.3',  section: 'panels', title: 'Монтаж финишной отделки',                      version: 1, status: 'ready',   url: 'pages/operations/2.2.3.html' },
+    // Подраздел 2.3
     { id: '2.3.1',  section: 'panels', title: 'Сборка каркаса внешней стены',                version: 1, status: 'draft',   url: 'pages/operations/2.3.1.html' },
     { id: '2.3.2',  section: 'panels', title: 'Установка оконных и дверных проёмов',         version: 1, status: 'draft',   url: 'pages/operations/2.3.2.html' },
     { id: '2.3.3',  section: 'panels', title: 'Монтаж плит с внешней стороны',               version: 1, status: 'draft',   url: 'pages/operations/2.3.3.html' },
+    // Подраздел 2.4
     { id: '2.4.1',  section: 'panels', title: 'Сборка каркаса внутренней стены',             version: 1, status: 'draft',   url: 'pages/operations/2.4.1.html' },
     { id: '2.4.2',  section: 'panels', title: 'Установка дверных проёмов',                   version: 1, status: 'draft',   url: 'pages/operations/2.4.2.html' },
     { id: '2.4.3',  section: 'panels', title: 'Монтаж ГВЛ/ОСБ',                              version: 1, status: 'draft',   url: 'pages/operations/2.4.3.html' }
@@ -49,19 +51,28 @@ const KB_OPERATIONS = [
 
 const PUBLIC_OP_IDS = undefined;
 
+/** Может ли пользователь подтверждать ознакомление */
 function kbUserCanConfirmRead(user) {
     return !!user && user.role === ROLE_WORKER;
 }
 
+/**
+ * Актуальный профиль текущего пользователя.
+ * ИСПРАВЛЕНО: Читает ТОЛЬКО из sessionStorage.
+ */
 function kbGetCurrentUser() {
     try {
         const data = sessionStorage.getItem('modular_house_session');
         if (!data) return null;
+        
         const user = JSON.parse(data);
+        
         if (!user.role) return null;
+        
         if (user.role === 'admin') user.role = 'Администратор';
         else if (user.role === 'worker') user.role = 'Сотрудник производства';
         else if (user.role === 'guest') user.role = 'Гость';
+
         return user;
     } catch (e) {
         console.error('Ошибка чтения сессии:', e);
@@ -69,14 +80,35 @@ function kbGetCurrentUser() {
     }
 }
 
-// ... (остальные функции kbGetReads, kbHasRead, kbAddRead остаются без изменений) ...
-function kbGetReads() { try { return JSON.parse(localStorage.getItem(KB_READ_KEY)) || []; } catch(e){ return []; } }
-function kbHasRead(userId, opId, version) { return kbGetReads().some(r => r.userId === userId && r.opId === opId && r.version === version); }
-function kbAddRead(userId, opId, version) { if (kbHasRead(userId, opId, version)) return false; const reads = kbGetReads(); reads.push({ userId, opId, version, timestamp: new Date().toISOString() }); localStorage.setItem(KB_READ_KEY, JSON.stringify(reads)); return true; }
+// ============================================================
+// Отметки «Ознакомлен» (локальный реестр для совместимости)
+// ============================================================
+function kbGetReads() {
+    try {
+        const arr = JSON.parse(localStorage.getItem(KB_READ_KEY));
+        return Array.isArray(arr) ? arr : [];
+    } catch (e) { return []; }
+}
 
+function kbHasRead(userId, opId, version) {
+    return kbGetReads().some(r => r.userId === userId && r.opId === opId && r.version === version);
+}
+
+function kbAddRead(userId, opId, version) {
+    if (kbHasRead(userId, opId, version)) return false;
+    const reads = kbGetReads();
+    reads.push({ userId, opId, version, timestamp: new Date().toISOString() });
+    localStorage.setItem(KB_READ_KEY, JSON.stringify(reads));
+    return true;
+}
+
+// ============================================================
+// Права доступа
+// ============================================================
 function kbUserCanViewSection(user, sectionId) {
     if (!user) return false;
     if (user.role === ROLE_ADMIN) return true;
+    
     if (!Array.isArray(user.access) || user.access.length === 0) return false;
     return user.access.includes(sectionId);
 }
@@ -85,44 +117,96 @@ function kbUserCanViewOperation(user, op) {
     if (!user) return false;
     if (user.role === ROLE_ADMIN) return true;
     if (!kbUserCanViewSection(user, op.section)) return false;
-    if (user.role === ROLE_GUEST && Array.isArray(PUBLIC_OP_IDS)) return PUBLIC_OP_IDS.includes(op.id);
+    
+    if (user.role === ROLE_GUEST && Array.isArray(PUBLIC_OP_IDS)) {
+        return PUBLIC_OP_IDS.includes(op.id);
+    }
     return true;
 }
 
 function kbCanViewPageByFile(user, fileName) {
-    const opMatch = fileName.match(/^(\d+\.\d+\.\d+)\.html$/);
+    const opMatch = fileName.match(/^(\d+.\d+.\d+).html$/);
     if (opMatch) {
         const op = kbGetOperationById(opMatch[1]);
         if (op && op.status === 'draft' && user.role !== ROLE_ADMIN) return false;
     }
     const sec = KB_SECTIONS.find(s => s.page.endsWith(fileName));
-    if (!sec) return true;
+    if (!sec) return true; 
     return kbUserCanViewSection(user, sec.id);
 }
 
-function kbGetSectionById(id) { return KB_SECTIONS.find(s => s.id === id) || null; }
-function kbGetOperationById(id) { return KB_OPERATIONS.find(o => o.id === id) || null; }
-function kbRootPrefix() { return window.location.pathname.includes('/pages/') ? '../' : './'; }
+function kbGetSectionById(id) {
+    return KB_SECTIONS.find(s => s.id === id) || null;
+}
 
+function kbGetOperationById(id) {
+    return KB_OPERATIONS.find(o => o.id === id) || null;
+}
+
+// ============================================================
+// Служебное
+// ============================================================
+function kbRootPrefix() {
+    return window.location.pathname.includes('/pages/') ? '../' : './';
+}
+
+// ============================================================
+// Guard — защита страниц и навигации
+// ============================================================
 document.addEventListener('DOMContentLoaded', function () {
     const prefix = kbRootPrefix();
+
+    // --- ПРИНУДИТЕЛЬНОЕ ОБНОВЛЕНИЕ ПРАВ НА ДАШБОРДЕ ---
+    // Дашборд пропущен в access-guard.js, поэтому обновляем сессию здесь
+    if (window.location.pathname.endsWith('dashboard.html') || window.location.pathname === '/') {
+        fetch('/api/me', { credentials: 'include' })
+            .then(res => res.ok ? res.json() : null)
+            .then(data => {
+                if (data && data.user) {
+                    try {
+                        const sessionData = JSON.parse(sessionStorage.getItem('modular_house_session') || '{}');
+                        
+                        // Обновляем роль и доступ актуальными данными с сервера
+                        let roleLabel = data.user.role;
+                        if (roleLabel === 'admin') roleLabel = 'Администратор';
+                        else if (roleLabel === 'worker') roleLabel = 'Сотрудник производства';
+                        else if (roleLabel === 'guest') roleLabel = 'Гость';
+
+                        sessionData.role = roleLabel;
+                        sessionData.access = Array.isArray(data.sections) ? data.sections : [];
+                        
+                        sessionStorage.setItem('modular_house_session', JSON.stringify(sessionData));
+                        
+                        console.log('🔄 Дашборд: Сессия обновлена актуальными правами:', sessionData.access);
+                    } catch (e) {
+                        console.error('Ошибка обновления сессии на дашборде:', e);
+                    }
+                }
+            })
+            .catch(err => console.error('Ошибка проверки прав на дашборде:', err));
+    }
+
+    // --- Защита контентных страниц ---
     const isContentPage = window.location.pathname.includes('/pages/');
     const isPublicPage  = /search\.html$/.test(window.location.pathname);
 
     if (isContentPage && !isPublicPage) {
-        const user = kbGetCurrentUser();
+        const user = (typeof kbGetCurrentUser === 'function') ? kbGetCurrentUser() : null;
+        
         if (!user) {
             if (typeof isAuthenticated === 'function' && !isAuthenticated()) {
-                window.location.href = prefix + 'index.html';
-                return;
+                 window.location.href = prefix + 'index.html';
+                 return;
             }
         }
+
         if (user) {
             const file = window.location.pathname.split('/').pop();
             if (file !== 'dashboard.html' && !kbCanViewPageByFile(user, file)) {
                 blockPage(user);
                 return;
             }
+            
             const opMatch = window.location.pathname.match(/operations\/(\d+\.\d+\.\d+)\.html$/);
             if (opMatch) {
                 const op = kbGetOperationById(opMatch[1]);
@@ -133,7 +217,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function blockPage(user) {
         const main = document.querySelector('main') || document.body;
-        // ИСПРАВЛЕНО: Абсолютный путь /dashboard.html
+        // ИСПРАВЛЕНО: Используем абсолютный путь /dashboard.html
         main.innerHTML = `
             <div style="max-width:560px;margin:120px auto;text-align:center;font-family:Inter,sans-serif;padding:0 20px;">
                 <div style="font-size:56px;">🔒</div>
@@ -143,8 +227,7 @@ document.addEventListener('DOMContentLoaded', function () {
             </div>`;
     }
 
-    // --- Панель пользователя в шапке ---
-    // Ищем элементы по ID, которые должны быть в dashboard.html и других страницах
+    // --- Панель пользователя в шапке + выход ---
     let userNameEl = document.getElementById('currentUserName') || document.getElementById('userName');
     if (userNameEl && typeof isAuthenticated === 'function' && isAuthenticated()) {
         const user = kbGetCurrentUser();
@@ -167,7 +250,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // --- Кнопки в шапке ---
+    // --- Кнопки в шапке по ролям ---
     if (typeof isAuthenticated === 'function' && isAuthenticated()) {
         const user = kbGetCurrentUser();
         const right = document.querySelector('.top-bar-right');
@@ -192,6 +275,7 @@ document.addEventListener('DOMContentLoaded', function () {
             } else if (user.role === ROLE_ADMIN) {
                 const onAdminPanel = /admin-panel\.html/.test(window.location.pathname);
                 const onMonitoring = /monitoring\.html/.test(window.location.pathname);
+                
                 if ((onMonitoring || onAdminPanel) && !right.querySelector('.btn-back-kb')) {
                     mkBtn('btn-admin btn-back-kb', 'dashboard.html', 'Вернуться к разделам базы знаний', ICON_BACK + '<span>В базу знаний</span>');
                 }
@@ -212,9 +296,11 @@ document.addEventListener('DOMContentLoaded', function () {
             KB_SECTIONS.forEach(sec => {
                 const allowed = kbUserCanViewSection(user, sec.id);
                 if (allowed) visible++;
+                
                 const card = document.createElement(allowed ? 'a' : 'div');
                 card.className = 'card card-section' + (allowed ? '' : ' card-disabled');
                 if (allowed) card.href = prefix + sec.page;
+                
                 const opsTotal = KB_OPERATIONS.filter(o => o.section === sec.id).length;
                 card.innerHTML = `
                     <div class="card-number">${sec.num}</div>
@@ -227,6 +313,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>`;
                 grid.appendChild(card);
             });
+            
             const statSec = document.getElementById('stat-sections');
             if (statSec) statSec.textContent = String(visible);
             const statOps = document.getElementById('stat-operations');
@@ -237,7 +324,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // --- Страницы раздела: скрыть ссылки ---
+    // --- Страницы раздела: скрыть ссылки на операции без права ---
     if (isContentPage && typeof isAuthenticated === 'function' && isAuthenticated()) {
         const user = kbGetCurrentUser();
         if (user) {
@@ -258,7 +345,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (op && op.status === 'draft' && user.role === ROLE_ADMIN && !link.querySelector('.op-draft-badge')) {
                     const b = document.createElement('span');
                     b.className = 'op-draft-badge';
-                    b.textContent = ' ✎ черновик';
+                    b.textContent = '  черновик';
                     b.style.cssText = 'font-size:11px;color:#b45309;background:#fef3c7;padding:2px 6px;border-radius:6px;margin-left:6px;white-space:nowrap;';
                     link.appendChild(b);
                 }
