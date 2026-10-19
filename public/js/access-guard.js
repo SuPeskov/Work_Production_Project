@@ -1,45 +1,38 @@
 /**
  * access-guard.js — Живая проверка прав доступа при каждом переходе
- * ИСПРАВЛЕНО: Синтаксис регулярных выражений и логика определения раздела.
+ * ИСПРАВЛЕНО: Синтаксис регулярных выражений и логика обновления сессии.
  */
 document.addEventListener('DOMContentLoaded', async function() {
     const path = window.location.pathname;
 
-    // 1. Страницы, где проверка не нужна (логин, дашборд, корень, админка, мониторинг)
+    // 1. Страницы, где проверка не нужна
     const skipPaths = ['/', '/index.html', '/dashboard.html', '/admin-panel.html', '/monitoring.html'];
-    if (skipPaths.includes(path)) return;
+    if (skipPaths.some(p => path === p || path.endsWith(p))) return;
 
     let currentSectionId = null;
 
-    // 2. Пытаемся определить раздел по URL
-    
-    // Вариант А: Страница раздела (например, /pages/panels.html)
-    // Регулярное выражение исправлено: добавлены слеши /.../
+    // 2. Определяем ID раздела из URL
+    // ИСПРАВЛЕНО: Добавлены слэши /.../ для регулярных выражений
     const fileMatch = path.match(/\/pages\/([\w-]+)\.html$/);
-    if (fileMatch && typeof KB_SECTIONS !== 'undefined') {
-        const fileName = fileMatch[1] + '.html'; // panels.html
-        const sec = KB_SECTIONS.find(s => s.page.endsWith(fileName));
-        if (sec) currentSectionId = sec.id;
-    }
-
-    // Вариант Б: Страница операции (например, /pages/operations/2.1.1.html)
-    if (!currentSectionId) {
-        // Регулярное выражение исправлено
-        const opMatch = path.match(/\/operations\/(\d+\.\d+\.\d+)\.html$/);
-        if (opMatch && typeof KB_OPERATIONS !== 'undefined') {
-            const opId = opMatch[1]; // "2.1.1"
-            const op = KB_OPERATIONS.find(o => o.id === opId);
-            if (op) currentSectionId = op.section; // "panels"
+    if (fileMatch) {
+        const fileName = fileMatch[1] + '.html';
+        if (typeof KB_SECTIONS !== 'undefined') {
+            const sec = KB_SECTIONS.find(s => s.page.endsWith(fileName));
+            if (sec) currentSectionId = sec.id;
         }
     }
 
-    // Если не смогли определить раздел (неизвестная страница), пропускаем проверку
     if (!currentSectionId) {
-        console.log('Access Guard: Раздел не определен для пути', path);
-        return;
+        const opMatch = path.match(/\/operations\/(\d+\.\d+\.\d+)\.html$/);
+        if (opMatch && typeof KB_OPERATIONS !== 'undefined') {
+            const op = KB_OPERATIONS.find(o => o.id === opMatch[1]);
+            if (op) currentSectionId = op.section;
+        }
     }
 
-    console.log(`Access Guard: Проверка доступа к разделу ${currentSectionId}...`);
+    if (!currentSectionId) return;
+
+    console.log(`🔒 Access Guard: Проверка доступа к разделу "${currentSectionId}" для пути ${path}`);
 
     // 3. Запрашиваем актуальные права у сервера
     try {
@@ -54,51 +47,45 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
 
         const data = await response.json();
-
+        
         if (!data.user) {
             window.location.href = '/index.html';
             return;
         }
 
         // 4. Проверяем права
-        if (data.user.role === 'admin') return; // Админу можно всё
+        if (data.user.role === 'admin') return;
 
-        const allowedSections = data.sections; // Массив ID или '*'
-
-        // Если sections это '*', значит доступ ко всему (на всякий случай)
-        if (allowedSections === '*') return;
-
+        const allowedSections = data.sections;
+        
         if (Array.isArray(allowedSections) && !allowedSections.includes(currentSectionId)) {
-            // ДОСТУПА НЕТ!
-            console.warn(`Доступ к разделу ${currentSectionId} закрыт. Редирект.`);
-            
-            // Показываем уведомление
-            alert('⚠️ Администратор изменил ваши права доступа. Этот раздел больше недоступен.');
-            
-            // Редирект на дашборд
+            console.warn(`Access Guard: Доступ к разделу "${currentSectionId}" ЗАКРЫТ. Редирект.`);
+            alert('⚠️ Администратор изменил ваши права доступа.\nЭтот раздел больше недоступен.');
             window.location.href = '/dashboard.html';
         } else {
-            // Доступ есть. Обновляем sessionStorage, чтобы kb.js знал о новых правах
+            // 5. Обновляем sessionStorage актуальными данными с сервера
+            // Это критически важно, чтобы kb.js видел новые права без перезахода
             try {
                 const sessionData = JSON.parse(sessionStorage.getItem('modular_house_session') || '{}');
                 
-                // Нормализуем роль для kb.js (он ждет русские названия)
+                // Нормализуем роль для kb.js
                 let roleLabel = data.user.role;
                 if (roleLabel === 'admin') roleLabel = 'Администратор';
                 else if (roleLabel === 'worker') roleLabel = 'Сотрудник производства';
                 else if (roleLabel === 'guest') roleLabel = 'Гость';
 
                 sessionData.role = roleLabel;
+                // Сохраняем актуальный список разделов с сервера
                 sessionData.access = Array.isArray(allowedSections) ? allowedSections : [];
                 
                 sessionStorage.setItem('modular_house_session', JSON.stringify(sessionData));
-                console.log('Access Guard: Права актуальны. Сессия обновлена.');
+                console.log('Access Guard: Сессия обновлена актуальными правами:', sessionData.access);
             } catch (e) {
-                console.error('Ошибка обновления сессии:', e);
+                console.error('Access Guard: Ошибка обновления сессии:', e);
             }
         }
 
     } catch (error) {
-        console.error('Ошибка проверки прав доступа:', error);
+        console.error('Access Guard: Критическая ошибка проверки прав:', error);
     }
 });

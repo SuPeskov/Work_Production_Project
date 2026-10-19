@@ -1,14 +1,7 @@
 /**
- * kb.js — Реестр разделов и операций базы знаний + клиентская «база данных»
- *
- * Единый источник правды для:
- *  - навигации по разделам (dashboard);
- *  - фильтрации контента по правам доступа пользователя;
- *  - реестра операций (для кнопки «Ознакомлен» и страницы мониторинга).
- *
- * Хранение отметок об ознакомлении и пользовательской базы — localStorage
- * (ключи KB_READ_KEY / KB_USERS_KEY). Это прототип: при переходе на бэкенд
- * функции API сохраняются, меняется только слой хранения.
+ * kb.js — Реестр разделов и операций базы знаний + клиентская логика
+ * ИСПРАВЛЕНО: kbGetCurrentUser теперь читает только из sessionStorage (источник правды - сервер).
+ * Убрана зависимость от localStorage для прав доступа, чтобы изменения админа применялись мгновенно.
  */
 
 // === Роли ===
@@ -16,71 +9,9 @@ const ROLE_ADMIN   = 'Администратор';
 const ROLE_WORKER  = 'Сотрудник производства';
 const ROLE_GUEST   = 'Гость';
 
-// === Ключи хранилища ===
-const KB_DB_KEY    = 'kb_db_v2';     // { users: [...] } (v2 — сброс «залипших» ролей)
-const KB_MIG_KEY   = 'kb_migrated_v3'; // разовые миграции прав
-const KB_READ_KEY  = 'kb_reads_v1';  // [{ userId, opId, version, timestamp }]
-const KB_ARCHIVE_KEY = 'kb_reads_archive_v1'; // неизменяемый журнал удалённых отметок (для хронологии)
-
-/**
- * Чтение профиля пользователя из локальной БД kb_db без инициализации.
- * Используется для самовосстановления сессии на страницах операций,
- * где auth.js не подключён.
- */
-function kbReadDbUser(username) {
-    let db = null;
-    try { db = JSON.parse(localStorage.getItem(KB_DB_KEY)); } catch (e) { db = null; }
-    if (!db || !Array.isArray(db.users)) return null;
-    return db.users.find(u => u.username === username) || null;
-}
-
-/**
- * Синхронизация встроенных демо-аккаунтов с USERS_DB.
- * Исправляет «залипшие» записи в localStorage после смены ролей в коде
- * (например, у builder раньше была роль «Гость»). Пользовательские поля
- * (пароль, доступ), изменённые администратором, сохраняются; роль и ФИО
- * встроенного аккаунта всегда берутся из кода.
- */
-function kbSyncSeedUsers() {
-    if (typeof USERS_DB === 'undefined') return;
-    const db = kbLoadDb();
-    let changed = false;
-    USERS_DB.forEach(seed => {
-        // Удалённые администратором встроенные аккаунты не восстанавливаем
-        // (иначе «закрыв» гостевой аккаунт, нельзя было бы убрать ему доступ ко всем разделам)
-        if (db.removed && db.removed.includes(seed.username)) return;
-        const u = db.users.find(x => x.username === seed.username);
-        if (!u) { db.users.push({ ...seed }); changed = true; return; }
-        if (u.role !== seed.role) { u.role = seed.role; changed = true; }
-        if (u.name !== seed.name) { u.name = seed.name; changed = true; }
-    });
-    if (changed) kbSaveDb(db);
-}
-
-/**
- * Разовые миграции прав доступа (выполняются до синхронизации seed-аккаунтов).
- * v3: у встроенного демо-гостя guest был полный доступ ко всем разделам —
- * это дыра в правах; теперь гость обязан иметь явно назначенный список разделов.
- */
-function kbRunMigrations() {
-    if (!localStorage.getItem(KB_MIG_KEY)) {
-        const db = kbLoadDb();
-        const g = db.users.find(u => u.username === 'guest');
-        if (g && Array.isArray(g.access) && g.access.length > 0) {
-            g.access = [];
-            kbSaveDb(db);
-        }
-        localStorage.setItem(KB_MIG_KEY, '3');
-    }
-}
-
-/** Запомнить удаление встроенного аккаунта — синхронизация не должна его воскрешать */
-function kbRememberRemoved(username) {
-    const db = kbLoadDb();
-    if (!Array.isArray(db.removed)) db.removed = [];
-    if (!db.removed.includes(username)) db.removed.push(username);
-    kbSaveDb(db);
-}
+// === Ключи хранилища (используются для отметок ознакомления) ===
+const KB_READ_KEY  = 'kb_reads_v1'; 
+const KB_ARCHIVE_KEY = 'kb_reads_archive_v1';
 
 // === Разделы базы знаний ===
 const KB_SECTIONS = [
@@ -93,7 +24,6 @@ const KB_SECTIONS = [
 ];
 
 // === Реестр операций ===
-// section — id раздела из KB_SECTIONS; status: ready — страница существует, planned — в разработке.
 const KB_OPERATIONS = [
     { id: '2.1.1',  section: 'panels', title: 'Сборка каркаса панели',            version: 1, status: 'ready',   url: 'pages/operations/2.1.1.html' },
     { id: '2.1.2',  section: 'panels', title: 'Монтаж листового материала на каркас',              version: 1, status: 'ready',   url: 'pages/operations/2.1.2.html' },
@@ -110,44 +40,37 @@ const KB_OPERATIONS = [
     { id: '2.2.1',  section: 'panels', title: 'Сборка каркаса кровельной панели',                    version: 1, status: 'ready',   url: 'pages/operations/2.2.1.html' },
     { id: '2.2.2',  section: 'panels', title: 'Укладка листового материала на каркас панели',                      version: 1, status: 'ready',   url: 'pages/operations/2.2.2.html' },
     { id: '2.2.3',  section: 'panels', title: 'Монтаж финишной отделки',                      version: 1, status: 'ready',   url: 'pages/operations/2.2.3.html' },
-
-    // Подраздел 2.3 — Сборка панели стены внешней (пустые страницы-заготовки по шаблону template.html)
+    // Подраздел 2.3
     { id: '2.3.1',  section: 'panels', title: 'Сборка каркаса внешней стены',                version: 1, status: 'draft',   url: 'pages/operations/2.3.1.html' },
     { id: '2.3.2',  section: 'panels', title: 'Установка оконных и дверных проёмов',         version: 1, status: 'draft',   url: 'pages/operations/2.3.2.html' },
     { id: '2.3.3',  section: 'panels', title: 'Монтаж плит с внешней стороны',               version: 1, status: 'draft',   url: 'pages/operations/2.3.3.html' },
-
-    // Подраздел 2.4 — Сборка панели стены внутренней (пустые страницы-заготовки по шаблону template.html)
+    // Подраздел 2.4
     { id: '2.4.1',  section: 'panels', title: 'Сборка каркаса внутренней стены',             version: 1, status: 'draft',   url: 'pages/operations/2.4.1.html' },
     { id: '2.4.2',  section: 'panels', title: 'Установка дверных проёмов',                   version: 1, status: 'draft',   url: 'pages/operations/2.4.2.html' },
     { id: '2.4.3',  section: 'panels', title: 'Монтаж ГВЛ/ОСБ',                              version: 1, status: 'draft',   url: 'pages/operations/2.4.3.html' }
 ];
 
-// Служебные страницы (шаблон и т.п.) — не являются операциями, доступ свободный
-const KB_SERVICE_PAGES = ['template'];
-
-
-
-// === Операции, доступные гостям с назначенным доступом к разделу ===
-// undefined (нет ограничения) => все готовые операции раздела;
-// список id => только перечисленные операции раздела.
 const PUBLIC_OP_IDS = undefined;
 
-/** Может ли пользователь подтверждать ознакомление (кнопка «Ознакомлен») */
+/** Может ли пользователь подтверждать ознакомление */
 function kbUserCanConfirmRead(user) {
-    // По ТЗ: только Сотрудник производства; Гость и Администратор — нет
     return !!user && user.role === ROLE_WORKER;
 }
 
+/**
+ * Актуальный профиль текущего пользователя.
+ * ИСПРАВЛЕНО: Читает ТОЛЬКО из sessionStorage.
+ * Данные в sessionStorage обновляются скриптом access-guard.js при каждом переходе,
+ * поэтому права доступа всегда актуальны (берутся с сервера).
+ */
 function kbGetCurrentUser() {
     try {
-        // Читаем сессию, которую создал auth.js при входе через /api/login
         const data = sessionStorage.getItem('modular_house_session');
         if (!data) return null;
         
         const user = JSON.parse(data);
         
-        // Критически важно: auth.js должен был сохранить roleLabel (русское название роли)
-        // и access (список разделов). Если их нет — пользователь не авторизован корректно.
+        // Проверка валидности
         if (!user.role) return null;
         
         // Нормализуем роль: если пришла английская (admin), заменяем на русскую для проверки прав
@@ -163,142 +86,8 @@ function kbGetCurrentUser() {
 }
 
 // ============================================================
-// Клиентская база данных (localStorage)
+// Отметки «Ознакомлен» (локальный реестр для совместимости)
 // ============================================================
-
-function kbLoadDb() {
-    let db = null;
-    try { db = JSON.parse(localStorage.getItem(KB_DB_KEY)); } catch (e) { db = null; }
-    if (!db || !Array.isArray(db.users)) {
-        // Инициализация из демо-базы users.js (пароли в прототипе открытые)
-        const seed = (typeof USERS_DB !== 'undefined') ? USERS_DB : [];
-        db = { users: seed.map(u => ({ ...u })) };
-        kbSaveDb(db);
-    }
-    return db;
-}
-
-function kbSaveDb(db) {
-    localStorage.setItem(KB_DB_KEY, JSON.stringify(db));
-}
-
-/** Все пользователи (демо-база + созданные администратором) */
-function kbGetUsers() {
-    const byName = {};
-    ((typeof USERS_DB !== 'undefined') ? USERS_DB : []).forEach(u => { byName[u.username] = u; });
-    kbLoadDb().users.forEach(u => { byName[u.username] = u; });
-    return Object.values(byName);
-}
-
-function kbFindUser(username) {
-    return kbGetUsers().find(u => u.username === username) || null;
-}
-
-function kbAddUser(data) {
-    if (!data.username || !data.password || !data.name || !data.role) {
-        throw new Error('Заполните все поля: ФИО, логин, пароль, роль');
-    }
-    const db = kbLoadDb();
-    if (kbFindUser(data.username)) throw new Error('Пользователь с таким логином уже существует');
-    db.users.push({
-        username: data.username.trim(),
-        password: data.password,
-        name: data.name.trim(),
-        role: data.role,
-        access: data.access || []
-    });
-    kbSaveDb(db);
-}
-
-function kbDeleteUser(username) {
-    const db = kbLoadDb();
-    const existing = db.users.find(u => u.username === username);
-    const displayName = existing ? existing.name : username;
-    db.users = db.users.filter(u => u.username !== username);
-    kbSaveDb(db);
-    // Отметки удалённого пользователя НЕ теряются: они переносятся в архивный
-    // журнал (остаются в «Журнале отметок (хронология)») и исчезают из матрицы
-    // ознакомления, чтобы ячейки не росли за счёт «мёртвых» аккаунтов.
-    kbArchiveReadsForUser(username, displayName);
-}
-
-/** Архивный журнал отметок (только для «Журнала отметок (хронология)») */
-function kbGetArchive() {
-    try {
-        const arr = JSON.parse(localStorage.getItem(KB_ARCHIVE_KEY));
-        return Array.isArray(arr) ? arr : [];
-    } catch (e) { return []; }
-}
-
-function kbSaveArchive(arr) {
-    localStorage.setItem(KB_ARCHIVE_KEY, JSON.stringify(arr));
-}
-
-/** Перенести отметки пользователя из активного реестра в архивный журнал.
- *  В архиве записи помечаются deleted:true — они остаются в хронологии,
- *  но не участвуют в матрице ознакомления. */
-function kbArchiveReadsForUser(username, displayName) {
-    const removed = kbGetReads().filter(r => r.userId === username);
-    if (!removed.length) return 0;
-    const archive = kbGetArchive();
-    const known = new Set(archive.map(r => r.userId + '|' + r.opId + '|' + r.version + '|' + r.timestamp));
-    removed.forEach(r => {
-        const key = r.userId + '|' + r.opId + '|' + r.version + '|' + r.timestamp;
-        if (!known.has(key)) {
-            archive.push({ ...r, deleted: true, name: displayName || r.userId });
-        }
-    });
-    kbSaveArchive(archive);
-    kbPurgeReadsForUser(username);
-    return removed.length;
-}
-
-/** Удалить все отметки «Ознакомлен» конкретного пользователя из активного реестра */
-function kbPurgeReadsForUser(userId) {
-    const reads = kbGetReads().filter(r => r.userId !== userId);
-    localStorage.setItem(KB_READ_KEY, JSON.stringify(reads));
-}
-
-/** Санитизация активного реестра: отметки исчезнувших пользователей переносятся
- *  в архивный журнал (сохраняются в хронологии) и убираются из матрицы.
- *  Вызывается при загрузке страницы мониторинга. */
-function kbSanitizeReads() {
-    const all = kbGetReads();
-    const validIds = new Set(kbGetUsers().map(u => u.username));
-    const orphaned = all.filter(r => !validIds.has(r.userId));
-    if (!orphaned.length) return 0;
-    const archive = kbGetArchive();
-    const known = new Set(archive.map(r => r.userId + '|' + r.opId + '|' + r.version + '|' + r.timestamp));
-    orphaned.forEach(r => {
-        const key = r.userId + '|' + r.opId + '|' + r.version + '|' + r.timestamp;
-        if (!known.has(key)) archive.push({ ...r, deleted: true });
-    });
-    kbSaveArchive(archive);
-    localStorage.setItem(KB_READ_KEY, JSON.stringify(all.filter(r => validIds.has(r.userId))));
-    return orphaned.length;
-}
-
-function kbSetPassword(username, newPassword) {
-    if (!newPassword) throw new Error('Пароль не может быть пустым');
-    const db = kbLoadDb();
-    const u = db.users.find(x => x.username === username);
-    if (!u) throw new Error('Пользователь не найден');
-    u.password = newPassword;
-    kbSaveDb(db);
-}
-
-function kbSetAccess(username, accessList) {
-    const db = kbLoadDb();
-    const u = db.users.find(x => x.username === username);
-    if (!u) throw new Error('Пользователь не найден');
-    u.access = Array.isArray(accessList) ? [...accessList] : [];
-    kbSaveDb(db);
-}
-
-// ============================================================
-// Отметки «Ознакомлен»
-// ============================================================
-
 function kbGetReads() {
     try {
         const arr = JSON.parse(localStorage.getItem(KB_READ_KEY));
@@ -306,7 +95,6 @@ function kbGetReads() {
     } catch (e) { return []; }
 }
 
-/** Есть ли у пользователя подтверждённая отметка текущей версии операции */
 function kbHasRead(userId, opId, version) {
     return kbGetReads().some(r => r.userId === userId && r.opId === opId && r.version === version);
 }
@@ -322,12 +110,11 @@ function kbAddRead(userId, opId, version) {
 // ============================================================
 // Права доступа
 // ============================================================
-
 function kbUserCanViewSection(user, sectionId) {
     if (!user) return false;
     if (user.role === ROLE_ADMIN) return true;
-    // Гость и Сотрудник производства — только по назначенному списку разделов.
-    // Пустой список доступа = нет доступа ни к одному разделу (в т.ч. для встроенного демо-гостя).
+    
+    // Гость и Сотрудник — только по назначенному списку разделов (из сессии)
     if (!Array.isArray(user.access) || user.access.length === 0) return false;
     return user.access.includes(sectionId);
 }
@@ -336,23 +123,21 @@ function kbUserCanViewOperation(user, op) {
     if (!user) return false;
     if (user.role === ROLE_ADMIN) return true;
     if (!kbUserCanViewSection(user, op.section)) return false;
-    // Дополнительное ограничение для гостя: конкретные операции (если задано)
+    
     if (user.role === ROLE_GUEST && Array.isArray(PUBLIC_OP_IDS)) {
         return PUBLIC_OP_IDS.includes(op.id);
     }
     return true;
 }
 
-/** Доступен ли раздел по URL-имени файла страницы (preparation.html → preparation) */
 function kbCanViewPageByFile(user, fileName) {
-    // Заготовки операций (status: 'draft') видны только администратору до наполнения
     const opMatch = fileName.match(/^(\d+\.\d+\.\d+)\.html$/);
     if (opMatch) {
         const op = kbGetOperationById(opMatch[1]);
         if (op && op.status === 'draft' && user.role !== ROLE_ADMIN) return false;
     }
     const sec = KB_SECTIONS.find(s => s.page.endsWith(fileName));
-    if (!sec) return true; // неизвестная страница — не блокируем
+    if (!sec) return true; 
     return kbUserCanViewSection(user, sec.id);
 }
 
@@ -365,45 +150,48 @@ function kbGetOperationById(id) {
 }
 
 // ============================================================
-// Служебное: относительный путь к корню
+// Служебное
 // ============================================================
-
 function kbRootPrefix() {
     return window.location.pathname.includes('/pages/') ? '../' : './';
 }
 
 // ============================================================
-// Guard — защита страниц и навигации (подключается вместо auth.js)
+// Guard — защита страниц и навигации
 // ============================================================
-
 document.addEventListener('DOMContentLoaded', function () {
-    // Сначала — миграции прав и самовосстановление демо-аккаунтов
-    kbRunMigrations();
-    kbSyncSeedUsers();
-
     const prefix = kbRootPrefix();
 
     // --- Защита контентных страниц ---
     const isContentPage = window.location.pathname.includes('/pages/');
-    const isPublicPage  = /search\.html$/.test(window.location.pathname); // поиск доступен всем
+    const isPublicPage  = /search\.html$/.test(window.location.pathname);
+
     if (isContentPage && !isPublicPage) {
-        // kbGetCurrentUser читает сессию напрямую и самовосстанавливает роль
-        // (на страницах операций auth.js не подключён)
-        const user = (typeof kbGetCurrentUser === 'function') ? kbGetCurrentUser() : getCurrentUser();
+        const user = (typeof kbGetCurrentUser === 'function') ? kbGetCurrentUser() : null;
+        
+        // Если пользователя нет в сессии (не вошел или сессия истекла)
         if (!user) {
-            window.location.href = prefix + 'index.html';
-            return;
+            // Не редиректим сразу, даем шанс auth.js или access-guard.js обработать это
+            // Но если мы точно на защищенной странице и нет юзера - идем на логин
+            // Однако access-guard.js делает это лучше. Здесь оставим мягкую проверку.
+            if (typeof isAuthenticated === 'function' && !isAuthenticated()) {
+                 window.location.href = prefix + 'index.html';
+                 return;
+            }
         }
-        const file = window.location.pathname.split('/').pop();
-        if (file !== 'dashboard.html' && !kbCanViewPageByFile(user, file)) {
-            blockPage(user);
-            return;
-        }
-        // Страницы операций: дополнительная проверка по реестру (гость — только разрешённые операции)
-        const opMatch = window.location.pathname.match(/operations\/(\d+\.\d+\.\d+)\.html$/);
-        if (opMatch) {
-            const op = kbGetOperationById(opMatch[1]);
-            if (op && !kbUserCanViewOperation(user, op)) { blockPage(user); return; }
+
+        if (user) {
+            const file = window.location.pathname.split('/').pop();
+            if (file !== 'dashboard.html' && !kbCanViewPageByFile(user, file)) {
+                blockPage(user);
+                return;
+            }
+            
+            const opMatch = window.location.pathname.match(/operations\/(\d+\.\d+\.\d+)\.html$/);
+            if (opMatch) {
+                const op = kbGetOperationById(opMatch[1]);
+                if (op && !kbUserCanViewOperation(user, op)) { blockPage(user); return; }
+            }
         }
     }
 
@@ -418,43 +206,37 @@ document.addEventListener('DOMContentLoaded', function () {
             </div>`;
     }
 
-// --- Панель пользователя в шапке + выход ---
-let userNameEl = document.getElementById('currentUserName') || document.getElementById('userName');
-// Убираем проверку tagName, так как в новой верстке это всегда SPAN
-if (userNameEl && isAuthenticated()) {
-    const user = kbGetCurrentUser();
-    if (user) {
-        const roleEl = document.getElementById('currentUserRole') || document.getElementById('userRole');
-        const avatarEl = document.getElementById('userAvatar');
-        
-        // Заполняем данные
-        if (roleEl) roleEl.textContent = user.role || 'Пользователь';
-        if (avatarEl) avatarEl.textContent = (user.name || user.username || '?').charAt(0).toUpperCase();
-        if (userNameEl) userNameEl.textContent = user.name || user.username;
-
-        // Кнопка выхода
-        const logoutBtn = document.getElementById('logoutBtn');
-        if (logoutBtn) {
-            logoutBtn.onclick = function (e) {
-                e.preventDefault();
-                logout(); // Вызываем исправленную функцию из auth.js (она сама сделает редирект)
-                // НЕ делаем window.location.href здесь!
-            };
+    // --- Панель пользователя в шапке + выход ---
+    let userNameEl = document.getElementById('currentUserName') || document.getElementById('userName');
+    if (userNameEl && typeof isAuthenticated === 'function' && isAuthenticated()) {
+        const user = kbGetCurrentUser();
+        if (user) {
+            const roleEl = document.getElementById('currentUserRole') || document.getElementById('userRole');
+            const avatarEl = document.getElementById('userAvatar');
+            
+            if (roleEl) roleEl.textContent = user.role || 'Пользователь';
+            if (avatarEl) avatarEl.textContent = (user.name || user.username || '?').charAt(0).toUpperCase();
+            if (userNameEl) userNameEl.textContent = user.name || user.username;
+            
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.onclick = function (e) {
+                    e.preventDefault();
+                    if (typeof logout === 'function') logout();
+                    else window.location.href = prefix + 'index.html';
+                };
+            }
         }
     }
-}
 
     // --- Кнопки в шапке по ролям ---
-    // Гость: только «В базу знаний» (на любой странице).
-    // Администратор: «Управление» (переход на admin-panel.html) везде, кроме самой панели;
-    //                 на monitoring.html и admin-panel.html дополнительно «В базу знаний».
-    if (isAuthenticated()) {
+    if (typeof isAuthenticated === 'function' && isAuthenticated()) {
         const user = kbGetCurrentUser();
         const right = document.querySelector('.top-bar-right');
-        if (right) {
+        if (right && user) {
             const ICON_BACK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>';
             const ICON_GEAR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06-.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l-.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
-
+            
             const mkBtn = (cls, href, title, html) => {
                 const a = document.createElement('a');
                 a.className = cls;
@@ -466,18 +248,16 @@ if (userNameEl && isAuthenticated()) {
             };
 
             if (user.role === ROLE_GUEST) {
-                // Гость — одна кнопка возврата в базу знаний
                 if (!right.querySelector('.btn-back-kb')) {
                     mkBtn('btn-admin btn-back-kb', 'dashboard.html', 'Вернуться к разделам базы знаний', ICON_BACK + '<span>В базу знаний</span>');
                 }
             } else if (user.role === ROLE_ADMIN) {
                 const onAdminPanel = /admin-panel\.html/.test(window.location.pathname);
                 const onMonitoring = /monitoring\.html/.test(window.location.pathname);
-                // «В базу знаний» — на мониторинге и на самой панели управления
+                
                 if ((onMonitoring || onAdminPanel) && !right.querySelector('.btn-back-kb')) {
                     mkBtn('btn-admin btn-back-kb', 'dashboard.html', 'Вернуться к разделам базы знаний', ICON_BACK + '<span>В базу знаний</span>');
                 }
-                // «Управление» — везде, кроме самой панели управления
                 if (!onAdminPanel && !right.querySelector('.btn-manage')) {
                     mkBtn('btn-admin btn-manage', 'admin-panel.html', 'Панель управления', ICON_GEAR + '<span>Управление</span>');
                 }
@@ -485,79 +265,70 @@ if (userNameEl && isAuthenticated()) {
         }
     }
 
-    // --- Dashboard: карточки разделов из реестра с фильтром по правам ---
+    // --- Dashboard: карточки разделов ---
     const grid = document.getElementById('cardsGrid');
-    if (grid && isAuthenticated()) {
+    if (grid && typeof isAuthenticated === 'function' && isAuthenticated()) {
         const user = kbGetCurrentUser();
-        grid.innerHTML = '';
-        let visible = 0;
-        
-        KB_SECTIONS.forEach(sec => {
-            const allowed = kbUserCanViewSection(user, sec.id);
-            if (allowed) visible++;
-            
-            // КЛЮЧЕВОЕ ИЗМЕНЕНИЕ: 
-            // Если доступа нет — создаем DIV (не кликабельный), иначе A (ссылка)
-            const card = document.createElement(allowed ? 'a' : 'div');
-            
-            // Добавляем класс card-disabled для стилизации
-            card.className = 'card card-section' + (allowed ? '' : ' card-disabled');
-            
-            // Ссылку задаем только разрешенным разделам
-            if (allowed) card.href = prefix + sec.page;
-            
-            const opsTotal = KB_OPERATIONS.filter(o => o.section === sec.id).length;
-            
-            card.innerHTML = `
-                <div class="card-number">${sec.num}</div>
-                <div class="card-icon"><img src="${sec.img}" alt=""></div>
-                <h3>${sec.title}</h3>
-                <p>${sec.desc}</p>
-                <div class="card-stats">
-                    <span class="card-badge">${opsTotal ? opsTotal + ' операций' : 'в разработке'}</span>
-                    ${!allowed ? '<span class="card-badge card-badge-lock">🔒 Нет доступа</span>' : ''}
-                </div>`;
+        if (user) {
+            grid.innerHTML = '';
+            let visible = 0;
+            KB_SECTIONS.forEach(sec => {
+                const allowed = kbUserCanViewSection(user, sec.id);
+                if (allowed) visible++;
                 
-            grid.appendChild(card);
-        });
-
-        // Обновляем счетчики только по ВИДИМЫМ разделам
-        const statSec = document.getElementById('stat-sections');
-        if (statSec) statSec.textContent = String(visible);
-        
-        const statOps = document.getElementById('stat-operations');
-        if (statOps) {
-            const n = KB_OPERATIONS.filter(o => o.status === 'ready' && kbUserCanViewOperation(user, o)).length;
-            statOps.textContent = String(n);
+                const card = document.createElement(allowed ? 'a' : 'div');
+                card.className = 'card card-section' + (allowed ? '' : ' card-disabled');
+                if (allowed) card.href = prefix + sec.page;
+                
+                const opsTotal = KB_OPERATIONS.filter(o => o.section === sec.id).length;
+                card.innerHTML = `
+                    <div class="card-number">${sec.num}</div>
+                    <div class="card-icon"><img src="${sec.img}" alt=""></div>
+                    <h3>${sec.title}</h3>
+                    <p>${sec.desc}</p>
+                    <div class="card-stats">
+                        <span class="card-badge">${opsTotal ? opsTotal + ' операций' : 'в разработке'}</span>
+                        ${!allowed ? '<span class="card-badge card-badge-lock">🔒 Нет доступа</span>' : ''}
+                    </div>`;
+                grid.appendChild(card);
+            });
+            
+            const statSec = document.getElementById('stat-sections');
+            if (statSec) statSec.textContent = String(visible);
+            const statOps = document.getElementById('stat-operations');
+            if (statOps) {
+                const n = KB_OPERATIONS.filter(o => o.status === 'ready' && kbUserCanViewOperation(user, o)).length;
+                statOps.textContent = String(n);
+            }
         }
     }
 
     // --- Страницы раздела: скрыть ссылки на операции без права ---
-    if (isContentPage && isAuthenticated()) {
+    if (isContentPage && typeof isAuthenticated === 'function' && isAuthenticated()) {
         const user = kbGetCurrentUser();
-        document.querySelectorAll('a[href*="operations/"]').forEach(link => {
-            const m = link.getAttribute('href').match(/(\d+\.\d+\.\d+)\.html/);
-            if (!m) return;
-            const op = kbGetOperationById(m[1]);
-            if (op && !kbUserCanViewOperation(user, op)) {
-                const li = link.closest('li');
-                if (li) li.remove(); else link.remove();
-                return;
-            }
-            // Черновики (пустые заготовки): неадминам ссылка запрещена даже внутри разрешённого раздела
-            if (op && op.status === 'draft' && user.role !== ROLE_ADMIN) {
-                const li = link.closest('li');
-                if (li) li.remove(); else link.remove();
-                return;
-            }
-            // Администратору — пометка «черновик»
-            if (op && op.status === 'draft' && user.role === ROLE_ADMIN && !link.querySelector('.op-draft-badge')) {
-                const b = document.createElement('span');
-                b.className = 'op-draft-badge';
-                b.textContent = ' ✎ черновик';
-                b.style.cssText = 'font-size:11px;color:#b45309;background:#fef3c7;padding:2px 6px;border-radius:6px;margin-left:6px;white-space:nowrap;';
-                link.appendChild(b);
-            }
-        });
+        if (user) {
+            document.querySelectorAll('a[href*="operations/"]').forEach(link => {
+                const m = link.getAttribute('href').match(/(\d+\.\d+\.\d+)\.html/);
+                if (!m) return;
+                const op = kbGetOperationById(m[1]);
+                if (op && !kbUserCanViewOperation(user, op)) {
+                    const li = link.closest('li');
+                    if (li) li.remove(); else link.remove();
+                    return;
+                }
+                if (op && op.status === 'draft' && user.role !== ROLE_ADMIN) {
+                    const li = link.closest('li');
+                    if (li) li.remove(); else link.remove();
+                    return;
+                }
+                if (op && op.status === 'draft' && user.role === ROLE_ADMIN && !link.querySelector('.op-draft-badge')) {
+                    const b = document.createElement('span');
+                    b.className = 'op-draft-badge';
+                    b.textContent = ' ✎ черновик';
+                    b.style.cssText = 'font-size:11px;color:#b45309;background:#fef3c7;padding:2px 6px;border-radius:6px;margin-left:6px;white-space:nowrap;';
+                    link.appendChild(b);
+                }
+            });
+        }
     }
 });
