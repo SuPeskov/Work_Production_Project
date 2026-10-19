@@ -5,7 +5,7 @@
 require('dotenv').config();
 const path = require('path');
 const fs = require('fs');
-const crypto = require('crypto'); // Для генерации токенов сессии
+const crypto = require('crypto'); // <--- ДОБАВЛЕНО: Для генерации токенов сессии
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
