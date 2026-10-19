@@ -1,7 +1,7 @@
 /**
  * kb.js — Реестр разделов и операций базы знаний + клиентская логика
  * ИСПРАВЛЕНО: kbGetCurrentUser теперь читает только из sessionStorage (источник правды - сервер).
- * Убрана зависимость от localStorage для прав доступа, чтобы изменения админа применялись мгновенно.
+ * ИСПРАВЛЕНО: blockPage использует абсолютный путь /dashboard.html для корректного редиректа.
  */
 
 // === Роли ===
@@ -60,8 +60,6 @@ function kbUserCanConfirmRead(user) {
 /**
  * Актуальный профиль текущего пользователя.
  * ИСПРАВЛЕНО: Читает ТОЛЬКО из sessionStorage.
- * Данные в sessionStorage обновляются скриптом access-guard.js при каждом переходе,
- * поэтому права доступа всегда актуальны (берутся с сервера).
  */
 function kbGetCurrentUser() {
     try {
@@ -70,10 +68,8 @@ function kbGetCurrentUser() {
         
         const user = JSON.parse(data);
         
-        // Проверка валидности
         if (!user.role) return null;
         
-        // Нормализуем роль: если пришла английская (admin), заменяем на русскую для проверки прав
         if (user.role === 'admin') user.role = 'Администратор';
         else if (user.role === 'worker') user.role = 'Сотрудник производства';
         else if (user.role === 'guest') user.role = 'Гость';
@@ -114,7 +110,6 @@ function kbUserCanViewSection(user, sectionId) {
     if (!user) return false;
     if (user.role === ROLE_ADMIN) return true;
     
-    // Гость и Сотрудник — только по назначенному списку разделов (из сессии)
     if (!Array.isArray(user.access) || user.access.length === 0) return false;
     return user.access.includes(sectionId);
 }
@@ -169,11 +164,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (isContentPage && !isPublicPage) {
         const user = (typeof kbGetCurrentUser === 'function') ? kbGetCurrentUser() : null;
         
-        // Если пользователя нет в сессии (не вошел или сессия истекла)
         if (!user) {
-            // Не редиректим сразу, даем шанс auth.js или access-guard.js обработать это
-            // Но если мы точно на защищенной странице и нет юзера - идем на логин
-            // Однако access-guard.js делает это лучше. Здесь оставим мягкую проверку.
             if (typeof isAuthenticated === 'function' && !isAuthenticated()) {
                  window.location.href = prefix + 'index.html';
                  return;
