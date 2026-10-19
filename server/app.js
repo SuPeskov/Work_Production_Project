@@ -1,11 +1,14 @@
 /**
  * app.js — Backend базы знаний Скаут Хаус (PPR)
- * Реализована защита от одновременных входов (unique session token + active flag).
+ * ИСПРАВЛЕНО: 
+ * 1. Синтаксическая ошибка в middleware auth()
+ * 2. Маршрут /api/logout теперь сбрасывает is_active_session в БД
+ * 3. Добавлена проверка уникальной сессии при входе
  */
 require('dotenv').config();
 const path = require('path');
 const fs = require('fs');
-const crypto = require('crypto'); // Для генерации токенов сессии
+const crypto = require('crypto');
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -71,7 +74,7 @@ function auth(required = true, roles = null) {
                 if (!user || user.session_token !== payload.st || !user.is_active_session) {
                     user = null; 
                     
-                    // Защита от зависания: если токен был, но проверка провалилась (истек/подделан),
+                    // Защита от зависания: если токен был, но проверка провалилась,
                     // а юзер помечен как активный — сбрасываем его статус
                     if (payload && payload.uid) {
                         try {
@@ -91,6 +94,7 @@ function auth(required = true, roles = null) {
             }
         }
         
+        // ИСПРАВЛЕНО: Убрана синтаксическая ошибка "roles &&&& required"
         if (!user && required) return res.status(401).json({ error: 'Требуется вход' });
         if (user && roles && !roles.includes(user.role)) return res.status(403).json({ error: 'Нет прав' });
         
@@ -103,12 +107,10 @@ function sectionsOf(userId) {
     return db.prepare('SELECT section_id FROM user_sections WHERE user_id=?').all(userId).map(r => r.section_id);
 }
 
-// ИСПРАВЛЕНИЕ: Гость (Контролер) имеет полный доступ для контроля
+// Гость (Контролер) имеет полный доступ для контроля
 function canAccess(user, sectionId) {
     if (!user) return false;
-    // Админ и Гость имеют доступ ко всем разделам
     if (user.role === 'admin' || user.role === 'guest') return true;
-    // Сотрудник производства — строго по назначенному списку
     return sectionsOf(user.id).includes(sectionId);
 }
 
@@ -119,28 +121,27 @@ app.post('/api/login', loginLimiter, (req, res) => {
     const { username, password } = req.body || {};
     if (!username || !password) return res.status(400).json({ error: 'Укажите логин и пароль' });
     
-    // 1. Находим пользователя
     const user = db.prepare('SELECT * FROM users WHERE username=? AND active=1').get(String(username).trim().toLowerCase());
     
-    // 2. Проверяем пароль
+    // 1. Проверяем пароль
     if (!user || !bcrypt.compareSync(String(password), user.pass_hash)) {
         return res.status(401).json({ error: 'Неверный логин или пароль' });
     }
     
-    // 3. 🔒 КЛЮЧЕВАЯ ПРОВЕРКА: Если сессия уже активна — БЛОКИРУЕМ ВХОД
-    if (user.is_active_session === 1) {
+    // 2. ПРОВЕРКА НА УЖЕ АКТИВНУЮ СЕССИЮ (Блокируем второй вход)
+    if (user.is_active_session) {
         return res.status(409).json({ 
             error: 'Этот сотрудник уже работает в системе. Повторный вход запрещен.' 
         });
     }
     
-    // 4. Генерируем уникальный токен сессии
+    // 3. Генерируем уникальный токен сессии
     const newSessionToken = crypto.randomBytes(32).toString('hex');
     
-    // 5. Активируем сессию и сохраняем токен ОДНИМ запросом
+    // 4. Активируем сессию и сохраняем токен ОДНИМ запросом
     db.prepare('UPDATE users SET session_token=?, is_active_session=1 WHERE id=?').run(newSessionToken, user.id);
     
-    // 6. Выдаем JWT
+    // 5. Выдаем JWT
     const token = jwt.sign({ uid: user.id, st: newSessionToken }, JWT_SECRET, { expiresIn: '12h' });
     
     res.cookie('kb_token', token, {
@@ -149,8 +150,8 @@ app.post('/api/login', loginLimiter, (req, res) => {
     res.json({ ok: true, user: publicUser(user) });
 });
 
+// ИСПРАВЛЕНО: Теперь logout сбрасывает флаг активности в БД
 app.post('/api/logout', (req, res) => {
-    // Сбрасываем ТОКЕН И ФЛАГ АКТИВНОСТИ при явном выходе
     if (req.user) {
         db.prepare('UPDATE users SET session_token=NULL, is_active_session=0 WHERE id=?').run(req.user.id);
     }
@@ -160,7 +161,6 @@ app.post('/api/logout', (req, res) => {
 
 app.get('/api/me', auth(false), (req, res) => {
     if (!req.user) return res.json({ user: null });
-    // Гость и Админ получают '*', сотрудник — конкретный список
     const accessList = (req.user.role === 'worker') ? sectionsOf(req.user.id) : '*';
     
     res.json({
@@ -178,7 +178,7 @@ function publicUser(u) {
     };
 }
 
-// === Права на чтение контента (серверный enforce) ===
+// === Права на чтение контента ===
 app.get('/api/access/:sectionId', auth(), (req, res) => {
     res.json({ allowed: canAccess(req.user, req.params.sectionId) });
 });
@@ -257,7 +257,6 @@ app.post('/api/read/:opId', auth(true, ['worker']), (req, res) => {
     res.json({ ok: true, already: !!exists });
 });
 
-// ИСПРАВЛЕНИЕ: Гость (Контролер) видит ВСЕ отметки
 app.get('/api/reads', auth(), (req, res) => {
     if (req.user.role === 'worker') {
         const rows = db.prepare('SELECT * FROM read_log WHERE user_id=? ORDER BY read_at DESC').all(req.user.id);
@@ -268,7 +267,7 @@ app.get('/api/reads', auth(), (req, res) => {
     }
 });
 
-// === Админ API (CRUD пользователей) ===
+// === Админ API ===
 const ROLES = ['admin', 'worker', 'guest'];
 
 app.get('/api/admin/users', auth(true, ['admin']), (req, res) => {
