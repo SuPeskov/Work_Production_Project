@@ -5,16 +5,6 @@
  * 2. Маршрут /api/logout теперь сбрасывает is_active_session в БД
  * 3. Добавлена проверка уникальной сессии при входе
  */
-const app = express();
-// ИСПРАВЛЕНО: Разрешаем доверять заголовкам X-Forwarded-For от прокси (Nginx)
-// Без этой строки express-rate-limit выбрасывает ошибку и блокирует вход
-app.set('trust proxy', true); 
-
-app.disable('x-powered-by');
-app.use(helmet({ contentSecurityPolicy: false }));
-app.use(express.json());
-app.use(cookieParser());
-
 require('dotenv').config();
 const path = require('path');
 const fs = require('fs');
@@ -61,6 +51,10 @@ if (!OPERATIONS.length) console.warn('ВНИМАНИЕ: реестр опера�
 const OP_MAP = Object.fromEntries(OPERATIONS.map(o => [o.id, o]));
 
 const app = express();
+// ИСПРАВЛЕНО: Разрешаем доверять заголовкам X-Forwarded-For от прокси (Nginx)
+// Без этой строки express-rate-limit выбрасывает ошибку и блокирует вход
+app.set('trust proxy', true); 
+
 app.disable('x-powered-by');
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(express.json());
