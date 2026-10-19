@@ -197,12 +197,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function blockPage(user) {
         const main = document.querySelector('main') || document.body;
+        // ИСПРАВЛЕНО: Используем абсолютный путь /dashboard.html вместо ${prefix}dashboard.html
         main.innerHTML = `
             <div style="max-width:560px;margin:120px auto;text-align:center;font-family:Inter,sans-serif;padding:0 20px;">
                 <div style="font-size:56px;">🔒</div>
                 <h1 style="font-size:24px;margin:16px 0 8px;">Нет доступа к разделу</h1>
                 <p style="color:#64748b;line-height:1.6;">Пользователю «${user.name}» (${user.role}) не назначен доступ к этому разделу базы знаний. Обратитесь к администратору.</p>
-                <a href="${prefix}dashboard.html" style="display:inline-block;margin-top:24px;background:#2563eb;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Вернуться на главную</a>
+                <a href="/dashboard.html" style="display:inline-block;margin-top:24px;background:#2563eb;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Вернуться в базу знаний</a>
             </div>`;
     }
 
