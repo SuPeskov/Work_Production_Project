@@ -1,9 +1,9 @@
 /**
- * app.js — Backend базы знаний Скаут Хаус (PPR)
- * Защищённый верифицированный вход (bcrypt + JWT в httpOnly-cookie),
- * серверная проверка прав доступа к разделам, неизменяемый журнал
- * ознакомлений. Статика сайта раздаётся из ../public.
- */
+app.js — Backend базы знаний Скаут Хаус (PPR)
+Защищённый верифицированный вход (bcrypt + JWT в httpOnly-cookie),
+серверная проверка прав доступа к разделам, неизменяемый журнал
+ознакомлений. Статика сайта раздаётся из ../public.
+*/
 require('dotenv').config();
 const path = require('path');
 const fs = require('fs');
@@ -76,15 +76,18 @@ function sectionsOf(userId) {
     return db.prepare('SELECT section_id FROM user_sections WHERE user_id=?').all(userId).map(r => r.section_id);
 }
 
-// ИСПРАВЛЕНИЕ: Гость теперь видит ТОЛЬКО назначенные разделы
+// ИСПРАВЛЕНИЕ: Гость (Контролер) теперь имеет доступ ко ВСЕМ разделам
 function canAccess(user, sectionId) {
     if (!user) return false;
-    if (user.role === 'admin') return true;              // админ — без ограничений
-    return sectionsOf(user.id).includes(sectionId);      // сотрудник и гость — строго по назначенному
+    // Админ и Гость имеют полный доступ для контроля
+    if (user.role === 'admin' || user.role === 'guest') return true;
+    // Сотрудник производства — строго по назначенному списку
+    return sectionsOf(user.id).includes(sectionId);
 }
 
 // === Auth API ===
 const loginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20, standardHeaders: true });
+
 app.post('/api/login', loginLimiter, (req, res) => {
     const { username, password } = req.body || {};
     if (!username || !password) return res.status(400).json({ error: 'Укажите логин и пароль' });
@@ -105,18 +108,21 @@ app.post('/api/logout', (req, res) => { res.clearCookie('kb_token'); res.json({ 
 
 app.get('/api/me', auth(false), (req, res) => {
     if (!req.user) return res.json({ user: null });
-    res.json({ 
-        user: publicUser(req.user), 
-        sections: req.user.role === 'worker' || req.user.role === 'guest' ? sectionsOf(req.user.id) : '*' 
+    // Гость получает список '*' (все разделы), сотрудник — конкретный список
+    const accessList = (req.user.role === 'worker') ? sectionsOf(req.user.id) : '*';
+    
+    res.json({
+        user: publicUser(req.user),
+        sections: accessList
     });
 });
 
 function publicUser(u) {
-    return { 
-        username: u.username, 
-        name: u.name, 
-        role: u.role, 
-        roleLabel: ROLE_LABELS[u.role] 
+    return {
+        username: u.username,
+        name: u.name,
+        role: u.role,
+        roleLabel: ROLE_LABELS[u.role]
     };
 }
 
@@ -126,16 +132,15 @@ app.get('/api/access/:sectionId', auth(), (req, res) => {
 });
 
 // Защита страниц по ролям: запрещённые разделы отдают 403 вместо HTML
-// ИСПРАВЛЕНИЕ: Убрано дублирующееся объявление SECTION_BY_PATH
-const SECTION_BY_PATH = { 
-    preparation: 'preparation', panels: 'panels', module: 'module', 
-    options: 'options', installation: 'installation', service: 'service' 
+const SECTION_BY_PATH = {
+    preparation: 'preparation', panels: 'panels', module: 'module',
+    options: 'options', installation: 'installation', service: 'service'
 };
 
 app.use((req, res, next) => {
     // Дашборд доступен всем авторизованным пользователям
     if (req.path === '/dashboard.html' || req.path === '/') return next();
-
+    
     const m = req.path.match(/^\/pages\/(?:operations|sections)?\/?([\w.-]+)\.html$/i);
     let sectionId = null;
     
@@ -168,6 +173,7 @@ app.use((req, res, next) => {
 // Очистка демо-аккаунтов при первом обращении к админ-API
 const DEMO_ACCOUNTS = ['builder', 'engineer', 'guest'];
 let demoCleaned = false;
+
 function cleanupDemoAccounts() {
     if (demoCleaned) return;
     demoCleaned = true;
@@ -193,9 +199,9 @@ app.post('/api/read/:opId', auth(true, ['worker']), (req, res) => {
     if (!canAccess(req.user, op.section)) return res.status(403).json({ error: 'Нет доступа к разделу' });
     
     const version = String(req.body?.version != null && req.body.version !== "" ? req.body.version : (op.version != null ? String(op.version) : "1"));
-    
     const exists = db.prepare('SELECT id FROM read_log WHERE user_id=? AND op_id=? AND version=?')
         .get(req.user.id, op.id, version);
+        
     if (!exists) {
         db.prepare(`INSERT INTO read_log (user_id, username, full_name, role, op_id, op_title, section_id, version) VALUES (?,?,?,?,?,?,?,?)`)
             .run(req.user.id, req.user.username, req.user.name, req.user.role, op.id, op.title, op.section, version);
@@ -203,11 +209,17 @@ app.post('/api/read/:opId', auth(true, ['worker']), (req, res) => {
     res.json({ ok: true, already: !!exists });
 });
 
+// ИСПРАВЛЕНИЕ: Гость (Контролер) видит ВСЕ отметки, как Администратор
 app.get('/api/reads', auth(), (req, res) => {
-    const rows = req.user.role === 'worker' || req.user.role === 'guest'
-        ? db.prepare('SELECT * FROM read_log WHERE user_id=? ORDER BY read_at DESC').all(req.user.id)
-        : db.prepare('SELECT * FROM read_log ORDER BY read_at DESC').all();
-    res.json(rows);
+    // Если роль worker — показываем только свои отметки
+    // Если роль guest или admin — показываем все отметки в системе
+    if (req.user.role === 'worker') {
+        const rows = db.prepare('SELECT * FROM read_log WHERE user_id=? ORDER BY read_at DESC').all(req.user.id);
+        res.json(rows);
+    } else {
+        const rows = db.prepare('SELECT * FROM read_log ORDER BY read_at DESC').all();
+        res.json(rows);
+    }
 });
 
 // === Админ API (CRUD пользователей) ===
