@@ -144,7 +144,8 @@ app.post('/api/login', loginLimiter, (req, res) => {
 });
 
 // СБРОС ФЛАГА ПРИ ВЫХОДЕ
-app.post('/api/logout', (req, res) => {
+// ИСПРАВЛЕНО: Добавлен middleware auth(), чтобы req.user был доступен
+app.post('/api/logout', auth(false), (req, res) => {
     if (req.user) {
         db.prepare('UPDATE users SET session_token=NULL, is_active_session=0 WHERE id=?').run(req.user.id);
     }
