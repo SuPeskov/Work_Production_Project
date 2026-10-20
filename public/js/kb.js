@@ -60,22 +60,22 @@ function kbUserCanConfirmRead(user) {
 }
 
 /**
- * Актуальный профиль текущего пользователя.
- * Читает ТОЛЬКО из sessionStorage (обновляется access-guard.js).
+ Актуальный профиль текущего пользователя.
+ Читает ТОЛЬКО из sessionStorage.
  */
 function kbGetCurrentUser() {
     try {
         const data = sessionStorage.getItem('modular_house_session');
         if (!data) return null;
         
-        const user = JSON.parse(data);
-        if (!user.role) return null;
-        
-        // Нормализуем роль для проверки прав
+        let user = JSON.parse(data);
+        if (!user || !user.role) return null;
+
+        // Нормализация роли (на случай, если в хранилище лежит технический код)
         if (user.role === 'admin') user.role = 'Администратор';
         else if (user.role === 'worker') user.role = 'Сотрудник производства';
         else if (user.role === 'guest') user.role = 'Гость';
-
+        
         return user;
     } catch (e) {
         console.error('Ошибка чтения сессии:', e);
@@ -108,10 +108,19 @@ function kbAddRead(userId, opId, version) {
 // ============================================================
 // Права доступа
 // ============================================================
+/**
+ * Проверяет, имеет ли пользователь доступ к разделу.
+ * ИСПРАВЛЕНО: Админ и Гость всегда имеют доступ ко всем разделам.
+ */
 function kbUserCanViewSection(user, sectionId) {
     if (!user) return false;
-    if (user.role === ROLE_ADMIN) return true;
     
+    // Администратор и Гость имеют ДОСТУП КО ВСЕМ РАЗДЕЛАМ БЕЗ ПРОВЕРКИ МАССИВА ACCESS
+    if (user.role === 'Администратор' || user.role === 'Гость') {
+        return true;
+    }
+    
+    // Для Сотрудника производства проверяем массив access
     if (!Array.isArray(user.access) || user.access.length === 0) return false;
     return user.access.includes(sectionId);
 }
@@ -201,24 +210,38 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // --- Панель пользователя в шапке + выход ---
-    let userNameEl = document.getElementById('currentUserName') || document.getElementById('userName');
-    if (userNameEl && typeof isAuthenticated === 'function' && isAuthenticated()) {
+    if (typeof isAuthenticated === 'function' && isAuthenticated()) {
         const user = kbGetCurrentUser();
+        console.log('[KB.JS] Текущий пользователь:', user); // ДИАГНОСТИКА
+        
         if (user) {
+            // Обновляем имя и роль (ищем по разным ID для совместимости)
+            const nameEl = document.getElementById('currentUserName') || document.getElementById('userName');
             const roleEl = document.getElementById('currentUserRole') || document.getElementById('userRole');
             const avatarEl = document.getElementById('userAvatar');
             
+            if (nameEl) nameEl.textContent = user.name || user.username;
             if (roleEl) roleEl.textContent = user.role || 'Пользователь';
             if (avatarEl) avatarEl.textContent = (user.name || user.username || '?').charAt(0).toUpperCase();
-            if (userNameEl) userNameEl.textContent = user.name || user.username;
-            
-            const logoutBtn = document.getElementById('logoutBtn');
+
+            // КНОПКА ВЫХОДА (ИСПРАВЛЕНО: надежный поиск)
+            const logoutBtn = document.getElementById('logoutBtn') || 
+                              document.querySelector('button[class*="logout"]') ||
+                              document.querySelector('a[href*="logout"]');
+                              
             if (logoutBtn) {
                 logoutBtn.onclick = function (e) {
                     e.preventDefault();
-                    if (typeof logout === 'function') logout();
-                    else window.location.href = prefix + 'index.html';
+                    console.log('[KB.JS] Нажата кнопка выхода');
+                    if (typeof logout === 'function') {
+                        logout();
+                    } else {
+                        sessionStorage.removeItem('modular_house_session');
+                        window.location.href = '/index.html';
+                    }
                 };
+            } else {
+                console.warn('[KB.JS] Кнопка выхода не найдена в DOM!');
             }
         }
     }
