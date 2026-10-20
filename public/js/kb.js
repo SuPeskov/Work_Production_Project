@@ -71,16 +71,10 @@ function kbGetCurrentUser() {
         let user = JSON.parse(data);
         if (!user || !user.role) return null;
 
-        // НОРМАЛИЗАЦИЯ РОЛИ: Приводим технические ID ('admin') к человеческим названиям ('Администратор')
-        // Это критически важно, так как остальные функции сравнивают именно со строками констант.
-        if (user.role === 'admin') {
-            user.role = 'Администратор';
-        } else if (user.role === 'worker') {
-            user.role = 'Сотрудник производства';
-        } else if (user.role === 'guest') {
-            user.role = 'Гость';
-        } 
-        // Если роль уже нормализована, оставляем как есть
+        // Нормализация роли (на случай, если в хранилище лежит технический код)
+        if (user.role === 'admin') user.role = 'Администратор';
+        else if (user.role === 'worker') user.role = 'Сотрудник производства';
+        else if (user.role === 'guest') user.role = 'Гость';
         
         return user;
     } catch (e) {
@@ -114,10 +108,19 @@ function kbAddRead(userId, opId, version) {
 // ============================================================
 // Права доступа
 // ============================================================
+/**
+ * Проверяет, имеет ли пользователь доступ к разделу.
+ * ИСПРАВЛЕНО: Админ и Гость всегда имеют доступ ко всем разделам.
+ */
 function kbUserCanViewSection(user, sectionId) {
     if (!user) return false;
-    if (user.role === ROLE_ADMIN) return true;
     
+    // Администратор и Гость имеют ДОСТУП КО ВСЕМ РАЗДЕЛАМ БЕЗ ПРОВЕРКИ МАССИВА ACCESS
+    if (user.role === 'Администратор' || user.role === 'Гость') {
+        return true;
+    }
+    
+    // Для Сотрудника производства проверяем массив access
     if (!Array.isArray(user.access) || user.access.length === 0) return false;
     return user.access.includes(sectionId);
 }
