@@ -141,90 +141,79 @@ document.addEventListener('DOMContentLoaded', function () {
     async function changeAccess(userId, username, currentSections) {
         openAccessModal(userId, username, currentSections);
     }
-    // --- Отрисовка таблицы ---
-    function renderUsers(users) {
-        tableBody.innerHTML = '';
+// --- Отрисовка таблицы ---
+function renderUsers(users) {
+    tableBody.innerHTML = '';
+    const sectionNames = {
+        'preparation': 'Заготовка', 'panels': 'Сборка панелей', 'module': 'Сборка модуля',
+        'options': 'Сборка опций', 'installation': 'Монтаж', 'service': 'Сервис'
+    };
+    const sectionOrder = ['preparation', 'panels', 'module', 'options', 'installation', 'service'];
+
+    users.forEach(user => {
+        const tr = document.createElement('tr');
         
-        // Словарь для перевода технических ID в русские названия
-        const sectionNames = {
-            'preparation': 'Заготовка',
-            'panels': 'Сборка панелей',
-            'module': 'Сборка модуля',
-            'options': 'Сборка опций',
-            'installation': 'Монтаж',
-            'service': 'Сервис'
-        };
-
-        // Правильный порядок разделов
-        const sectionOrder = [
-            'preparation', 'panels', 'module', 'options', 'installation', 'service'
-        ];
-
-        users.forEach(user => {
-            const tr = document.createElement('tr');
-            
-            // ФИО
-            const tdName = document.createElement('td');
-            tdName.textContent = user.name;
-            tr.appendChild(tdName);
-
-            // Логин
-            const tdLogin = document.createElement('td');
-            tdLogin.textContent = user.username;
-            tr.appendChild(tdLogin);
-
-            // Роль
-            const tdRole = document.createElement('td');
-            const roleLabels = { admin: 'Администратор', worker: 'Сотрудник производства', guest: 'Гость' };
-            tdRole.textContent = roleLabels[user.role] || user.role;
-            tr.appendChild(tdRole);
-
-            // Доступ (ИСПРАВЛЕНО: перевод + сортировка)
-            const tdAccess = document.createElement('td');
-            if (user.role === 'admin') {
-                tdAccess.textContent = 'все разделы';
-            } else if (user.sections && user.sections.length > 0) {
-                // Сортируем массив разделов пользователя согласно sectionOrder
-                const sortedSections = user.sections.sort((a, b) => {
-                    return sectionOrder.indexOf(a) - sectionOrder.indexOf(b);
-                });
-                // Переводим в русские названия
-                const translatedSections = sortedSections.map(id => sectionNames[id] || id);
-                tdAccess.textContent = translatedSections.join(', ');
-            } else {
-                tdAccess.textContent = '—';
-            }
-            tr.appendChild(tdAccess);
-
-            // Действия
-            const tdActions = document.createElement('td');
-            
-            // Кнопка Пароль
-            const btnPass = document.createElement('button');
-            btnPass.textContent = 'Пароль...';
-            btnPass.className = 'btn-action';
-            btnPass.onclick = () => changePassword(user.id, user.username);
-            tdActions.appendChild(btnPass);
-
-            // Кнопки для не-админов
-            if (user.role !== 'admin') {
-                const btnAccess = document.createElement('button');
-                btnAccess.textContent = 'Доступ...';
-                btnAccess.className = 'btn-action';
-                btnAccess.onclick = () => changeAccess(user.id, user.username, user.sections);
-                tdActions.appendChild(btnAccess);
-
-                const btnDel = document.createElement('button');
-                btnDel.textContent = 'Удалить';
-                btnDel.className = 'btn-action btn-delete';
-                btnDel.onclick = () => deleteUser(user.id, user.username);
-                tdActions.appendChild(btnDel);
-            }
-
-            tr.appendChild(tdActions);
-            tableBody.appendChild(tr);
-        });
-    }
+        // ФИО
+        const tdName = document.createElement('td');
+        tdName.textContent = user.name;
+        tr.appendChild(tdName);
+        
+        // Логин
+        const tdLogin = document.createElement('td');
+        tdLogin.textContent = user.username;
+        tr.appendChild(tdLogin);
+        
+        // Роль
+        const tdRole = document.createElement('td');
+        const roleLabels = { admin: 'Администратор', worker: 'Сотрудник производства', guest: 'Гость' };
+        tdRole.textContent = roleLabels[user.role] || user.role;
+        tr.appendChild(tdRole);
+        
+        // Доступ
+        const tdAccess = document.createElement('td');
+        if (user.role === 'admin' || user.role === 'guest') {
+            tdAccess.textContent = 'все разделы';
+        } else if (user.sections && user.sections.length > 0) {
+            const sortedSections = user.sections.sort((a, b) => sectionOrder.indexOf(a) - sectionOrder.indexOf(b));
+            const translatedSections = sortedSections.map(id => sectionNames[id] || id);
+            tdAccess.textContent = translatedSections.join(', ');
+        } else {
+            tdAccess.textContent = '—';
+        }
+        tr.appendChild(tdAccess);
+        
+        // Действия
+        const tdActions = document.createElement('td');
+        
+        // Кнопка Пароль (для всех, кроме самого себя, но это можно опустить)
+        const btnPass = document.createElement('button');
+        btnPass.textContent = 'Пароль...';
+        btnPass.className = 'btn-action';
+        btnPass.onclick = () => changePassword(user.id, user.username);
+        tdActions.appendChild(btnPass);
+        
+        // Кнопка Доступ — ТОЛЬКО для Сотрудника производства
+        if (user.role === 'worker') {
+            const btnAccess = document.createElement('button');
+            btnAccess.textContent = 'Доступ...';
+            btnAccess.className = 'btn-action';
+            btnAccess.onclick = () => changeAccess(user.id, user.username, user.sections);
+            tdActions.appendChild(btnAccess);
+        }
+        
+        // Кнопка Удалить (нельзя удалить последнего админа, но это проверяется на сервере)
+        if (user.role !== 'admin') {
+            const btnDel = document.createElement('button');
+            btnDel.textContent = 'Удалить';
+            btnDel.className = 'btn-action btn-delete';
+            btnDel.onclick = () => deleteUser(user.id, user.username);
+            tdActions.appendChild(btnDel);
+        }
+        
+        tr.appendChild(tdActions);
+        tableBody.appendChild(tr);
+    });
+}
 
     // --- Загрузка пользователей ---
 
@@ -240,68 +229,74 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // --- Обработка формы создания ---
-
-    form.addEventListener('submit', async function (e) {
-        e.preventDefault();
-        hideError();
-
-        const nameInput = document.getElementById('userNameInput');
-        const loginInput = document.getElementById('userLoginInput');
-        const passInput = document.getElementById('userPasswordInput');
-        const roleInput = document.getElementById('userRoleSelect');
-
-        if (!nameInput || !loginInput || !passInput || !roleInput) {
-            showError('Поля формы не найдены');
-            return;
+// --- Обработка формы создания ---
+form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    hideError();
+    
+    const nameInput = document.getElementById('userNameInput');
+    const loginInput = document.getElementById('userLoginInput');
+    const passInput = document.getElementById('userPasswordInput');
+    const roleInput = document.getElementById('userRoleSelect');
+    
+    if (!nameInput || !loginInput || !passInput || !roleInput) {
+        showError('Поля формы не найдены');
+        return;
+    }
+    
+    const name = nameInput.value.trim();
+    const username = loginInput.value.trim().toLowerCase();
+    const password = passInput.value;
+    const role = roleInput.value;
+    
+    // ИСПРАВЛЕНО: Для Гостя и Админа автоматически проставляем все разделы
+    // (хотя сервер все равно их проигнорирует для guest, но для чистоты)
+    let sections = [];
+    if (role === 'worker') {
+        sections = Array.from(document.querySelectorAll('input[name="sections"]:checked')).map(cb => cb.value);
+    } else if (role === 'guest' || role === 'admin') {
+        sections = ['preparation', 'panels', 'module', 'options', 'installation', 'service'];
+    }
+    
+    if (!name || !username || !password || !role) {
+        showError('Заполните все обязательные поля');
+        return;
+    }
+    if (password.length < 6) {
+        showError('Пароль минимум 6 символов');
+        return;
+    }
+    
+    const btn = form.querySelector('button[type="submit"]');
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Добавление...';
+    
+    try {
+        const response = await fetch('/api/admin/users', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ username, name, role, password, sections })
+        });
+        const data = await response.json();
+        if (response.ok && data.ok) {
+            form.reset();
+            await loadUsers();
+            alert('Пользователь создан!');
+        } else {
+            showError(data.error || 'Ошибка создания');
         }
+    } catch (error) {
+        console.error('Ошибка создания:', error);
+        showError('Ошибка соединения с сервером');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
+    }
+});
 
-        const name = nameInput.value.trim();
-        const username = loginInput.value.trim().toLowerCase();
-        const password = passInput.value;
-        const role = roleInput.value;
-        const sections = Array.from(document.querySelectorAll('input[name="sections"]:checked')).map(cb => cb.value);
-
-        if (!name || !username || !password || !role) {
-            showError('Заполните все обязательные поля');
-            return;
-        }
-
-        if (password.length < 6) {
-            showError('Пароль минимум 6 символов');
-            return;
-        }
-
-        const btn = form.querySelector('button[type="submit"]');
-        const originalText = btn.textContent;
-        btn.disabled = true;
-        btn.textContent = 'Добавление...';
-
-        try {
-            const response = await fetch('/api/admin/users', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify({ username, name, role, password, sections })
-            });
-
-            const data = await response.json();
-
-            if (response.ok && data.ok) {
-                form.reset();
-                await loadUsers();
-                alert('Пользователь создан!');
-            } else {
-                showError(data.error || 'Ошибка создания');
-            }
-        } catch (error) {
-            console.error('Ошибка создания:', error);
-            showError('Ошибка соединения с сервером');
-        } finally {
-            btn.disabled = false;
-            btn.textContent = originalText;
-        }
-    });
+// ... (вспомогательные функции UI без изменений) ...
 
     // --- Вспомогательные функции UI ---
 
@@ -319,3 +314,20 @@ document.addEventListener('DOMContentLoaded', function () {
     // Запуск при загрузке
     loadUsers();
 });
+
+// --- Логика скрытия блока разделов при выборе роли ---
+const roleSelect = document.getElementById('userRoleSelect');
+const sectionsBlock = document.getElementById('sectionsBlock');
+
+if (roleSelect && sectionsBlock) {
+    roleSelect.addEventListener('change', function() {
+        // Показываем блок разделов только для Сотрудника производства
+        if (this.value === 'worker') {
+            sectionsBlock.style.display = 'block';
+        } else {
+            sectionsBlock.style.display = 'none';
+        }
+    });
+    // Вызываем сразу при загрузке, чтобы скрыть блок, если по умолчанию выбрана не worker
+    roleSelect.dispatchEvent(new Event('change'));
+}

@@ -160,7 +160,8 @@ app.post('/api/logout', auth(false), (req, res) => {
 
 app.get('/api/me', auth(false), (req, res) => {
     if (!req.user) return res.json({ user: null });
-    const accessList = (req.user.role === 'worker') ? sectionsOf(req.user.id) : '*';
+    // Для worker — конкретный список из БД, для admin и guest — все разделы (массив ID)
+    const accessList = (req.user.role === 'worker') ? sectionsOf(req.user.id) : SECTIONS;
     res.json({ user: publicUser(req.user), sections: accessList });
 });
 
