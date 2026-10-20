@@ -239,7 +239,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             tr.innerHTML = `
                 <td>${date}</td>
                 <td>${r.full_name || r.username}</td>
-                <td>${r.op_title || r.op_id}</td>
+                <td><strong>${r.op_id}</strong> ${r.op_title || ''}</td>
                 <td>v${r.version}</td>
             `;
             tbody.appendChild(tr);
