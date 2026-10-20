@@ -66,6 +66,10 @@ function logout() {
             !window.location.pathname.includes('index.html') && 
             !window.location.pathname.includes('session-terminated')) {
             
+            // КРИТИЧЕСКИ ВАЖНО: Очищаем локальную сессию ПЕРЕД редиректом
+            // Иначе isAuthenticated() вернет true и вернет пользователя на дашборд
+            sessionStorage.removeItem(SESSION_KEY);
+            
             try {
                 const session = JSON.parse(sessionStorage.getItem(SESSION_KEY) || '{}');
                 const username = session.username || 'пользователя';
@@ -87,10 +91,25 @@ document.addEventListener('DOMContentLoaded', function () {
     const toggleBtn = document.getElementById('togglePassword');
     const passwordInput = document.getElementById('password');
     
-    if (isAuthenticated()) {
-        window.location.href = 'dashboard.html';
-        return;
-    }
+// Проверяем не только наличие сессии в браузере, но и её валидность на сервере
+if (isAuthenticated()) {
+    fetch('/api/me', { credentials: 'include' })
+        .then(res => res.json())
+        .then(data => {
+            if (data.user) {
+                // Сессия валидна — пускаем на дашборд
+                window.location.href = 'dashboard.html';
+            } else {
+                // Сессия невалидна (пользователь был выкинут) — очищаем и остаемся на логине
+                sessionStorage.removeItem(SESSION_KEY);
+            }
+        })
+        .catch(() => {
+            // Ошибка сети — очищаем сессию на всякий случай
+            sessionStorage.removeItem(SESSION_KEY);
+        });
+    return;
+}
     
     if (toggleBtn && passwordInput) {
         toggleBtn.addEventListener('click', function () {
