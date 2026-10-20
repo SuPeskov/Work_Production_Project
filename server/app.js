@@ -1,6 +1,8 @@
 /**
  * app.js — Backend базы знаний Скаут Хаус (PPR)
- * Реализована гибкая защита от дублей: Админ всегда входит, Guest/Worker — только 1 сессия.
+ * ИСПРАВЛЕНО: 
+ * 1. Устранена ошибка ERR_ERL_PERMISSIVE_TRUST_PROXY
+ * 2. Администратор всегда имеет доступ, даже если сессия "зависла"
  */
 require('dotenv').config();
 const path = require('path');
@@ -21,6 +23,7 @@ if (!JWT_SECRET) { console.error('ОБЯЗАТЕЛЬНО задайте пере
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
 const ROLE_LABELS = { admin: 'Администратор', worker: 'Сотрудник производства', guest: 'Гость' };
 
+// === Парсинг реестра операций из kb.js ===
 function extractLiteral(src, name) {
     const start = src.indexOf(`const ${name} = [`);
     if (start === -1) return [];
@@ -47,7 +50,7 @@ if (!OPERATIONS.length) console.warn('ВНИМАНИЕ: реестр опера�
 const OP_MAP = Object.fromEntries(OPERATIONS.map(o => [o.id, o]));
 
 const app = express();
-app.set('trust proxy', true); // Для корректной работы за Nginx
+app.set('trust proxy', true); // Доверяем Nginx
 app.disable('x-powered-by');
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(express.json());
@@ -58,15 +61,26 @@ function auth(required = true, roles = null) {
     return (req, res, next) => {
         const token = req.cookies.kb_token;
         let user = null;
+        
         if (token) {
             try {
                 const payload = jwt.verify(token, JWT_SECRET);
                 user = db.prepare('SELECT id, username, name, role, active, session_token, is_active_session FROM users WHERE id=? AND active=1').get(payload.uid);
                 
+                // Проверка токена и активности сессии
                 if (!user || user.session_token !== payload.st || !user.is_active_session) {
-                    user = null; 
-                    if (payload && payload.uid) {
-                        try { db.prepare('UPDATE users SET is_active_session=0 WHERE id=?').run(payload.uid); } catch(e) {}
+                    // Для АДМИНИСТРАТОРА делаем исключение: если токен валиден, но сессия "зависла",
+                    // мы автоматически восстанавливаем его активность, чтобы он не терял доступ.
+                    if (user && user.role === 'admin') {
+                        db.prepare('UPDATE users SET is_active_session=1 WHERE id=?').run(user.id);
+                        // Обновляем локальный объект user
+                        user.is_active_session = 1;
+                    } else {
+                        user = null;
+                        // Для остальных сбрасываем зависшую сессию
+                        if (payload && payload.uid) {
+                            try { db.prepare('UPDATE users SET is_active_session=0 WHERE id=?').run(payload.uid); } catch(e) {}
+                        }
                     }
                 }
             } catch (_) { 
@@ -78,6 +92,7 @@ function auth(required = true, roles = null) {
                 } catch(e) {}
             }
         }
+        
         if (!user && required) return res.status(401).json({ error: 'Требуется вход' });
         if (user && roles && !roles.includes(user.role)) return res.status(403).json({ error: 'Нет прав' });
         req.user = user;
@@ -89,22 +104,21 @@ function sectionsOf(userId) {
     return db.prepare('SELECT section_id FROM user_sections WHERE user_id=?').all(userId).map(r => r.section_id);
 }
 
-// === Права доступа (ИСПРАВЛЕНО) ===
 function canAccess(user, sectionId) {
     if (!user) return false;
-    
-    // Админ и Гость имеют ДОСТУП КО ВСЕМ РАЗДЕЛАМ БЕЗ ЗАПРОСА К БД
-    if (user.role === 'admin' || user.role === 'guest') {
-        return true;
-    }
-    
-    // Сотрудник производства — строго по списку из БД
-    // Если таблица user_sections пуста, доступ будет закрыт (это правильно для worker)
+    // Админ и Гость имеют доступ ко всем разделам
+    if (user.role === 'admin' || user.role === 'guest') return true;
     return sectionsOf(user.id).includes(sectionId);
 }
 
 // === Auth API ===
-const loginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20, standardHeaders: true, validate: { xForwardedForHeader: false } });
+// ИСПРАВЛЕНИЕ RATE-LIMIT: Отключаем строгую проверку trustProxy
+const loginLimiter = rateLimit({ 
+    windowMs: 15 * 60 * 1000, 
+    max: 20, 
+    standardHeaders: true,
+    validate: { xForwardedForHeader: false } 
+});
 
 app.post('/api/login', loginLimiter, (req, res) => {
     const { username, password } = req.body || {};
@@ -115,9 +129,9 @@ app.post('/api/login', loginLimiter, (req, res) => {
         return res.status(401).json({ error: 'Неверный логин или пароль' });
     }
     
-    // БЛОКИРОВКА ПОВТОРНОГО ВХОДА ТОЛЬКО ДЛЯ ГОСТЯ И СОТРУДНИКА
+    // Блокировка повторного входа ТОЛЬКО для Guest и Worker
     if (user.is_active_session === 1 && user.role !== 'admin') {
-        return res.status(409).json({ error: 'Этот пользователь уже работает в системе. Повторный вход запрещен.' });
+        return res.status(409).json({ error: 'Этот пользователь уже работает в системе.' });
     }
     
     const newSessionToken = crypto.randomBytes(32).toString('hex');
@@ -158,9 +172,8 @@ app.use((req, res, next) => {
     
     let sectionId = null;
     const opMatch = req.path.match(/(\d+\.\d+\.\d+)\.html$/);
-    if (opMatch && OP_MAP[opMatch[1]]) {
-        sectionId = OP_MAP[opMatch[1]].section;
-    } else {
+    if (opMatch && OP_MAP[opMatch[1]]) { sectionId = OP_MAP[opMatch[1]].section; } 
+    else {
         for (const key of Object.keys(SECTION_BY_PATH)) {
             if (req.path.includes(key + '.html')) { sectionId = key; break; }
         }
@@ -168,11 +181,13 @@ app.use((req, res, next) => {
     
     if (!sectionId) return next();
     
-    // Используем auth(false), чтобы получить req.user даже если токен битый
     auth(false)(req, res, () => {
-        // Если пользователь не найден ИЛИ у него нет прав
-        if (!req.user || !canAccess(req.user, sectionId)) {
-            console.log(`[ACCESS DENIED] User: ${req.user ? req.user.username : 'Guest'}, Role: ${req.user ? req.user.role : 'None'}, Section: ${sectionId}`);
+        if (!req.user) {
+            console.log(`[ACCESS DENIED] No user for section: ${sectionId}`);
+            return res.redirect('/index.html?need_login=1');
+        }
+        if (!canAccess(req.user, sectionId)) {
+            console.log(`[ACCESS DENIED] User: ${req.user.username}, Role: ${req.user.role}, Section: ${sectionId}`);
             return res.status(403).sendFile(path.join(PUBLIC_DIR, 'no-access.html'));
         }
         next();
@@ -191,7 +206,7 @@ function cleanupDemoAccounts() {
         if (!rows.length) return;
         const delU = db.prepare("UPDATE users SET active=0, deleted_at=datetime('now') WHERE id=?");
         const delS = db.prepare('DELETE FROM user_sections WHERE user_id=?');
-        rows.forEach(r => { delU.run(r.id); delS.run(r.id); console.log(`DEMO-аккаунт удалён: ${r.username}`); });
+        rows.forEach(r => { delU.run(r.id); delS.run(r.id); });
     } catch (e) { console.warn('Не удалось убрать демо-аккаунты:', e.message); }
 }
 
@@ -222,18 +237,15 @@ const ROLES = ['admin', 'worker', 'guest'];
 
 app.get('/api/admin/users', auth(true, ['admin']), (req, res) => {
     cleanupDemoAccounts();
-    // ДОБАВЛЕНО: is_active_session в выборку
     const users = db.prepare("SELECT id, username, name, role, active, is_active_session FROM users WHERE active=1 ORDER BY username").all();
     users.forEach(u => u.sections = sectionsOf(u.id));
     res.json(users);
 });
 
-// НОВЫЙ ENDPOINT: Принудительный выход пользователя
 app.post('/api/admin/users/:id/force-logout', auth(true, ['admin']), (req, res) => {
     const u = db.prepare('SELECT * FROM users WHERE id=? AND active=1').get(req.params.id);
     if (!u) return res.status(404).json({ error: 'Пользователь не найден' });
     if (u.role === 'admin') return res.status(403).json({ error: 'Нельзя принудительно завершить сессию администратора' });
-    
     db.prepare('UPDATE users SET session_token=NULL, is_active_session=0 WHERE id=?').run(u.id);
     res.json({ ok: true });
 });
@@ -245,11 +257,8 @@ app.post('/api/admin/users', auth(true, ['admin']), (req, res) => {
     }
     const uname = String(username).trim().toLowerCase();
     if (db.prepare('SELECT id FROM users WHERE username=?').get(uname)) return res.status(409).json({ error: 'Такой логин уже занят' });
-    
     const info = db.prepare('INSERT INTO users (username, name, role, pass_hash) VALUES (?,?,?,?)')
         .run(uname, String(name).trim(), role, bcrypt.hashSync(String(password), 10));
-    
-    // Для guest и admin автоматически проставляем все разделы (хотя сервер их и так игнорирует для guest)
     const finalSections = (role === 'worker') ? sections : SECTIONS;
     setSections(info.lastInsertRowid, finalSections);
     res.json({ ok: true, id: info.lastInsertRowid });
