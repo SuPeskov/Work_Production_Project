@@ -127,12 +127,17 @@ app.post('/api/login', loginLimiter, (req, res) => {
         return res.status(401).json({ error: 'Неверный логин или пароль' });
     }
     
-    // БЛОКИРОВКА ПОВТОРНОГО ВХОДА
-    if (user.is_active_session === 1) {
-        return res.status(409).json({ error: 'Этот сотрудник уже работает в системе. Повторный вход запрещен.' });
-    }
+    // РЕШЕНИЕ ПРОБЛЕМЫ "ВЕЧНОЙ БЛОКИРОВКИ":
+    // Мы НЕ блокируем вход ошибкой 409. Вместо этого мы всегда создаем новую сессию.
+    // Если пользователь уже был где-то авторизован, его старый токен автоматически 
+    // станет недействительным, так как session_token в базе данных изменится.
+    // При следующем запросе старый браузер получит 401 и будет перенаправлен на вход.
+    // Это гарантирует "одну активную сессию" без риска, что пользователь не сможет 
+    // войти после закрытия вкладки (когда запрос /api/logout не отправляется).
     
     const newSessionToken = crypto.randomBytes(32).toString('hex');
+    
+    // Перезаписываем токен и активируем сессию
     db.prepare('UPDATE users SET session_token=?, is_active_session=1 WHERE id=?').run(newSessionToken, user.id);
     
     const token = jwt.sign({ uid: user.id, st: newSessionToken }, JWT_SECRET, { expiresIn: '12h' });
