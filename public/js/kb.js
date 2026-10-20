@@ -206,35 +206,42 @@ document.addEventListener('DOMContentLoaded', function () {
             </div>`;
     }
 
-// --- Панель пользователя в шапке + выход ---
-// Ищем элементы по разным возможным ID для совместимости
-let userNameEl = document.getElementById('currentUserName') || document.getElementById('userName');
-let roleEl = document.getElementById('currentUserRole') || document.getElementById('userRole');
-let avatarEl = document.getElementById('userAvatar');
-
-if (userNameEl && typeof isAuthenticated === 'function' && isAuthenticated()) {
-    const user = kbGetCurrentUser();
-    if (user) {
-        // Заполняем данные
-        if (roleEl) roleEl.textContent = user.role || 'Пользователь';
-        if (avatarEl) avatarEl.textContent = (user.name || user.username || '?').charAt(0).toUpperCase();
-        if (userNameEl) userNameEl.textContent = user.name || user.username;
+    // --- Панель пользователя в шапке + выход ---
+    if (typeof isAuthenticated === 'function' && isAuthenticated()) {
+        const user = kbGetCurrentUser();
+        console.log('[KB.JS] Текущий пользователь:', user); // ДИАГНОСТИКА
         
-        // Назначаем обработчик выхода
-        const logoutBtn = document.getElementById('logoutBtn');
-        if (logoutBtn) {
-            logoutBtn.onclick = function (e) {
-                e.preventDefault();
-                if (typeof logout === 'function') logout();
-                else window.location.href = prefix + 'index.html';
-            };
+        if (user) {
+            // Обновляем имя и роль (ищем по разным ID для совместимости)
+            const nameEl = document.getElementById('currentUserName') || document.getElementById('userName');
+            const roleEl = document.getElementById('currentUserRole') || document.getElementById('userRole');
+            const avatarEl = document.getElementById('userAvatar');
+            
+            if (nameEl) nameEl.textContent = user.name || user.username;
+            if (roleEl) roleEl.textContent = user.role || 'Пользователь';
+            if (avatarEl) avatarEl.textContent = (user.name || user.username || '?').charAt(0).toUpperCase();
+
+            // КНОПКА ВЫХОДА (ИСПРАВЛЕНО: надежный поиск)
+            const logoutBtn = document.getElementById('logoutBtn') || 
+                              document.querySelector('button[class*="logout"]') ||
+                              document.querySelector('a[href*="logout"]');
+                              
+            if (logoutBtn) {
+                logoutBtn.onclick = function (e) {
+                    e.preventDefault();
+                    console.log('[KB.JS] Нажата кнопка выхода');
+                    if (typeof logout === 'function') {
+                        logout();
+                    } else {
+                        sessionStorage.removeItem('modular_house_session');
+                        window.location.href = '/index.html';
+                    }
+                };
+            } else {
+                console.warn('[KB.JS] Кнопка выхода не найдена в DOM!');
+            }
         }
-    } else {
-        // Если пользователь не найден, но isAuthenticated вернул true - очищаем сессию
-        sessionStorage.removeItem('modular_house_session');
-        window.location.reload();
     }
-}
 
     // --- Кнопки в шапке по ролям ---
     if (typeof isAuthenticated === 'function' && isAuthenticated()) {

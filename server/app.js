@@ -89,9 +89,17 @@ function sectionsOf(userId) {
     return db.prepare('SELECT section_id FROM user_sections WHERE user_id=?').all(userId).map(r => r.section_id);
 }
 
+// === Права доступа (ИСПРАВЛЕНО) ===
 function canAccess(user, sectionId) {
     if (!user) return false;
-    if (user.role === 'admin' || user.role === 'guest') return true;
+    
+    // Админ и Гость имеют ДОСТУП КО ВСЕМ РАЗДЕЛАМ БЕЗ ЗАПРОСА К БД
+    if (user.role === 'admin' || user.role === 'guest') {
+        return true;
+    }
+    
+    // Сотрудник производства — строго по списку из БД
+    // Если таблица user_sections пуста, доступ будет закрыт (это правильно для worker)
     return sectionsOf(user.id).includes(sectionId);
 }
 
@@ -147,18 +155,26 @@ const SECTION_BY_PATH = { preparation: 'preparation', panels: 'panels', module: 
 
 app.use((req, res, next) => {
     if (req.path === '/dashboard.html' || req.path === '/') return next();
+    
     let sectionId = null;
     const opMatch = req.path.match(/(\d+\.\d+\.\d+)\.html$/);
-    if (opMatch && OP_MAP[opMatch[1]]) { sectionId = OP_MAP[opMatch[1]].section; } 
-    else {
+    if (opMatch && OP_MAP[opMatch[1]]) {
+        sectionId = OP_MAP[opMatch[1]].section;
+    } else {
         for (const key of Object.keys(SECTION_BY_PATH)) {
             if (req.path.includes(key + '.html')) { sectionId = key; break; }
         }
     }
+    
     if (!sectionId) return next();
+    
+    // Используем auth(false), чтобы получить req.user даже если токен битый
     auth(false)(req, res, () => {
-        if (!req.user) return res.redirect('/index.html?need_login=1');
-        if (!canAccess(req.user, sectionId)) return res.status(403).sendFile(path.join(PUBLIC_DIR, 'no-access.html'));
+        // Если пользователь не найден ИЛИ у него нет прав
+        if (!req.user || !canAccess(req.user, sectionId)) {
+            console.log(`[ACCESS DENIED] User: ${req.user ? req.user.username : 'Guest'}, Role: ${req.user ? req.user.role : 'None'}, Section: ${sectionId}`);
+            return res.status(403).sendFile(path.join(PUBLIC_DIR, 'no-access.html'));
+        }
         next();
     });
 });
