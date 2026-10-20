@@ -146,6 +146,14 @@
     <script src="js/kb.js"></script>
     <script src="js/access-guard.js"></script>
     <script src="js/countDashboard.js"></script>
+    <script>
+// Инициализация дашборда после загрузки всех скриптов
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof initDashboard === 'function') {
+        initDashboard();
+    }
+});
+</script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     if (!isAuthenticated()) return;
