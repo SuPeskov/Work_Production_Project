@@ -3,6 +3,7 @@
  * Включает защиту от параллельных входов (перехват 401 -> session-terminated)
  * и обработку ошибки 409 (пользователь уже активен).
  */
+
 const SESSION_KEY = 'modular_house_session';
 
 function setSession(user) {

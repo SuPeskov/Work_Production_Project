@@ -15,6 +15,7 @@ const ROLE_GUEST   = 'Гость';
 const KB_READ_KEY  = 'kb_reads_v1'; 
 const KB_ARCHIVE_KEY = 'kb_reads_archive_v1';
 
+
 // === Разделы базы знаний ===
 const KB_SECTIONS = [
     { id: 'preparation', num: '01', title: 'Заготовка',        img: 'assets/images/icons/section-1-zagotovka.svg', desc: 'Напил элементов каркаса, листового материала, отделочной доски и заготовка для сборки модуля', page: 'pages/preparation.html' },

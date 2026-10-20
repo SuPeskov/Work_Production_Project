@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const tableBody = document.getElementById('usersTableBody');
     const errorDiv = document.getElementById('formError');
 
+    
     if (!form || !tableBody) {
         console.error('❌ Форма или таблица не найдены');
         return;
