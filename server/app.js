@@ -112,7 +112,8 @@ function canAccess(user, sectionId) {
 }
 
 // === Auth API ===
-// ИСПРАВЛЕНИЕ RATE-LIMIT: Отключаем строгую проверку trustProxy
+// ИСПРАВЛЕНИЕ RATE-LIMIT: Отключаем строгую проверку trustProxy для rate-limit,
+// так как мы находимся за Nginx и знаем, что X-Forwarded-For корректен
 const loginLimiter = rateLimit({ 
     windowMs: 15 * 60 * 1000, 
     max: 20, 
