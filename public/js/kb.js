@@ -60,22 +60,28 @@ function kbUserCanConfirmRead(user) {
 }
 
 /**
- * Актуальный профиль текущего пользователя.
- * Читает ТОЛЬКО из sessionStorage (обновляется access-guard.js).
+ Актуальный профиль текущего пользователя.
+ Читает ТОЛЬКО из sessionStorage.
  */
 function kbGetCurrentUser() {
     try {
         const data = sessionStorage.getItem('modular_house_session');
         if (!data) return null;
         
-        const user = JSON.parse(data);
-        if (!user.role) return null;
-        
-        // Нормализуем роль для проверки прав
-        if (user.role === 'admin') user.role = 'Администратор';
-        else if (user.role === 'worker') user.role = 'Сотрудник производства';
-        else if (user.role === 'guest') user.role = 'Гость';
+        let user = JSON.parse(data);
+        if (!user || !user.role) return null;
 
+        // НОРМАЛИЗАЦИЯ РОЛИ: Приводим технические ID ('admin') к человеческим названиям ('Администратор')
+        // Это критически важно, так как остальные функции сравнивают именно со строками констант.
+        if (user.role === 'admin') {
+            user.role = 'Администратор';
+        } else if (user.role === 'worker') {
+            user.role = 'Сотрудник производства';
+        } else if (user.role === 'guest') {
+            user.role = 'Гость';
+        } 
+        // Если роль уже нормализована, оставляем как есть
+        
         return user;
     } catch (e) {
         console.error('Ошибка чтения сессии:', e);
@@ -200,28 +206,35 @@ document.addEventListener('DOMContentLoaded', function () {
             </div>`;
     }
 
-    // --- Панель пользователя в шапке + выход ---
-    let userNameEl = document.getElementById('currentUserName') || document.getElementById('userName');
-    if (userNameEl && typeof isAuthenticated === 'function' && isAuthenticated()) {
-        const user = kbGetCurrentUser();
-        if (user) {
-            const roleEl = document.getElementById('currentUserRole') || document.getElementById('userRole');
-            const avatarEl = document.getElementById('userAvatar');
-            
-            if (roleEl) roleEl.textContent = user.role || 'Пользователь';
-            if (avatarEl) avatarEl.textContent = (user.name || user.username || '?').charAt(0).toUpperCase();
-            if (userNameEl) userNameEl.textContent = user.name || user.username;
-            
-            const logoutBtn = document.getElementById('logoutBtn');
-            if (logoutBtn) {
-                logoutBtn.onclick = function (e) {
-                    e.preventDefault();
-                    if (typeof logout === 'function') logout();
-                    else window.location.href = prefix + 'index.html';
-                };
-            }
+// --- Панель пользователя в шапке + выход ---
+// Ищем элементы по разным возможным ID для совместимости
+let userNameEl = document.getElementById('currentUserName') || document.getElementById('userName');
+let roleEl = document.getElementById('currentUserRole') || document.getElementById('userRole');
+let avatarEl = document.getElementById('userAvatar');
+
+if (userNameEl && typeof isAuthenticated === 'function' && isAuthenticated()) {
+    const user = kbGetCurrentUser();
+    if (user) {
+        // Заполняем данные
+        if (roleEl) roleEl.textContent = user.role || 'Пользователь';
+        if (avatarEl) avatarEl.textContent = (user.name || user.username || '?').charAt(0).toUpperCase();
+        if (userNameEl) userNameEl.textContent = user.name || user.username;
+        
+        // Назначаем обработчик выхода
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.onclick = function (e) {
+                e.preventDefault();
+                if (typeof logout === 'function') logout();
+                else window.location.href = prefix + 'index.html';
+            };
         }
+    } else {
+        // Если пользователь не найден, но isAuthenticated вернул true - очищаем сессию
+        sessionStorage.removeItem('modular_house_session');
+        window.location.reload();
     }
+}
 
     // --- Кнопки в шапке по ролям ---
     if (typeof isAuthenticated === 'function' && isAuthenticated()) {
