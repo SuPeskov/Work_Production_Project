@@ -242,29 +242,35 @@ document.addEventListener('DOMContentLoaded', function () {
                 return a;
             };
 
-            // ИСПРАВЛЕНО: Добавлена кнопка мониторинга для Гостя и Сотрудника производства
-            if (user.role === ROLE_GUEST || user.role === ROLE_WORKER) {
-                if (!right.querySelector('.btn-monitoring')) {
+            // 1. Логика для АДМИНИСТРАТОРА и ГОСТЯ (Контролера)
+            if (user.role === ROLE_ADMIN || user.role === ROLE_GUEST) {
+                const onMonitoring = /monitoring\.html/.test(window.location.pathname);
+                const onAdminPanel = /admin-panel\.html/.test(window.location.pathname);
+                const isDashboard = window.location.pathname.endsWith('dashboard.html') || window.location.pathname === '/';
+
+                // Кнопка "Мониторинг" (если мы не на самой странице мониторинга)
+                if (!onMonitoring && !right.querySelector('.btn-monitoring')) {
                     mkBtn('btn-admin btn-monitoring', 'monitoring.html', 'Мониторинг ознакомления', ICON_CHART + '<span>Мониторинг</span>');
                 }
-                if (!right.querySelector('.btn-back-kb')) {
+
+                // Кнопка "Управление" (ТОЛЬКО для Админа, если мы не в панели управления)
+                if (user.role === ROLE_ADMIN && !onAdminPanel && !right.querySelector('.btn-manage')) {
+                    mkBtn('btn-admin btn-manage', 'admin-panel.html', 'Панель управления', ICON_GEAR + '<span>Управление</span>');
+                }
+                
+                // Кнопка "В базу знаний" (если мы не на дашборде)
+                if (!isDashboard && !right.querySelector('.btn-back-kb')) {
                     mkBtn('btn-admin btn-back-kb', 'dashboard.html', 'Вернуться к разделам базы знаний', ICON_BACK + '<span>В базу знаний</span>');
                 }
             } 
-            // Логика для Администратора
-            else if (user.role === ROLE_ADMIN) {
-                const onAdminPanel = /admin-panel\.html/.test(window.location.pathname);
-                const onMonitoring = /monitoring\.html/.test(window.location.pathname);
+            // 2. Логика ТОЛЬКО для СОТРУДНИКА производства
+            else if (user.role === ROLE_WORKER) {
+                const isDashboard = window.location.pathname.endsWith('dashboard.html') || window.location.pathname === '/';
                 
-                if ((onMonitoring || onAdminPanel) && !right.querySelector('.btn-back-kb')) {
+                // Сотруднику показываем ТОЛЬКО кнопку "В базу знаний" (и то, если он не на дашборде)
+                // Кнопки "Мониторинг" и "Управление" для него НЕ создаются.
+                if (!isDashboard && !right.querySelector('.btn-back-kb')) {
                     mkBtn('btn-admin btn-back-kb', 'dashboard.html', 'Вернуться к разделам базы знаний', ICON_BACK + '<span>В базу знаний</span>');
-                }
-                if (!onAdminPanel && !right.querySelector('.btn-manage')) {
-                    mkBtn('btn-admin btn-manage', 'admin-panel.html', 'Панель управления', ICON_GEAR + '<span>Управление</span>');
-                }
-                // Админу тоже нужна кнопка мониторинга, если он не на ней
-                if (!onMonitoring && !right.querySelector('.btn-monitoring')) {
-                    mkBtn('btn-admin btn-monitoring', 'monitoring.html', 'Мониторинг ознакомления', ICON_CHART + '<span>Мониторинг</span>');
                 }
             }
         }
