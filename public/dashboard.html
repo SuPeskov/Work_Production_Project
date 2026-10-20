@@ -25,9 +25,9 @@
             <div class="user-info">
                 <div class="user-avatar" id="userAvatar">А</div>
                 <div class="user-details">
-                    <span class="user-name" id="userName">Пользователь</span>
-                    <span class="user-role" id="userRole">Роль</span>
-                </div>
+                    <span class="user-name" id="currentUserName">Пользователь </span>
+                    <span class="user-role" id="currentUserRole">Роль</span>
+                </div>           
             </div>
             <button class="btn-logout" id="logoutBtn" title="Выйти">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
@@ -146,6 +146,14 @@
     <script src="js/kb.js"></script>
     <script src="js/access-guard.js"></script>
     <script src="js/countDashboard.js"></script>
+    <script>
+// Инициализация дашборда после загрузки всех скриптов
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof initDashboard === 'function') {
+        initDashboard();
+    }
+});
+</script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     if (!isAuthenticated()) return;

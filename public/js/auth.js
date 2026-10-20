@@ -1,7 +1,5 @@
 /**
  * auth.js — Логика авторизации и управления сессией
- * Включает защиту от параллельных входов (перехват 401 -> session-terminated)
- * и обработку ошибки 409 (пользователь уже активен).
  */
 const SESSION_KEY = 'modular_house_session';
 
@@ -29,47 +27,31 @@ function isAuthenticated() {
 }
 
 function logout() {
-    // Сначала отправляем запрос на сервер и ЖДЕМ ответа
-    fetch('/api/logout', { 
-        method: 'POST', 
-        credentials: 'include' 
-    })
-    .then(response => {
-        if (response.ok) {
-            // Только после успешного ответа сервера очищаем локальную сессию
+    fetch('/api/logout', { method: 'POST', credentials: 'include' })
+        .finally(() => { 
             sessionStorage.removeItem(SESSION_KEY);
-            // И переходим на страницу входа
-            window.location.href = '/index.html';
-        } else {
-            console.error('Ошибка выхода:', response.status);
-            // Даже при ошибке сервера — выходим локально, чтобы пользователь не застрял
-            sessionStorage.removeItem(SESSION_KEY);
-            window.location.href = '/index.html';
-        }
-    })
-    .catch(error => {
-        console.error('Сетевая ошибка при выходе:', error);
-        // При сетевой ошибке тоже выходим локально
-        sessionStorage.removeItem(SESSION_KEY);
-        window.location.href = '/index.html';
-    });
+            window.location.href = '/index.html'; 
+        });
 }
 
-// === Перехватчик завершения сессии из-за нового входа ===
+// === АВТОМАТИЧЕСКИЙ ВЫХОД ПРИ ЗАКРЫТИИ ВКЛАДКИ ===
+window.addEventListener('beforeunload', function(e) {
+    if (isAuthenticated()) {
+        // sendBeacon гарантирует отправку запроса даже при закрытии страницы
+        navigator.sendBeacon('/api/logout', new Blob([], { type: 'application/json' }));
+        sessionStorage.removeItem(SESSION_KEY);
+    }
+});
+
+// === Перехватчик 401 (принудительный выход админом или истечение токена) ===
 (function() {
     const originalFetch = window.fetch;
     window.fetch = async function(...args) {
         const response = await originalFetch.apply(this, args);
-        
-        // Если получили 401 и мы НЕ на странице входа/предупреждения
         if (response.status === 401 && 
             !window.location.pathname.includes('index.html') && 
             !window.location.pathname.includes('session-terminated')) {
-            
-            // КРИТИЧЕСКИ ВАЖНО: Очищаем локальную сессию ПЕРЕД редиректом
-            // Иначе isAuthenticated() вернет true и вернет пользователя на дашборд
             sessionStorage.removeItem(SESSION_KEY);
-            
             try {
                 const session = JSON.parse(sessionStorage.getItem(SESSION_KEY) || '{}');
                 const username = session.username || 'пользователя';
@@ -91,25 +73,10 @@ document.addEventListener('DOMContentLoaded', function () {
     const toggleBtn = document.getElementById('togglePassword');
     const passwordInput = document.getElementById('password');
     
-// Проверяем не только наличие сессии в браузере, но и её валидность на сервере
-if (isAuthenticated()) {
-    fetch('/api/me', { credentials: 'include' })
-        .then(res => res.json())
-        .then(data => {
-            if (data.user) {
-                // Сессия валидна — пускаем на дашборд
-                window.location.href = 'dashboard.html';
-            } else {
-                // Сессия невалидна (пользователь был выкинут) — очищаем и остаемся на логине
-                sessionStorage.removeItem(SESSION_KEY);
-            }
-        })
-        .catch(() => {
-            // Ошибка сети — очищаем сессию на всякий случай
-            sessionStorage.removeItem(SESSION_KEY);
-        });
-    return;
-}
+    if (isAuthenticated()) {
+        window.location.href = 'dashboard.html';
+        return;
+    }
     
     if (toggleBtn && passwordInput) {
         toggleBtn.addEventListener('click', function () {
@@ -141,38 +108,24 @@ if (isAuthenticated()) {
                 credentials: 'include',
                 body: JSON.stringify({ username, password })
             });
-            
             const data = await response.json();
             
             if (response.ok && data.ok) {
-                hideError();
-                // Запрашиваем полные данные пользователя (с разделами)
                 const meResponse = await fetch('/api/me', { credentials: 'include' });
                 const meData = await meResponse.json();
-                
                 if (meData.user) {
-                    setSession({
-                        ...meData.user,
-                        access: meData.sections
-                    });
+                    setSession({ ...meData.user, access: meData.sections });
                 } else {
                     setSession(data.user);
                 }
-                
                 btn.classList.add('success');
                 btn.querySelector('span').textContent = 'Вход выполнен!';
-                setTimeout(() => {
-                    window.location.href = 'dashboard.html';
-                }, 800);
+                setTimeout(() => { window.location.href = 'dashboard.html'; }, 800);
             } else {
-                // ОБРАБОТКА ОШИБОК
                 let errorMsg = data.error || 'Неверный логин или пароль';
-                
-                // Специальная обработка для занятой сессии (код 409)
                 if (response.status === 409) {
-                    errorMsg = '⚠️ Этот сотрудник уже работает в системе!\nПовторный вход под одним логином запрещен.';
+                    errorMsg = '⚠️ Этот пользователь уже работает в системе!\nПовторный вход под одним логином запрещен.';
                 }
-                
                 showError(errorMsg);
                 loginForm.classList.add('shake');
                 setTimeout(() => loginForm.classList.remove('shake'), 500);
@@ -190,7 +143,6 @@ if (isAuthenticated()) {
         if (errorText) errorText.textContent = msg;
         if (errorDiv) errorDiv.classList.remove('hidden');
     }
-    
     function hideError() {
         if (errorDiv) errorDiv.classList.add('hidden');
     }
