@@ -40,11 +40,40 @@ function extractLiteral(src, name) {
     catch (e) { console.warn(`Не удалось разобрать ${name}:`, e.message); return []; }
 }
 
+// Функция для извлечения версии из HTML-файла операции
+function getOpVersionFromHtml(opUrl) {
+    try {
+        // opUrl выглядит как 'pages/operations/2.1.1.html'
+        const htmlPath = path.join(PUBLIC_DIR, opUrl);
+        const htmlContent = fs.readFileSync(htmlPath, 'utf8');
+        
+        // Ищем атрибут data-op-version="X" в кнопке "Ознакомлен"
+        const match = htmlContent.match(/data-op-version=["'](\d+)["']/i);
+        if (match && match[1]) {
+            return parseInt(match[1], 10);
+        }
+    } catch (e) {
+        console.warn(`Не удалось прочитать версию из ${opUrl}:`, e.message);
+    }
+    return null; // Версия не найдена
+}
+
 let OPERATIONS = [], SECTIONS = [];
 try {
     const src = fs.readFileSync(path.join(PUBLIC_DIR, 'js', 'kb.js'), 'utf8');
     OPERATIONS = extractLiteral(src, 'KB_OPERATIONS');
     SECTIONS = extractLiteral(src, 'KB_SECTIONS').map(s => s.id);
+    
+    //  КЛЮЧЕВОЙ ШАГ: Обновляем версии из HTML-файлов
+    OPERATIONS.forEach(op => {
+        if (op.url) {
+            const htmlVersion = getOpVersionFromHtml(op.url);
+            if (htmlVersion !== null) {
+                op.version = htmlVersion; // Перезаписываем версию из kb.js на версию из HTML
+            }
+        }
+    });
+    
 } catch (e) { console.warn('Не удалось загрузить реестр операций:', e.message); }
 
 if (!OPERATIONS.length) console.warn('ВНИМАНИЕ: реестр операций пуст — проверьте public/js/kb.js');
