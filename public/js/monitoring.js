@@ -102,16 +102,29 @@ try {
             });
         }
 
-        reads.forEach(r => {
-            const parts = r.op_id.split('.');
-            if (parts.length < 3) return;
-            const secId = parts[0];
-            const subId = `${parts[0]}.${parts[1]}`;
-            if (tree[secId] && tree[secId].subsections[subId]) {
-                const opObj = tree[secId].subsections[subId].ops.find(o => o.id === r.op_id);
-                if (opObj) opObj.users.add(r.full_name || r.username);
+    reads.forEach(r => {
+        const parts = r.op_id.split('.');
+        if (parts.length < 3) return;
+        const secId = parts[0];
+        const subId = `${parts[0]}.${parts[1]}`;
+        if (tree[secId] && tree[secId].subsections[subId]) {
+            const opObj = tree[secId].subsections[subId].ops.find(o => o.id === r.op_id);
+            if (opObj) {
+                // Сохраняем объект {name, date}, а не просто строку
+                // Используем Map или массив уникальных записей, чтобы не дублировать, 
+                // но для простоты здесь оставим Set объектов (хотя Set сравнивает по ссылке, поэтому лучше массив с проверкой)
+                
+                // Простая проверка на дубликаты по имени
+                const exists = Array.from(opObj.users).find(u => u.name === (r.full_name || r.username));
+                if (!exists) {
+                    opObj.users.add({ 
+                        name: r.full_name || r.username, 
+                        date: r.read_at 
+                    });
+                }
             }
-        });
+        }
+    });
 
         const sortedSections = Object.keys(tree).sort((a, b) => Number(a) - Number(b));
         if (sortedSections.length === 0) {
@@ -191,18 +204,65 @@ try {
                 ul.className = 'operations-list';
                 
                 subsection.ops.forEach(op => {
-                    const li = document.createElement('li');
-                    const usersList = Array.from(op.users).join(', ') || '—';
-                    const usersColor = op.users.size > 0 ? '#16a34a' : '#94a3b8';
-                    
-                    // Используем структуру ссылки, но добавляем span для пользователей
+            // ... внутри цикла subsection.ops.forEach(op => { ...
+            
+            const li = document.createElement('li');
+            const usersArray = Array.from(op.users); // Массив объектов {name, date}
+            const count = usersArray.length;
+            
+            // Сортируем пользователей по дате (новые сверху)
+            usersArray.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            if (count > 0) {
+                // Формируем список для аккордеона с тултипами
+                let usersListHtml = usersArray.map(u => {
+                    // Форматируем дату для тултипа: 16.10.2026, 12:41
+                    const d = new Date(u.date);
+                    const dateStr = d.toLocaleDateString('ru-RU') + ', ' + d.toLocaleTimeString('ru-RU', {hour: '2-digit', minute:'2-digit'});
+                    return `<div class="matrix-user-item" title="Ознакомился: ${dateStr}">${u.name}</div>`;
+                }).join('');
+
+                // Если пользователей много (больше 3), делаем аккордеон
+                if (count > 3) {
                     li.innerHTML = `
                         <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 6px 0;">
                             <span><strong>${op.id}</strong> — ${op.title}</span>
-                            <span style="font-size: 0.85rem; color: ${usersColor}; font-weight: 500; margin-left: 10px;">${usersList}</span>
+                            <div class="users-accordion" style="position: relative; display: inline-block;">
+                                <button class="btn-users-toggle" onclick="this.nextElementSibling.classList.toggle('show')">
+                                    ${count} сотр. ▾
+                                </button>
+                                <div class="users-dropdown">
+                                    ${usersListHtml}
+                                </div>
+                            </div>
                         </div>
                     `;
-                    ul.appendChild(li);
+                } else {
+                    // Если мало, показываем просто имена через запятую (с тултипами)
+                    const simpleList = usersArray.map(u => {
+                         const d = new Date(u.date);
+                         const dateStr = d.toLocaleDateString('ru-RU');
+                         return `<span title="${dateStr}" style="cursor: help; border-bottom: 1px dotted #94a3b8;">${u.name}</span>`;
+                    }).join(', ');
+                    
+                    li.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 6px 0;">
+                            <span><strong>${op.id}</strong> — ${op.title}</span>
+                            <span style="font-size: 0.85rem; color: #16a34a; font-weight: 500; margin-left: 10px;">${simpleList}</span>
+                        </div>
+                    `;
+                }
+            } else {
+                // Нет ознакомившихся
+                li.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 6px 0;">
+                        <span><strong>${op.id}</strong> — ${op.title}</span>
+                        <span style="color: #cbd5e1;">—</span>
+                    </div>
+                `;
+            }
+            ul.appendChild(li);
+            // ... конец цикла
                 });
                 
                 subContent.appendChild(ul);

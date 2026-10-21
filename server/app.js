@@ -248,12 +248,15 @@ app.get('/api/matrix', auth(true, ['admin', 'guest']), (req, res) => {
     
     res.json(rows);
 });
+// === Журнал ознакомлений (ОБНОВЛЕНО: добавлена дата read_at для тултипов) ===
 app.get('/api/reads', auth(), (req, res) => {
     if (req.user.role === 'worker') {
-        const rows = db.prepare('SELECT * FROM read_log WHERE user_id=? ORDER BY read_at DESC').all(req.user.id);
+        // Для сотрудника: только свои отметки + дата
+        const rows = db.prepare('SELECT *, read_at FROM read_log WHERE user_id=? ORDER BY read_at DESC').all(req.user.id);
         res.json(rows);
     } else {
-        const rows = db.prepare('SELECT * FROM read_log ORDER BY read_at DESC').all();
+        // Для админа/гостя: все отметки + дата
+        const rows = db.prepare('SELECT *, read_at FROM read_log ORDER BY read_at DESC').all();
         res.json(rows);
     }
 });

@@ -3305,3 +3305,55 @@ h1, h2, h3, h4, h5, h6 {
     border-radius: 12px;
     margin-left: 8px;
 }
+/* Кнопка переключения списка */
+.btn-users-toggle {
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 0.75rem;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.btn-users-toggle:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+}
+
+/* Выпадающий список */
+.users-dropdown {
+    display: none; /* Скрыт по умолчанию */
+    position: absolute;
+    right: 0;
+    top: 100%;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    min-width: 150px;
+    z-index: 10;
+    padding: 4px 0;
+    margin-top: 4px;
+}
+
+/* Класс для показа списка (добавляется JS-ом) */
+.users-dropdown.show {
+    display: block;
+}
+
+/* Элемент списка пользователей */
+.matrix-user-item {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    color: #334155;
+    cursor: help; /* Курсор вопроса для тултипа */
+    border-bottom: 1px solid #f8fafc;
+}
+.matrix-user-item:last-child {
+    border-bottom: none;
+}
+.matrix-user-item:hover {
+    background: #f8fafc;
+    color: #0f172a;
+}
