@@ -3268,6 +3268,28 @@ h1, h2, h3, h4, h5, h6 {
 .section-tag { display: inline-block; background: #ede9fe; color: #5b21b6; border-radius: 6px; padding: 2px 8px; font-size: 12px; font-weight: 600; }
 @media (max-width: 768px) { .admin-form .form-row { flex-direction: column; } .admin-table { font-size: 12px; } }
 
+/* ИСПРАВЛЕНИЕ: Возвращаем фиолетовый фон для primary-кнопок в таблице */
+.admin-table .btn-primary {
+    background-color: #6d28d9 !important;
+    color: #fff !important;
+    border: none !important;
+}
+
+.admin-table .btn-primary:hover {
+    background-color: #5b21b6 !important;
+}
+
+/* Исправление для красной кнопки удаления */
+.admin-table .btn-danger.btn-primary {
+    background-color: #dc2626 !important; /* Красный фон */
+    color: #fff !important;
+    border: none !important;
+}
+
+.admin-table .btn-danger.btn-primary:hover {
+    background-color: #b91c1c !important;
+}
+
 /* ============================================
    Стили для заблокированных разделов (Нет доступа)
    ============================================ */
