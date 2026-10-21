@@ -235,6 +235,19 @@ app.post('/api/read/:opId', auth(true, ['worker']), (req, res) => {
     res.json({ ok: true, already: !!exists });
 });
 
+// === НОВЫЙ ENDPOINT ДЛЯ МАТРИЦЫ (только активные сотрудники) ===
+app.get('/api/matrix', auth(true, ['admin', 'guest']), (req, res) => {
+    // Запрашиваем отметки ТОЛЬКО активных пользователей через JOIN
+    const rows = db.prepare(`
+        SELECT rl.* 
+        FROM read_log rl
+        INNER JOIN users u ON rl.user_id = u.id
+        WHERE u.active = 1
+        ORDER BY rl.read_at DESC
+    `).all();
+    
+    res.json(rows);
+});
 app.get('/api/reads', auth(), (req, res) => {
     if (req.user.role === 'worker') {
         const rows = db.prepare('SELECT * FROM read_log WHERE user_id=? ORDER BY read_at DESC').all(req.user.id);

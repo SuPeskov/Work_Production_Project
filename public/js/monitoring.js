@@ -37,7 +37,20 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // --- 2. Загрузка данных с СЕРВЕРА ---
     try {
-        const response = await fetch('/api/reads', { credentials: 'include' });
+        // Загружаем данные для матрицы (только активные)
+const matrixResponse = await fetch('/api/matrix', { credentials: 'include' });
+if (!matrixResponse.ok) throw new Error('Ошибка загрузки матрицы');
+const matrixReads = await matrixResponse.json();
+
+// Загружаем данные для журнала (все, включая удаленных)
+const logResponse = await fetch('/api/reads', { credentials: 'include' });
+if (!logResponse.ok) throw new Error('Ошибка загрузки журнала');
+const logReads = await logResponse.json();
+
+// Рендерим матрицу отфильтрованными данными
+renderMatrixAccordion(matrixReads);
+// Рендерим журнал полными данными
+renderLog(logReads);
         if (!response.ok) throw new Error('Ошибка загрузки данных с сервера');
         const reads = await response.json();
 
