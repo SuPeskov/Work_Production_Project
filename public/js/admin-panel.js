@@ -184,19 +184,20 @@ function renderUsers(users) {
         
         // Действия
         const tdActions = document.createElement('td');
+        tdActions.style.whiteSpace = 'nowrap'; // Чтобы кнопки не переносились
         
-        // Кнопка Пароль (для всех, кроме самого себя, но это можно опустить)
+        // Кнопка Пароль
         const btnPass = document.createElement('button');
-        btnPass.textContent = 'Пароль...';
-        btnPass.className = 'btn-action';
+        btnPass.textContent = 'Пароль';
+        btnPass.className = 'btn-primary btn-sm'; // <--- НОВЫЕ КЛАССЫ
         btnPass.onclick = () => changePassword(user.id, user.username);
         tdActions.appendChild(btnPass);
         
         // Кнопка Доступ — ТОЛЬКО для Сотрудника производства
         if (user.role === 'worker') {
             const btnAccess = document.createElement('button');
-            btnAccess.textContent = 'Доступ...';
-            btnAccess.className = 'btn-action';
+            btnAccess.textContent = 'Доступ';
+            btnAccess.className = 'btn-primary btn-sm'; // <--- НОВЫЕ КЛАССЫ
             btnAccess.onclick = () => changeAccess(user.id, user.username, user.sections);
             tdActions.appendChild(btnAccess);
         }
@@ -205,7 +206,7 @@ function renderUsers(users) {
         if (user.role !== 'admin') {
             const btnDel = document.createElement('button');
             btnDel.textContent = 'Удалить';
-            btnDel.className = 'btn-action btn-delete';
+            btnDel.className = 'btn-primary btn-sm btn-danger'; // <--- НОВЫЕ КЛАССЫ + btn-danger для красного оттенка (опционально)
             btnDel.onclick = () => deleteUser(user.id, user.username);
             tdActions.appendChild(btnDel);
         }
