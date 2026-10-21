@@ -35,35 +35,29 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // --- 2. Загрузка данных с СЕРВЕРА ---
-    try {
-        // Загружаем данные для матрицы (только активные)
-const matrixResponse = await fetch('/api/matrix', { credentials: 'include' });
-if (!matrixResponse.ok) throw new Error('Ошибка загрузки матрицы');
-const matrixReads = await matrixResponse.json();
+// --- 2. Загрузка данных с СЕРВЕРА ---
+try {
+    // Загружаем данные для матрицы (только активные)
+    const matrixResponse = await fetch('/api/matrix', { credentials: 'include' });
+    if (!matrixResponse.ok) throw new Error('Ошибка загрузки матрицы');
+    const matrixReads = await matrixResponse.json();
 
-// Загружаем данные для журнала (все, включая удаленных)
-const logResponse = await fetch('/api/reads', { credentials: 'include' });
-if (!logResponse.ok) throw new Error('Ошибка загрузки журнала');
-const logReads = await logResponse.json();
+    // Загружаем данные для журнала (все, включая удаленных)
+    const logResponse = await fetch('/api/reads', { credentials: 'include' });
+    if (!logResponse.ok) throw new Error('Ошибка загрузки журнала');
+    const logReads = await logResponse.json();
 
-// Рендерим матрицу отфильтрованными данными
-renderMatrixAccordion(matrixReads);
-// Рендерим журнал полными данными
-renderLog(logReads);
-        if (!response.ok) throw new Error('Ошибка загрузки данных с сервера');
-        const reads = await response.json();
-
-        renderMatrixAccordion(reads);
-        renderLog(reads);
-
-    } catch (error) {
-        console.error('Monitoring Error:', error);
-        const matrixBody = document.getElementById('matrixBody');
-        if (matrixBody) {
-            matrixBody.innerHTML = `<div style="color:red; text-align:center; padding: 20px;">Ошибка: ${error.message}</div>`;
-        }
+    // Рендерим матрицу отфильтрованными данными
+    renderMatrixAccordion(matrixReads);
+    // Рендерим журнал полными данными
+    renderLog(logReads);
+} catch (error) {
+    console.error('Monitoring Error:', error);
+    const matrixBody = document.getElementById('matrixBody');
+    if (matrixBody) {
+        matrixBody.innerHTML = `<div style="color:red; text-align:center; padding: 20px;">Ошибка: ${error.message}</div>`;
     }
+}
 
     // --- 3. Рендер Матрицы (Аккордеон) ---
     function renderMatrixAccordion(reads) {
