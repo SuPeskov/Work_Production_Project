@@ -442,26 +442,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         // Применяем стили
-        Object.entries(statuses).forEach(([id, isRead]) => {
-            const link = linkMap[id];
-            if (!link) return;
-            
-            // Находим родительский элемент списка (li), чтобы красить всю строку
-            // Важно: ищем именно li, так как в panels.html структура <li><a href="...">...</a></li>
-            const parentItem = link.closest('li'); 
-            
-            if (parentItem) {
-                if (isRead) {
-                    // Ознакомлен — светлый фон
-                    parentItem.classList.remove('unread-operation');
-                    parentItem.classList.add('read-operation');
-                } else {
-                    // НЕ ознакомлен — оранжевый фон
-                    parentItem.classList.remove('read-operation');
-                    parentItem.classList.add('unread-operation');
-                }
-            }
-        });
+Object.entries(statuses).forEach(([id, statusObj]) => {
+    const link = linkMap[id];
+    if (!link) return;
+    const parentItem = link.closest('li');
+    
+    // Теперь мы точно знаем, актуальна ли прочитанная версия
+    const isCurrent = statusObj.isRead; 
+    
+    if (isCurrent) {
+        parentItem.classList.remove('unread-operation');
+        parentItem.classList.add('read-operation');
+    } else {
+        parentItem.classList.remove('read-operation');
+        parentItem.classList.add('unread-operation');
+    }
+});
     } catch (error) {
         console.error('Не удалось загрузить статусы ознакомления:', error);
     }

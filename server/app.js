@@ -353,7 +353,11 @@ app.post('/api/read-status', auth(), (req, res) => {
     // Формируем ответ: { '2.1.1': true, '2.1.2': false, ... }
     const statusMap = {};
     opsData.forEach(op => {
-        statusMap[op.id] = readSet.has(`${op.id}|${op.version}`);
+        // Вместо: statusMap[op.id] = readSet.has(`${op.id}|${op.version}`);
+statusMap[op.id] = { 
+    isRead: readSet.has(`${op.id}|${op.version}`),
+    currentVersion: op.version 
+};
     });
 
     res.json(statusMap);
