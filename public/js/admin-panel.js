@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const data = await response.json();
             
             if (response.ok && data.ok) {
-                alert('Пользователь удален');
+                // alert('Пользователь удален');
                 await loadUsers(); // Перезагружаем список
             } else {
                 alert('Ошибка: ' + (data.error || 'Не удалось удалить'));
