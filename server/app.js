@@ -321,6 +321,44 @@ function setSections(userId, list) {
     });
 }
 
+// === Проверка статуса ознакомления для списка операций ===
+app.post('/api/read-status', auth(), (req, res) => {
+    const { opIds } = req.body || {}; // Ожидаем массив ID операций ['2.1.1', '2.1.2', ...]
+    if (!Array.isArray(opIds)) return res.json({});
+
+    // Получаем данные о текущих версиях операций из реестра
+    const opsData = opIds.map(id => {
+        const op = OP_MAP[id];
+        return {
+            id,
+            version: op ? String(op.version != null ? op.version : "1") : "1"
+        };
+    });
+
+    // Массовый запрос к БД для проверки прочитанных версий
+    // Используем транзакцию или batch query для производительности
+    const stmt = db.prepare(`
+        SELECT op_id, version 
+        FROM read_log 
+        WHERE user_id = ? AND (op_id, version) IN (VALUES ${opsData.map(() => '(?,?)').join(', ')})
+    `);
+    
+    // Формируем плоский массив параметров [userId, opId1, ver1, opId2, ver2, ...]
+    const params = [req.user.id, ...opsData.flatMap(o => [o.id, o.version])];
+    const rows = stmt.all(...params);
+
+    // Преобразуем результат в Set для быстрого поиска
+    const readSet = new Set(rows.map(r => `${r.op_id}|${r.version}`));
+
+    // Формируем ответ: { '2.1.1': true, '2.1.2': false, ... }
+    const statusMap = {};
+    opsData.forEach(op => {
+        statusMap[op.id] = readSet.has(`${op.id}|${op.version}`);
+    });
+
+    res.json(statusMap);
+});
+
 // === Статика ===
 app.use(express.static(PUBLIC_DIR, { extensions: ['html'] }));
 app.get('/', (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'index.html')));

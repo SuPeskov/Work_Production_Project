@@ -367,3 +367,66 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 });
+
+/**
+ * operation-status.js — Визуальная индикация статуса ознакомления
+ * Подключается на страницах разделов (panels.html, module.html и др.)
+ */
+document.addEventListener('DOMContentLoaded', async () => {
+    // Проверяем авторизацию
+    if (typeof isAuthenticated === 'function' && !isAuthenticated()) return;
+    
+    // Находим все ссылки на операции на странице
+    // Предполагаем, что они имеют атрибут data-op-id или href вида /pages/operations/X.X.X.html
+    const opLinks = document.querySelectorAll('a[href*="/pages/operations/"]');
+    if (opLinks.length === 0) return;
+
+    // Собираем ID операций из ссылок
+    const opIds = [];
+    const linkMap = {}; // Карта ID -> DOM-элемент для быстрой раскраски
+    
+    opLinks.forEach(link => {
+        const match = link.href.match(/(\d+\.\d+\.\d+)\.html$/);
+        if (match) {
+            const id = match[1];
+            opIds.push(id);
+            linkMap[id] = link;
+        }
+    });
+
+    if (opIds.length === 0) return;
+
+    try {
+        // Запрашиваем статусы у сервера
+        const response = await fetch('/api/read-status', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ opIds })
+        });
+        
+        if (!response.ok) throw new Error('Ошибка загрузки статусов');
+        const statuses = await response.json();
+
+        // Применяем стили
+        Object.entries(statuses).forEach(([id, isRead]) => {
+            const link = linkMap[id];
+            if (!link) return;
+
+            // Находим родительский элемент списка (li или div), чтобы красить всю строку
+            const parentItem = link.closest('li') || link.closest('.operation-item') || link.parentElement;
+            
+            if (isRead) {
+                // Ознакомлен — светлый фон (как сейчас)
+                parentItem.classList.remove('unread-operation');
+                parentItem.classList.add('read-operation');
+            } else {
+                // НЕ ознакомлен — оранжевый фон
+                parentItem.classList.remove('read-operation');
+                parentItem.classList.add('unread-operation');
+            }
+        });
+    } catch (error) {
+        console.error('Не удалось загрузить статусы ознакомления:', error);
+    }
+});

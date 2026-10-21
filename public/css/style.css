@@ -3357,3 +3357,25 @@ h1, h2, h3, h4, h5, h6 {
     background: #f8fafc;
     color: #0f172a;
 }
+
+/* НЕ ознакомленная операция — привлекает внимание */
+.unread-operation {
+    background-color: #fff7ed !important; /* Светло-оранжевый фон */
+    border-left: 4px solid #f97316 !important; /* Оранжевая полоса слева */
+}
+
+.unread-operation a {
+    color: #c2410c !important; /* Темно-оранжевый текст */
+    font-weight: 600;
+}
+
+/* Ознакомленная операция — спокойный вид */
+.read-operation {
+    background-color: #ffffff !important; /* Белый/светлый фон */
+    border-left: 4px solid transparent !important;
+}
+
+/* Плавный переход при изменении статуса */
+li, .operation-item {
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
