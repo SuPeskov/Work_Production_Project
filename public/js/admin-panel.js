@@ -283,7 +283,7 @@ form.addEventListener('submit', async function (e) {
         if (response.ok && data.ok) {
             form.reset();
             await loadUsers();
-            alert('Пользователь создан!');
+           // alert('Пользователь создан!');
         } else {
             showError(data.error || 'Ошибка создания');
         }

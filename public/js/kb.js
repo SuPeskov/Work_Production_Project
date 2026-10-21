@@ -370,23 +370,27 @@ document.addEventListener('DOMContentLoaded', function () {
 
 /**
  * operation-status.js — Визуальная индикация статуса ознакомления
- * Подключается на страницах разделов (panels.html, module.html и др.)
+ * ИСПРАВЛЕНО: 
+ * 1. Поддержка относительных путей (operations/X.X.X.html)
+ * 2. Добавлены необходимые CSS стили прямо в JS (чтобы не править style.css)
+ * 3. Экранирование точек в регулярном выражении
  */
 document.addEventListener('DOMContentLoaded', async () => {
     // Проверяем авторизацию
     if (typeof isAuthenticated === 'function' && !isAuthenticated()) return;
     
     // Находим все ссылки на операции на странице
-    // Предполагаем, что они имеют атрибут data-op-id или href вида /pages/operations/X.X.X.html
-    const opLinks = document.querySelectorAll('a[href*="/pages/operations/"]');
+    // Ищем как абсолютные (/pages/operations/...), так и относительные (operations/...) пути
+    const opLinks = document.querySelectorAll('a[href*="operations/"]');
     if (opLinks.length === 0) return;
 
     // Собираем ID операций из ссылок
     const opIds = [];
-    const linkMap = {}; // Карта ID -> DOM-элемент для быстрой раскраски
+    const linkMap = {}; 
     
     opLinks.forEach(link => {
-        const match = link.href.match(/(\d+\.\d+\.\d+)\.html$/);
+        // Исправленное регулярное выражение с экранированными точками
+        const match = link.getAttribute('href').match(/(\d+\.\d+\.\d+)\.html/);
         if (match) {
             const id = match[1];
             opIds.push(id);
@@ -408,22 +412,54 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!response.ok) throw new Error('Ошибка загрузки статусов');
         const statuses = await response.json();
 
+        // Динамически добавляем стили, если их нет на странице
+        if (!document.getElementById('dynamic-op-status-styles')) {
+            const style = document.createElement('style');
+            style.id = 'dynamic-op-status-styles';
+            style.textContent = `
+                /* НЕ ознакомленная операция — привлекает внимание */
+                .unread-operation {
+                    background-color: #fff7ed !important; /* Светло-оранжевый фон */
+                    border-left: 4px solid #f97316 !important; /* Оранжевая полоса слева */
+                }
+                .unread-operation a {
+                    color: #c2410c !important; /* Темно-оранжевый текст */
+                    font-weight: 600;
+                }
+                
+                /* Ознакомленная операция — спокойный вид */
+                .read-operation {
+                    background-color: #ffffff !important; /* Белый/светлый фон */
+                    border-left: 4px solid transparent !important;
+                }
+                
+                /* Плавный переход при изменении статуса */
+                li, .operation-item {
+                    transition: background-color 0.3s ease, border-color 0.3s ease;
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
         // Применяем стили
         Object.entries(statuses).forEach(([id, isRead]) => {
             const link = linkMap[id];
             if (!link) return;
-
-            // Находим родительский элемент списка (li или div), чтобы красить всю строку
-            const parentItem = link.closest('li') || link.closest('.operation-item') || link.parentElement;
             
-            if (isRead) {
-                // Ознакомлен — светлый фон (как сейчас)
-                parentItem.classList.remove('unread-operation');
-                parentItem.classList.add('read-operation');
-            } else {
-                // НЕ ознакомлен — оранжевый фон
-                parentItem.classList.remove('read-operation');
-                parentItem.classList.add('unread-operation');
+            // Находим родительский элемент списка (li), чтобы красить всю строку
+            // Важно: ищем именно li, так как в panels.html структура <li><a href="...">...</a></li>
+            const parentItem = link.closest('li'); 
+            
+            if (parentItem) {
+                if (isRead) {
+                    // Ознакомлен — светлый фон
+                    parentItem.classList.remove('unread-operation');
+                    parentItem.classList.add('read-operation');
+                } else {
+                    // НЕ ознакомлен — оранжевый фон
+                    parentItem.classList.remove('read-operation');
+                    parentItem.classList.add('unread-operation');
+                }
             }
         });
     } catch (error) {
