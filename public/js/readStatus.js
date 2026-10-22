@@ -61,114 +61,134 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const userId = user.username;
 
-    // Функция визуального обновления кнопки
-    function markAsRead(timestamp) {
-        button.classList.add('is-read');
-        button.disabled = true;
-        const textSpan = button.querySelector('.btn-text') || button;
-        if (textSpan) textSpan.textContent = 'Ознакомлен ✓';
-        
-        if (timestamp && statusInfo) {
-            statusInfo.textContent = `Отметка поставлена: ${new Date(timestamp).toLocaleString('ru-RU')}`;
-        }
+// === Функция визуального обновления кнопки ===
+function markAsRead(timestamp) {
+    button.classList.add('is-read');
+    button.disabled = true;
+    const textSpan = button.querySelector('.btn-text') || button;
+    if (textSpan) textSpan.textContent = 'Ознакомлен ✓';
+    if (timestamp && statusInfo) {
+        statusInfo.textContent = `Отметка поставлена: ${new Date(timestamp).toLocaleString('ru-RU')}`;
     }
+}
 
-    // Проверка статуса при загрузке (сначала пробуем сервер, потом localStorage)
-    async function checkStatus() {
-        // 1. Проверяем сервер (если есть доступ)
-        try {
-            // Мы не можем легко проверить конкретную операцию через GET /api/reads без загрузки всего списка,
-            // поэтому полагаемся на то, что если кнопка нажата, сервер вернет ok.
-            // Но для отображения "уже ознакомлен" при перезагрузке страницы, нам нужно знать состояние.
-            // Простой способ: попробовать отправить запрос? Нет, это создаст дубль.
-            // Лучше: проверить localStorage как кэш, но доверять серверу.
-            // В данной архитектуре проще всего: если в localStorage есть запись И она совпадает по версии,
-            // считаем что ознакомлен. При клике все равно отправим на сервер (идемпотентно).
+function resetButton() {
+    button.classList.remove('is-read');
+    button.disabled = false;
+    const textSpan = button.querySelector('.btn-text') || button;
+    if (textSpan) textSpan.textContent = 'Ознакомлен';
+    if (statusInfo) statusInfo.textContent = '';
+}
+
+// === ПРОВЕРКА СТАТУСА ПРИ ЗАГРУЗКЕ (СИНХРОНИЗАЦИЯ С СЕРВЕРОМ) ===
+async function checkStatus() {
+    try {
+        // Запрашиваем статус именно для этой операции у сервера
+        const response = await fetch('/api/read-status', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ opIds: [opId] })
+        });
+
+        if (!response.ok) throw new Error('Ошибка сети');
+
+        const statuses = await response.json();
+        const statusObj = statuses[opId];
+
+        // Если сервер подтверждает, что текущая версия прочитана — переключаем кнопку
+        if (statusObj && statusObj.isRead) {
+            markAsRead(statusObj.timestamp || new Date().toISOString());
             
+            // Обновляем локальный кэш для надежности
             const storageKey = `read_${userId}_${opId}_v${opVersion}`;
-            const readData = localStorage.getItem(storageKey);
-            
-            if (readData) {
+            localStorage.setItem(storageKey, JSON.stringify({
+                userId: userId, opId: opId, version: opVersion, 
+                timestamp: statusObj.timestamp || new Date().toISOString()
+            }));
+        } else {
+            // Если не прочитано — сбрасываем кнопку (даже если в localStorage был старый кэш)
+            resetButton();
+        }
+    } catch (error) {
+        console.warn('Не удалось синхронизировать статус кнопки с сервером:', error);
+        // Fallback: если сервер недоступен, пробуем проверить локальный кэш
+        const storageKey = `read_${userId}_${opId}_v${opVersion}`;
+        const readData = localStorage.getItem(storageKey);
+        if (readData) {
+            try {
                 const data = JSON.parse(readData);
                 if (data.version === opVersion) {
                     markAsRead(data.timestamp);
-                    return; // Уже отмечено локально, кнопку блокируем
+                    return;
                 }
-            }
-        } catch (e) {
-            console.warn('Ошибка проверки локального статуса', e);
+            } catch (e) {}
         }
-
-        // Если не отмечено локально, сбрасываем кнопку
         resetButton();
     }
+}
 
-    function resetButton() {
-        button.classList.remove('is-read');
-        button.disabled = false;
-        const textSpan = button.querySelector('.btn-text') || button;
-        if (textSpan) textSpan.textContent = 'Ознакомлен';
-        if (statusInfo) statusInfo.textContent = '';
-    }
+// Обработчик клика (остается прежним, но добавляем синхронизацию после успеха)
+button.addEventListener('click', async function() {
+    if (button.classList.contains('is-read')) return;
 
-    // Обработчик клика
-    button.addEventListener('click', async function() {
-        if (button.classList.contains('is-read')) return;
+    const now = new Date().toISOString();
+    button.disabled = true;
+    const textSpan = button.querySelector('.btn-text') || button;
+    if (textSpan) textSpan.textContent = 'Отправка...';
 
-        const now = new Date().toISOString();
-        const originalText = button.innerHTML;
+    try {
+        const response = await fetch(`/api/read/${opId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ version: String(opVersion) })
+        });
         
-        // Блокируем кнопку на время запроса
-        button.disabled = true;
-        const textSpan = button.querySelector('.btn-text') || button;
-        if (textSpan) textSpan.textContent = 'Отправка...';
-
-        try {
-            // --- ОТПРАВКА НА СЕРВЕР (ГЛАВНОЕ ИЗМЕНЕНИЕ) ---
-            const response = await fetch(`/api/read/${opId}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include', // Обязательно для передачи куки авторизации
-                body: JSON.stringify({ version: String(opVersion) })
-            });
-
-            const data = await response.json();
-
-            if (response.ok && data.ok) {
-                // Успех на сервере
-                
-                // Сохраняем в localStorage для быстрого отображения при перезагрузке
-                const storageKey = `read_${userId}_${opId}_v${opVersion}`;
-                localStorage.setItem(storageKey, JSON.stringify({
-                    userId: userId, opId: opId, version: opVersion, timestamp: now
-                }));
-
-                // Также дублируем в общий реестр kb.js (на случай, если мониторинг где-то еще использует его)
-                if (typeof kbAddRead === 'function') {
-                    kbAddRead(userId, opId, opVersion);
-                }
-
-                markAsRead(now);
-                showToast('✓ Вы отметили операцию как ознакомленную');
-                console.log(`✅ Операция ${opId} v${opVersion} сохранена на сервере (${userId})`);
-            } else {
-                // Ошибка сервера (например, 403 Нет доступа или 401 Не авторизован)
-                alert('Ошибка сохранения: ' + (data.error || 'Неизвестная ошибка сервера'));
-                button.disabled = false;
-                if (textSpan) textSpan.textContent = 'Ознакомлен';
+        const data = await response.json();
+        
+        if (response.ok && data.ok) {
+            // Сохраняем в localStorage
+            const storageKey = `read_${userId}_${opId}_v${opVersion}`;
+            localStorage.setItem(storageKey, JSON.stringify({
+                userId: userId, opId: opId, version: opVersion, timestamp: now
+            }));
+            
+            // Дублируем в общий реестр kb.js
+            if (typeof kbAddRead === 'function') {
+                kbAddRead(userId, opId, opVersion);
             }
-        } catch (error) {
-            console.error('Сетевая ошибка:', error);
-            alert('Ошибка соединения с сервером. Проверьте интернет и попробуйте снова.');
-            button.disabled = false;
-            if (textSpan) textSpan.textContent = 'Ознакомлен';
+            
+            markAsRead(now);
+            showToast('✓ Вы отметили операцию как ознакомленную');
+            
+            // ⚡ ВАЖНО: Принудительно перекрашиваем фон в списке раздела
+            // Это мгновенно убирает оранжевый фон без перезагрузки страницы
+            try {
+                await fetch('/api/read-status', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ opIds: [opId] })
+                });
+                // Триггерим событие для operation-status.js, если он слушает
+                window.dispatchEvent(new CustomEvent('kb:operation-read', { detail: { opId, version: opVersion } }));
+            } catch(e) {}
+            
+        } else {
+            alert('Ошибка сохранения: ' + (data.error || 'Неизвестная ошибка'));
+            resetButton();
         }
-    });
-
-    // Запуск проверки при загрузке
-    checkStatus();
-    console.log(`✅ Кнопка "Ознакомлен" инициализирована: ${opId} v${opVersion}, пользователь ${userId}`);
+    } catch (error) {
+        console.error('Сетевая ошибка:', error);
+        alert('Ошибка соединения с сервером.');
+        resetButton();
+    }
 });
+
+// Запуск проверки при загрузке
+checkStatus();
+console.log(`✅ Кнопка "Ознакомлен" инициализирована: ${opId} v${opVersion}, пользователь ${userId}`);
 
 // Toast уведомление
 function showToast(message) {
