@@ -212,3 +212,4 @@ function showToast(message) {
         toast.style.transform = 'translateY(20px)';
     }, 3000);
 }
+});
