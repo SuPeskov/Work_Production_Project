@@ -81,6 +81,7 @@ function resetButton() {
 }
 
 // === ПРОВЕРКА СТАТУСА ПРИ ЗАГРУЗКЕ (СИНХРОНИЗАЦИЯ С СЕРВЕРОМ) ===
+// === ПРОВЕРКА СТАТУСА ПРИ ЗАГРУЗКЕ (СИНХРОНИЗАЦИЯ С СЕРВЕРОМ) ===
 async function checkStatus() {
     try {
         // Запрашиваем статус именно для этой операции у сервера
@@ -92,10 +93,10 @@ async function checkStatus() {
         });
 
         if (!response.ok) throw new Error('Ошибка сети');
-
+        
         const statuses = await response.json();
         const statusObj = statuses[opId];
-
+        
         // Если сервер подтверждает, что текущая версия прочитана — переключаем кнопку
         if (statusObj && statusObj.isRead) {
             markAsRead(statusObj.timestamp || new Date().toISOString());
@@ -103,18 +104,22 @@ async function checkStatus() {
             // Обновляем локальный кэш для надежности
             const storageKey = `read_${userId}_${opId}_v${opVersion}`;
             localStorage.setItem(storageKey, JSON.stringify({
-                userId: userId, opId: opId, version: opVersion, 
+                userId: userId, 
+                opId: opId, 
+                version: opVersion, 
                 timestamp: statusObj.timestamp || new Date().toISOString()
             }));
         } else {
             // Если не прочитано — сбрасываем кнопку (даже если в localStorage был старый кэш)
             resetButton();
         }
-    } catch (error) {
+    } catch (error) {  // <--- ЗДЕСЬ БЫЛА ОШИБКА: отсутствовала эта скобка или она была misplaced
         console.warn('Не удалось синхронизировать статус кнопки с сервером:', error);
+        
         // Fallback: если сервер недоступен, пробуем проверить локальный кэш
         const storageKey = `read_${userId}_${opId}_v${opVersion}`;
         const readData = localStorage.getItem(storageKey);
+        
         if (readData) {
             try {
                 const data = JSON.parse(readData);
