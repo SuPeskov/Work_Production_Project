@@ -462,3 +462,57 @@ Object.entries(statuses).forEach(([id, statusObj]) => {
         console.error('Не удалось загрузить статусы ознакомления:', error);
     }
 });
+
+/**
+ * auto-check-read-btn.js — Автоматическая синхронизация кнопки "Ознакомлен"
+ * Добавляется в конец kb.js
+ */
+document.addEventListener('DOMContentLoaded', async () => {
+    // Проверяем, находимся ли мы на странице операции и есть ли кнопка
+    const readBtn = document.getElementById('readBtn');
+    if (!readBtn || !window.location.pathname.includes('/operations/')) return;
+
+    // Проверяем авторизацию
+    if (typeof isAuthenticated !== 'function' || !isAuthenticated()) return;
+
+    const opId = readBtn.dataset.opId;
+    const opVersion = readBtn.dataset.opVersion;
+    
+    if (!opId || !opVersion) return;
+
+    try {
+        // Запрашиваем статус именно для этой операции у сервера
+        const response = await fetch('/api/read-status', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ opIds: [opId] })
+        });
+
+        if (!response.ok) throw new Error('Ошибка загрузки статуса');
+        
+        const statuses = await response.json();
+        const statusObj = statuses[opId];
+
+        // Если сервер подтверждает, что версия прочитана — переключаем кнопку
+        if (statusObj && statusObj.isRead) {
+            readBtn.classList.add('read');
+            
+            // Меняем иконки и текст (предполагая стандартную структуру кнопки из вашего HTML)
+            const iconUnread = readBtn.querySelector('.icon-unread');
+            const iconRead = readBtn.querySelector('.icon-read');
+            const btnText = readBtn.querySelector('.btn-text');
+            
+            if (iconUnread) iconUnread.style.display = 'none';
+            if (iconRead) iconRead.style.display = 'inline-block';
+            if (btnText) btnText.textContent = 'Ознакомлен';
+            
+            // Блокируем повторное нажатие (опционально)
+            readBtn.disabled = true;
+            readBtn.style.opacity = '0.7';
+            readBtn.style.cursor = 'default';
+        }
+    } catch (error) {
+        console.error('Не удалось проверить статус кнопки:', error);
+    }
+});
