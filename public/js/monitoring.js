@@ -308,10 +308,10 @@ try {
         pageData.forEach(r => {
             const tr = document.createElement('tr');
             const date = new Date(r.read_at).toLocaleString('ru-RU', { 
-    timeZone: 'Europe/Moscow',
-    year: 'numeric', month: '2-digit', day: '2-digit',
-    hour: '2-digit', minute: '2-digit', second: '2-digit'
-});
+                    timeZone: 'Europe/Moscow',
+                    year: 'numeric', month: '2-digit', day: '2-digit',
+                    hour: '2-digit', minute: '2-digit', second: '2-digit'
+                    });
             tr.innerHTML = `
                 <td>${date}</td>
                 <td>${r.full_name || r.username}</td>

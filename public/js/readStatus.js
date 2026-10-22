@@ -67,8 +67,15 @@ function markAsRead(timestamp) {
     button.disabled = true;
     const textSpan = button.querySelector('.btn-text') || button;
     if (textSpan) textSpan.textContent = 'Ознакомлен ✓';
+    
+    // ИСПРАВЛЕНО: Добавлена принудительная конвертация в Europe/Moscow
     if (timestamp && statusInfo) {
-        statusInfo.textContent = `Отметка поставлена: ${new Date(timestamp).toLocaleString('ru-RU')}`;
+        const moscowTime = new Date(timestamp).toLocaleString('ru-RU', {
+            timeZone: 'Europe/Moscow',
+            year: 'numeric', month: '2-digit', day: '2-digit',
+            hour: '2-digit', minute: '2-digit'
+        });
+        statusInfo.textContent = `Отметка поставлена: ${moscowTime}`;
     }
 }
 
