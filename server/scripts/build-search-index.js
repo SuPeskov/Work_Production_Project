@@ -9,7 +9,7 @@ const path = require('path');
 const lunr = require('lunr');
 
 // Настройки путей
-const PUBLIC_DIR = path.join(__dirname, '..', 'public');
+const PUBLIC_DIR = path.join(__dirname, '..', '..', 'public');
 const KB_JS_PATH = path.join(PUBLIC_DIR, 'js', 'kb.js');
 const OUTPUT_PATH = path.join(PUBLIC_DIR, 'js', 'search-index.json');
 
