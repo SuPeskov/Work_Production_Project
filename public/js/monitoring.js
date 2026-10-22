@@ -218,7 +218,12 @@ try {
                 let usersListHtml = usersArray.map(u => {
                     // Форматируем дату для тултипа: 16.10.2026, 12:41
                     const d = new Date(u.date);
-                    const dateStr = d.toLocaleDateString('ru-RU') + ', ' + d.toLocaleTimeString('ru-RU', {hour: '2-digit', minute:'2-digit'});
+                    const dateStr = d.toLocaleDateString('ru-RU', { timeZone: 'Europe/Moscow' }) + ', ' + 
+                                    d.toLocaleTimeString('ru-RU', { 
+                                        timeZone: 'Europe/Moscow', 
+                                        hour: '2-digit', 
+                                        minute: '2-digit' 
+                                    });
                     return `<div class="matrix-user-item" title="Ознакомился: ${dateStr}">${u.name}</div>`;
                 }).join('');
 
@@ -302,7 +307,11 @@ try {
 
         pageData.forEach(r => {
             const tr = document.createElement('tr');
-            const date = new Date(r.read_at).toLocaleString('ru-RU');
+            const date = new Date(r.read_at).toLocaleString('ru-RU', { 
+    timeZone: 'Europe/Moscow',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit'
+});
             tr.innerHTML = `
                 <td>${date}</td>
                 <td>${r.full_name || r.username}</td>
