@@ -305,21 +305,28 @@ try {
             return;
         }
 
-        pageData.forEach(r => {
-            const tr = document.createElement('tr');
-            const date = new Date(r.read_at).toLocaleString('ru-RU', { 
-                    timeZone: 'Europe/Moscow',
-                    year: 'numeric', month: '2-digit', day: '2-digit',
-                    hour: '2-digit', minute: '2-digit', second: '2-digit'
-                    });
-            tr.innerHTML = `
-                <td>${date}</td>
-                <td>${r.full_name || r.username}</td>
-                <td><strong>${r.op_id}</strong> ${r.op_title || ''}</td>
-                <td>v${r.version}</td>
-            `;
-            tbody.appendChild(tr);
-        });
+pageData.forEach(r => {
+    const tr = document.createElement('tr');
+    
+    // ИСПРАВЛЕНО: Жесткая привязка к Europe/Moscow, как в readStatus.js
+    const rawDate = r.read_at;
+    // Добавляем 'Z', если сервер отдал дату без указания пояса, чтобы JS точно понял, что это UTC
+    const safeDate = rawDate && !rawDate.endsWith('Z') ? rawDate + 'Z' : rawDate;
+    
+    const date = new Date(safeDate).toLocaleString('ru-RU', { 
+        timeZone: 'Europe/Moscow',
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit'
+    });
+
+    tr.innerHTML = `
+        <td>${date}</td>
+        <td>${r.full_name || r.username}</td>
+        <td><strong>${r.op_id}</strong> ${r.op_title || ''}</td>
+        <td>v${r.version}</td>
+    `;
+    tbody.appendChild(tr);
+});
 
         if (pagination) {
             pagination.innerHTML = '';
