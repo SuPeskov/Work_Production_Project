@@ -242,7 +242,7 @@ try {
                     const simpleList = usersArray.map(u => {
                          const d = new Date(u.date);
                          const dateStr = d.toLocaleDateString('ru-RU');
-                         return `<span title="${dateStr}" style="cursor: help; border-bottom: 1px dotted #94a3b8;">${u.name}</span>`;
+                         return `<span title="Ознакомился: ${dateStr}" style="cursor: help; border-bottom: 1px dotted #94a3b8;">${u.name}</span>`;
                     }).join(', ');
                     
                     li.innerHTML = `
