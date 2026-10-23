@@ -253,41 +253,47 @@ app.post('/api/read/:opId', auth(true, ['worker']), (req, res) => {
     const op = OP_MAP[req.params.opId];
     if (!op) return res.status(404).json({ error: 'Неизвестная операция' });
     if (!canAccess(req.user, op.section)) return res.status(403).json({ error: 'Нет доступа к разделу' });
-    
-    const version = String(req.body?.version != null && req.body.version !== "" ? req.body.version : (op.version != null ? String(op.version) : "1"));
+
+    // Версию берем из реестра операций (или из HTML, если нужно)
+    const version = String(op.version != null ? op.version : "1");
+
+    // Проверяем, не ставил ли пользователь уже эту отметку
     const exists = db.prepare('SELECT id FROM read_log WHERE user_id=? AND op_id=? AND version=?').get(req.user.id, op.id, version);
-        
+    
     if (!exists) {
-        db.prepare(`INSERT INTO read_log (user_id, username, full_name, role, op_id, op_title, section_id, version) VALUES (?,?,?,?,?,?,?,?)`)
+        // ИСПРАВЛЕНО: Используем datetime('now') для получения времени СЕРВЕРА
+        db.prepare(`INSERT INTO read_log (user_id, username, full_name, role, op_id, op_title, section_id, version, read_at) 
+                    VALUES (?,?,?,?,?,?,?, ?, datetime('now'))`)
             .run(req.user.id, req.user.username, req.user.name, req.user.role, op.id, op.title, op.section, version);
     }
+
     res.json({ ok: true, already: !!exists });
 });
 
 // === НОВЫЙ ENDPOINT ДЛЯ МАТРИЦЫ (только активные сотрудники) ===
+// Для матрицы
 app.get('/api/matrix', auth(true, ['admin', 'guest']), (req, res) => {
-    // Запрашиваем отметки ТОЛЬКО активных пользователей через JOIN
     const rows = db.prepare(`
-        SELECT rl.* 
-        FROM read_log rl
-        INNER JOIN users u ON rl.user_id = u.id
-        WHERE u.active = 1
+        SELECT rl.*, rl.read_at 
+        FROM read_log rl 
+        INNER JOIN users u ON rl.user_id = u.id 
+        WHERE u.active = 1 
         ORDER BY rl.read_at DESC
     `).all();
-    
     res.json(rows);
 });
 // === Журнал ознакомлений (ОБНОВЛЕНО: добавлена дата read_at для тултипов) ===
+// Для журнала
 app.get('/api/reads', auth(), (req, res) => {
-    if (req.user.role === 'worker') {
-        // Для сотрудника: только свои отметки + дата
-        const rows = db.prepare('SELECT *, read_at FROM read_log WHERE user_id=? ORDER BY read_at DESC').all(req.user.id);
-        res.json(rows);
-    } else {
-        // Для админа/гостя: все отметки + дата
-        const rows = db.prepare('SELECT *, read_at FROM read_log ORDER BY read_at DESC').all();
-        res.json(rows);
-    }
+    const query = req.user.role === 'worker' 
+        ? 'SELECT *, read_at FROM read_log WHERE user_id=? ORDER BY read_at DESC'
+        : 'SELECT *, read_at FROM read_log ORDER BY read_at DESC';
+        
+    const rows = req.user.role === 'worker' 
+        ? db.prepare(query).all(req.user.id)
+        : db.prepare(query).all();
+        
+    res.json(rows);
 });
 
 // === Админ API ===
