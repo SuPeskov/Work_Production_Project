@@ -218,12 +218,7 @@ try {
                 let usersListHtml = usersArray.map(u => {
                     // Форматируем дату для тултипа: 16.10.2026, 12:41
                     const d = new Date(u.date);
-                    const dateStr = d.toLocaleDateString('ru-RU', { timeZone: 'Europe/Moscow' }) + ', ' + 
-                                    d.toLocaleTimeString('ru-RU', { 
-                                        timeZone: 'Europe/Moscow', 
-                                        hour: '2-digit', 
-                                        minute: '2-digit' 
-                                    });
+                    const dateStr = d.toLocaleDateString('ru-RU', { timeZone: 'Europe/Moscow' });
                     return `<div class="matrix-user-item" title="Ознакомился: ${dateStr}">${u.name}</div>`;
                 }).join('');
 
