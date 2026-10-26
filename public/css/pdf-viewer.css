@@ -106,3 +106,24 @@ canvas {
     min-width: 120px;
     text-align: center;
 }
+
+/* Стили для кнопок навигации в панели управления */
+.pdf-controls button#prevPage,
+.pdf-controls button#nextPage {
+    border-radius: 50%; /* Делаем кнопку круглой */
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    padding: 0 !important; /* Перебиваем inline-стили JS при необходимости */
+    min-width: auto;
+}
+
+/* Для счетчика страниц */
+#pageInfo {
+    font-variant-numeric: tabular-nums; /* Чтобы цифры не прыгали */
+    min-width: 60px;
+    text-align: center;
+}

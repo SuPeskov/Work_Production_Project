@@ -1,10 +1,13 @@
 /**
  * pdf-viewer.js — Встроенный просмотрщик PDF для базы знаний Скаут Хаус
- * ИСПРАВЛЕНО: Адаптивность для мобильных устройств
+ * ИСПРАВЛЕНО: 
+ * 1. Добавлен обработчик resize для мобильных устройств
+ * 2. Адаптирован интерфейс (стрелки в кружках, сокращенный текст)
+ * 3. Исправлен путь к воркеру (абсолютный)
  */
 import * as pdfjsLib from './pdfjs/build/pdf.min.mjs';
 
-// Указываем путь к воркеру (ОБЯЗАТЕЛЬНО)
+// ⚠️ ВАЖНО: Абсолютный путь от корня сайта
 pdfjsLib.GlobalWorkerOptions.workerSrc = '/js/pdfjs/build/pdf.worker.min.mjs';
 
 let currentPdf = null;
@@ -20,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const ctx = canvas.getContext('2d');
     const pageInfo = document.getElementById('pageInfo');
 
-    // Обработчик клика по ссылкам PDF
+    // === ОБРАБОТЧИК КЛИКА ПО ССЫЛКАМ PDF ===
     document.querySelectorAll('.pdf-link').forEach(link => {
         link.addEventListener('click', async (e) => {
             e.preventDefault();
@@ -36,8 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 totalPages = currentPdf.numPages;
                 currentPage = 1;
                 
-                // Сбрасываем масштаб при открытии нового документа
-                // На мобильных сразу подстраиваем под ширину экрана
+                // Сразу адаптируем масштаб под текущий экран
                 adjustScaleForMobile();
                 renderPage(currentPage);
             } catch (err) {
@@ -47,28 +49,75 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Функция адаптивного масштаба
+    // === ФУНКЦИЯ АДАПТИВНОГО МАСШТАБА ===
     function adjustScaleForMobile() {
-        const containerWidth = document.querySelector('.pdf-container').clientWidth;
-        // Отступы контейнера (padding)
-        const padding = 40; 
-        const availableWidth = containerWidth - padding;
+        if (!currentPdf) return;
         
-        // Получаем ширину первой страницы без масштаба (scale=1)
+        const container = document.querySelector('.pdf-container');
+        if (!container) return;
+
+        // Учитываем padding контейнера (обычно 40px)
+        const availableWidth = container.clientWidth - 40; 
+        
+        // Получаем реальную ширину первой страницы при масштабе 1.0
         currentPdf.getPage(1).then(page => {
             const viewport = page.getViewport({ scale: 1 });
             const originalWidth = viewport.width;
             
-            // Рассчитываем масштаб так, чтобы страница занимала доступную ширину
-            // Ограничиваем минимальный масштаб 0.5 и максимальный 2.0 для удобства
+            // Рассчитываем масштаб так, чтобы страница заняла всю доступную ширину
             let newScale = availableWidth / originalWidth;
+            
+            // Ограничиваем разумными пределами (не меньше 0.5, не больше 2.0)
             newScale = Math.max(0.5, Math.min(newScale, 2.0));
             
-            scale = newScale;
+            // Если новый масштаб сильно отличается от текущего — обновляем
+            if (Math.abs(scale - newScale) > 0.1) {
+                scale = newScale;
+                renderPage(currentPage);
+            }
         });
     }
 
-    // Закрытие модального окна
+    // === ОБРАБОТЧИК RESIZE (КЛЮЧЕВОЕ ИЗМЕНЕНИЕ) ===
+    // Используем debounce, чтобы не перерисовывать слишком часто при ресайзе
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+        if (currentPdf && !modal.classList.contains('hidden')) {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                adjustScaleForMobile();
+                updateMobileUI(); // Обновляем видимость элементов интерфейса
+            }, 150);
+        }
+    });
+
+    // === ФУНКЦИЯ ОБНОВЛЕНИЯ ИНТЕРФЕЙСА ДЛЯ МОБИЛЬНЫХ ===
+    function updateMobileUI() {
+        const isMobile = window.innerWidth < 600;
+        const prevBtn = document.getElementById('prevPage');
+        const nextBtn = document.getElementById('nextPage');
+        
+        if (isMobile) {
+            // На мобильных: только стрелки, убираем текст "Назад"/"Вперед"
+            prevBtn.innerHTML = '←';
+            nextBtn.innerHTML = '→';
+            prevBtn.style.padding = '8px 12px';
+            nextBtn.style.padding = '8px 12px';
+        } else {
+            // На десктопе: возвращаем полный текст
+            prevBtn.innerHTML = '← Назад';
+            nextBtn.innerHTML = 'Вперед →';
+            prevBtn.style.padding = '8px 16px';
+            nextBtn.style.padding = '8px 16px';
+        }
+        
+        // Всегда показываем сокращенный формат "X из Y"
+        if (pageInfo) {
+            pageInfo.textContent = `${currentPage} из ${totalPages}`;
+        }
+    }
+
+    // === ЗАКРЫТИЕ МОДАЛЬНОГО ОКНА ===
     function closeModal() {
         modal.classList.add('hidden');
         if (currentPdf) {
@@ -79,34 +128,47 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('pdfClose').onclick = closeModal;
     
-    // Закрытие по клику вне контента
+    // Закрытие по клику на затемненный фон
     modal.addEventListener('click', (e) => {
         if (e.target === modal) closeModal();
     });
 
-    // Навигация
+    // === НАВИГАЦИЯ И ЗУМ ===
     document.getElementById('prevPage').onclick = () => { 
-        if (currentPage > 1) renderPage(--currentPage); 
-    };
-    document.getElementById('nextPage').onclick = () => { 
-        if (currentPage < totalPages) renderPage(++currentPage); 
+        if (currentPage > 1) {
+            currentPage--;
+            renderPage(currentPage);
+            updateMobileUI();
+        } 
     };
     
-    // Зум с пересчетом
-    document.getElementById('zoomIn').onclick = () => { 
-        scale += 0.25; renderPage(currentPage); 
+    document.getElementById('nextPage').onclick = () => { 
+        if (currentPage < totalPages) {
+            currentPage++;
+            renderPage(currentPage);
+            updateMobileUI();
+        } 
     };
+    
+    document.getElementById('zoomIn').onclick = () => { 
+        scale += 0.25; 
+        renderPage(currentPage); 
+    };
+    
     document.getElementById('zoomOut').onclick = () => { 
-        if (scale > 0.5) { scale -= 0.25; renderPage(currentPage); } 
+        if (scale > 0.5) { 
+            scale -= 0.25; 
+            renderPage(currentPage); 
+        } 
     };
 
-    // Рендер страницы
+    // === РЕНДЕР СТРАНИЦЫ ===
     async function renderPage(num) {
         if (!currentPdf) return;
         
         const page = await currentPdf.getPage(num);
         
-        // ВАЖНО: Пересчитываем viewport с текущим масштабом
+        // Пересчитываем viewport с учетом текущего масштаба
         const viewport = page.getViewport({ scale });
         
         // Устанавливаем размеры канваса точно под viewport
@@ -116,18 +178,12 @@ document.addEventListener('DOMContentLoaded', () => {
         // Рисуем страницу
         await page.render({ canvasContext: ctx, viewport }).promise;
         
-        // Обновляем счетчик страниц
-        pageInfo.textContent = `Страница ${num} из ${totalPages}`;
+        // Обновляем счетчик страниц (сокращенный формат)
+        if (pageInfo) {
+            pageInfo.textContent = `${num} из ${totalPages}`;
+        }
     }
     
-    // Обработка поворота экрана или ресайза окна
-    window.addEventListener('resize', () => {
-        if (currentPdf && !modal.classList.contains('hidden')) {
-            // Небольшая задержка, чтобы браузер успел пересчитать ширину
-            setTimeout(() => {
-                adjustScaleForMobile();
-                renderPage(currentPage);
-            }, 100);
-        }
-    });
+    // Инициализация UI при загрузке
+    updateMobileUI();
 });
