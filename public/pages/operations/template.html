@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../css/style.css">
+    <link rel="stylesheet" href="../../css/pdf-viewer.css">
     <style>
         .step-image.hidden-photo { display: none !important; }
         .steps-list > li.no-photo { grid-template-columns: 1fr !important; }
@@ -171,12 +172,33 @@
             </a>
         </div>
     </main>
+    <!-- Модальное окно PDF Viewer -->
+<div id="pdfModal" class="pdf-modal hidden">
+    <div class="pdf-modal-content">
+        <div class="pdf-toolbar">
+            <span id="pdfTitle" class="pdf-title">Документ</span>
+            <button id="pdfClose" class="btn-close" aria-label="Закрыть">×</button>
+        </div>
+        <div class="pdf-container">
+            <canvas id="pdfCanvas"></canvas>
+        </div>
+        <div class="pdf-controls">
+            <button id="prevPage">← Назад</button>
+            <span id="pageInfo">Страница 1 из ?</span>
+            <button id="nextPage">Вперед →</button>
+            <button id="zoomIn">+</button>
+            <button id="zoomOut">−</button>
+        </div>
+    </div>
+</div>
 
     <script src="../../js/users.js"></script>
     <script src="../../js/kb.js"></script>
     <script src="../../js/access-guard.js"></script>
     <script src="../../js/scrollTop.js"></script>
     <script src="../../js/readStatus.js"></script>
+    <script src="../../js/pdfjs/build/pdf.min.mjs" type="module"></script>
+    <script src="../../js/pdf-viewer.js" type="module"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const qs = document.getElementById('qualitySection');

@@ -8,8 +8,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
     <link rel="stylesheet" href="../../css/style.css">
+    <link rel="stylesheet" href="../../css/pdf-viewer.css">
     
     <style>
         /* Дополнительные стили для скрытия пустых блоков с фото */
@@ -64,7 +64,10 @@
             <h2>📋 Необходимая документация</h2>
             <div class="section-content">
                 <p>Раздел КС.ПП.</p>
-                <a href="https://disk.yandex.ru/i/4s-dUwrDRPrBFw" target="_blank" class="doc-link">
+                <!-- <a href="https://disk.yandex.ru/i/4s-dUwrDRPrBFw" target="_blank" class="doc-link"> -->
+                <a href="../../assets/docs/2.1_standard assembly components.pdf" target="_blank" class="pdf-link" data-title="Альбом сборки типовых узлов каркаса">
+                    📄 Альбом сборки типовых узлов каркаса
+                </a>    
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                         <polyline points="14 2 14 8 20 8"/>
@@ -336,12 +339,33 @@
             </a>
         </div>
     </main>
+    <!-- Модальное окно PDF Viewer -->
+<div id="pdfModal" class="pdf-modal hidden">
+    <div class="pdf-modal-content">
+        <div class="pdf-toolbar">
+            <span id="pdfTitle" class="pdf-title">Документ</span>
+            <button id="pdfClose" class="btn-close" aria-label="Закрыть">×</button>
+        </div>
+        <div class="pdf-container">
+            <canvas id="pdfCanvas"></canvas>
+        </div>
+        <div class="pdf-controls">
+            <button id="prevPage">← Назад</button>
+            <span id="pageInfo">Страница 1 из ?</span>
+            <button id="nextPage">Вперед →</button>
+            <button id="zoomIn">+</button>
+            <button id="zoomOut">−</button>
+        </div>
+    </div>
+</div>
 
     <script src="../../js/users.js"></script>
     <script src="../../js/kb.js"></script>
     <script src="../../js/scrollTop.js"></script>
     <script src="../../js/readStatus.js"></script>
     <script src="../../js/access-guard.js"></script>
+    <script src="../../js/pdfjs/build/pdf.min.mjs" type="module"></script>
+    <script src="../../js/pdf-viewer.js" type="module"></script>
     <script>
         // === АВТОМАТИЧЕСКОЕ СКРЫТИЕ ПУСТЫХ БЛОКОВ С ФОТО ===
         document.addEventListener('DOMContentLoaded', function() {
