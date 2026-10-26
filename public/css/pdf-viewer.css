@@ -176,3 +176,66 @@ canvas {
     will-change: transform; 
     transition: transform 0.1s linear; /* Небольшая плавность */
 }
+
+/* === ПЛАВАЮЩИЕ КНОПКИ В ПОЛНОМ ЭКРАНЕ === */
+#pdf-floating-controls {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 20px;
+    z-index: 10001;
+    pointer-events: auto;
+    /* Убедимся, что контейнер не растягивается */
+    width: max-content; 
+}
+
+.float-btn {
+    /* Явно задаем размеры круга */
+    width: 56px !important;
+    height: 56px !important;
+    min-width: 56px !important;
+    min-height: 56px !important;
+    
+    border-radius: 50% !important; /* Гарантируем круглую форму */
+    background: rgba(255, 255, 255, 0.95) !important;
+    border: none !important;
+    
+    font-size: 24px !important;
+    color: #1e293b !important;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4) !important;
+    
+    cursor: pointer;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    
+    backdrop-filter: blur(8px);
+    transition: all 0.2s ease;
+    
+    /* Сброс любых наследуемых отступов и паддингов */
+    padding: 0 !important;
+    margin: 0 !important;
+    line-height: 1 !important;
+}
+
+.float-btn:hover {
+    background: #ffffff !important;
+    transform: scale(1.05);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.5) !important;
+}
+
+.float-btn:active {
+    transform: scale(0.95) !important;
+    background: #f1f5f9 !important;
+}
+
+/* Специфичные стили для кнопки закрытия, чтобы она отличалась */
+#fs-close {
+    background: rgba(239, 68, 68, 0.9) !important;
+    color: white !important;
+}
+#fs-close:hover {
+    background: #ef4444 !important;
+}
