@@ -1,9 +1,6 @@
-/**
- * pdf-viewer.js — Встроенный просмотрщик PDF для базы знаний Скаут Хаус
- */
-import * as pdfjsLib from '/pdfjs/build/pdf.min.mjs';
+import * as pdfjsLib from './pdfjs/build/pdf.min.mjs';
 
-// Указываем путь к воркеру (ОБЯЗАТЕЛЬНО для работы библиотеки)
+// ⚠️ КРИТИЧЕСКИ ВАЖНО: Абсолютный путь к воркеру
 pdfjsLib.GlobalWorkerOptions.workerSrc = '/js/pdfjs/build/pdf.worker.min.mjs';
 
 let currentPdf = null;
@@ -15,12 +12,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const modal = document.getElementById('pdfModal');
     if (!modal) return;
 
-    // Обработчик клика по ссылкам PDF
+    // Ищем ВСЕ ссылки с классом pdf-link
     document.querySelectorAll('.pdf-link').forEach(link => {
         link.addEventListener('click', async (e) => {
-            e.preventDefault();
+            e.preventDefault(); // ⚠️ ЭТО ПРЕДОТВРАЩАЕТ СКАЧИВАНИЕ
+            
             const url = link.getAttribute('href');
-            const title = link.getAttribute('data-title') || link.textContent.trim() || 'Документ';
+            const title = link.getAttribute('data-title') || 'Документ';
             
             document.getElementById('pdfTitle').textContent = title;
             modal.classList.remove('hidden');
@@ -39,7 +37,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Закрытие модального окна
     function closeModal() {
         modal.classList.add('hidden');
         if (currentPdf) {
@@ -50,12 +47,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('pdfClose').onclick = closeModal;
     
-    // Закрытие по клику вне контента
     modal.addEventListener('click', (e) => {
         if (e.target === modal) closeModal();
     });
 
-    // Навигация
     document.getElementById('prevPage').onclick = () => { 
         if (currentPage > 1) renderPage(--currentPage); 
     };
@@ -69,7 +64,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (scale > 0.5) { scale -= 0.25; renderPage(currentPage); } 
     };
 
-    // Рендер страницы
     async function renderPage(num) {
         const page = await currentPdf.getPage(num);
         const canvas = document.getElementById('pdfCanvas');
