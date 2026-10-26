@@ -1,10 +1,10 @@
 /**
  * pdf-viewer.js — Встроенный просмотрщик PDF для базы знаний Скаут Хаус
  */
-import * as pdfjsLib from './pdfjs/build/pdf.min.mjs';
+import * as pdfjsLib from '/pdfjs/build/pdf.min.mjs';
 
 // Указываем путь к воркеру (ОБЯЗАТЕЛЬНО для работы библиотеки)
-pdfjsLib.GlobalWorkerOptions.workerSrc = './js/pdfjs/build/pdf.worker.min.mjs';
+pdfjsLib.GlobalWorkerOptions.workerSrc = '/js/pdfjs/build/pdf.worker.min.mjs';
 
 let currentPdf = null;
 let currentPage = 1;
