@@ -127,3 +127,46 @@ canvas {
     min-width: 60px;
     text-align: center;
 }
+
+/* Кнопка полноэкранного режима */
+.btn-fullscreen {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: #64748b;
+    margin-right: 12px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.btn-fullscreen:hover {
+    background: #f1f5f9;
+    color: #1e293b;
+}
+
+/* Стили для самого модального окна в полном экране */
+.pdf-modal:fullscreen,
+.pdf-modal:-webkit-full-screen {
+    background: #000;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pdf-modal:fullscreen .pdf-modal-content,
+.pdf-modal:-webkit-full-screen .pdf-modal-content {
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    border-radius: 0;
+}
+
+.pdf-modal:fullscreen .pdf-container,
+.pdf-modal:-webkit-full-screen .pdf-container {
+    overflow: auto;
+    -webkit-overflow-scrolling: touch; /* Плавная прокрутка на iOS */
+}
