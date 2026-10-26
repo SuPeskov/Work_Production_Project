@@ -126,7 +126,7 @@ canvas {
     min-width: auto;
 }
 
-/* === ПОЛНОЭКРАННЫЙ РЕЖИМ === */
+/* === ПОЛНОЭКРАННЫЙ РЕЖИМ (ИСПРАВЛЕНО) === */
 .pdf-modal:fullscreen,
 .pdf-modal:-webkit-full-screen {
     background: #000 !important;
