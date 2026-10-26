@@ -1,5 +1,5 @@
 /**
- * pdf-viewer.js — Встроенный просмотрщик PDF с ПРОГРАММНЫМ pinch-to-zoom
+ * pdf-viewer.js — Просмотрщик PDF с Pinch-to-Zoom и Pan (перемещением)
  */
 import * as pdfjsLib from './pdfjs/build/pdf.min.mjs';
 
@@ -8,12 +8,23 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = '/js/pdfjs/build/pdf.worker.min.mjs';
 let currentPdf = null;
 let currentPage = 1;
 let totalPages = 0;
-let scale = 1.5; // Текущий масштаб
+let scale = 1.5;
 
-// Переменные для отслеживания жеста pinch
+// Переменные для панорамирования (перемещения)
+let translateX = 0;
+let translateY = 0;
+
+// Переменные для жестов
 let initialDistance = 0;
 let initialScale = 0;
 let isPinching = false;
+
+// Переменные для перетаскивания
+let startX = 0;
+let startY = 0;
+let startTranslateX = 0;
+let startTranslateY = 0;
+let isPanning = false;
 
 document.addEventListener('DOMContentLoaded', () => {
     const modal = document.getElementById('pdfModal');
@@ -43,9 +54,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 totalPages = currentPdf.numPages;
                 currentPage = 1;
                 
-                // Сбрасываем масштаб при открытии нового файла
-                scale = 1.0; 
-                adjustScaleForMobile();
+                // Сброс состояния при открытии нового файла
+                scale = 1.0;
+                translateX = 0;
+                translateY = 0;
+                updateCanvasTransform();
+                
+                adjustScaleForMobile(true);
                 renderPage(currentPage);
             } catch (err) {
                 alert('Ошибка загрузки PDF: ' + err.message);
@@ -70,13 +85,16 @@ document.addEventListener('DOMContentLoaded', () => {
             toolbar.style.display = 'none';
             controls.style.display = 'none';
             addFloatingControls();
-            // В полном экране сразу подгоняем под ширину
             adjustScaleForMobile(true);
             renderPage(currentPage);
         } else {
             toolbar.style.display = 'flex';
             controls.style.display = 'flex';
             removeFloatingControls();
+            // При выходе из полного экрана сбрасываем позицию в центр
+            translateX = 0; 
+            translateY = 0;
+            updateCanvasTransform();
             adjustScaleForMobile(false);
             renderPage(currentPage);
         }
@@ -103,7 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (floatingContainer) { floatingContainer.remove(); floatingContainer = null; }
     }
 
-    // === АДАПТИВНЫЙ МАСШТАБ (ТОЛЬКО ДЛЯ НАЧАЛЬНОЙ ОТРИСОВКИ) ===
+    // === АДАПТИВНЫЙ МАСШТАБ ===
     function adjustScaleForMobile(forceFit = false) {
         if (!currentPdf) return;
         const container = document.querySelector('.pdf-container');
@@ -117,46 +135,98 @@ document.addEventListener('DOMContentLoaded', () => {
             const originalWidth = viewport.width;
             let newScale = availableWidth / originalWidth;
             
-            // Если forceFit (вход в FS или открытие), всегда подгоняем
-            // Иначе обновляем только если разница существенна и мы не в процессе зума
             if (forceFit || Math.abs(scale - newScale) > 0.1) {
                 scale = newScale;
+                // При подгонке под экран сбрасываем смещение
+                translateX = 0;
+                translateY = 0;
+                updateCanvasTransform();
             }
         });
     }
 
-    // === ПРОГРАММНЫЙ PINCH-TO-ZOOM ===
-    // Отключаем стандартное поведение браузера для контейнера
+    // === ОБРАБОТЧИКИ КАСАНИЙ (ZOOM + PAN) ===
     const container = document.querySelector('.pdf-container');
     if (container) {
-        container.style.touchAction = 'none'; // Блокируем скролл/зум браузера, берем управление на себя
+        container.style.touchAction = 'none'; // Блокируем стандартные жесты браузера
         
         container.addEventListener('touchstart', (e) => {
             if (e.touches.length === 2) {
+                // Начало зума
                 isPinching = true;
+                isPanning = false;
                 initialDistance = getDistance(e.touches[0], e.touches[1]);
                 initialScale = scale;
+            } else if (e.touches.length === 1 && !isPinching) {
+                // Начало перетаскивания (только если документ больше экрана)
+                // Проверяем, есть ли куда двигать
+                const canvasRect = canvas.getBoundingClientRect();
+                const containerRect = container.getBoundingClientRect();
+                
+                if (canvasRect.width > containerRect.width || canvasRect.height > containerRect.height) {
+                    isPanning = true;
+                    startX = e.touches[0].clientX;
+                    startY = e.touches[0].clientY;
+                    startTranslateX = translateX;
+                    startTranslateY = translateY;
+                }
             }
         }, { passive: false });
 
         container.addEventListener('touchmove', (e) => {
+            e.preventDefault(); // Всегда предотвращаем скролл страницы
+            
             if (isPinching && e.touches.length === 2) {
-                e.preventDefault(); // Предотвращаем зум всей страницы
+                // Логика зума
                 const currentDistance = getDistance(e.touches[0], e.touches[1]);
                 const delta = currentDistance / initialDistance;
-                
-                // Ограничиваем зум от 0.5x до 4.0x
                 let newScale = initialScale * delta;
                 newScale = Math.max(0.5, Math.min(newScale, 4.0));
                 
-                scale = newScale;
-                renderPage(currentPage);
+                if (Math.abs(scale - newScale) > 0.01) {
+                    scale = newScale;
+                    renderPage(currentPage);
+                }
+            } else if (isPanning && e.touches.length === 1) {
+                // Логика перемещения
+                const dx = e.touches[0].clientX - startX;
+                const dy = e.touches[0].clientY - startY;
+                
+                translateX = startTranslateX + dx;
+                translateY = startTranslateY + dy;
+                
+                // Ограничиваем перемещение границами (опционально, можно убрать для свободного движения)
+                // Но лучше оставить, чтобы не улететь в бесконечность
+                constrainTranslation();
+                updateCanvasTransform();
             }
         }, { passive: false });
 
         container.addEventListener('touchend', () => {
             isPinching = false;
+            isPanning = false;
         });
+    }
+
+    // Функция ограничения смещения (чтобы не утащить картинку за пределы видимости слишком далеко)
+    function constrainTranslation() {
+        if (!canvas.parentElement) return;
+        const containerW = canvas.parentElement.clientWidth;
+        const containerH = canvas.parentElement.clientHeight;
+        const canvasW = canvas.width * scale; // Примерная ширина после трансформации
+        const canvasH = canvas.height * scale;
+        
+        // Разрешаем двигать только если контент больше контейнера
+        const maxTX = Math.max(0, (canvasW - containerW) / 2);
+        const maxTY = Math.max(0, (canvasH - containerH) / 2);
+        
+        translateX = Math.max(-maxTX, Math.min(maxTX, translateX));
+        translateY = Math.max(-maxTY, Math.min(maxTY, translateY));
+    }
+
+    // Применение трансформации к canvas
+    function updateCanvasTransform() {
+        canvas.style.transform = `translate(${translateX}px, ${translateY}px)`;
     }
 
     function getDistance(touch1, touch2) {
@@ -186,7 +256,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('pdfClose').onclick = closeModal;
     modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
 
-    // Кнопки зума для десктопа
+    // Кнопки навигации
     document.getElementById('prevPage').onclick = () => { if (currentPage > 1) { currentPage--; renderPage(currentPage); } };
     document.getElementById('nextPage').onclick = () => { if (currentPage < totalPages) { currentPage++; renderPage(currentPage); } };
     document.getElementById('zoomIn').onclick = () => { scale += 0.25; renderPage(currentPage); };
@@ -198,11 +268,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const page = await currentPdf.getPage(num);
         const viewport = page.getViewport({ scale });
         
-        // Устанавливаем реальные пиксельные размеры canvas
         canvas.height = viewport.height;
         canvas.width = viewport.width;
         
         await page.render({ canvasContext: ctx, viewport }).promise;
         pageInfo.textContent = `${num} из ${totalPages}`;
+        
+        // После рендера обновляем трансформацию (на случай изменения масштаба)
+        updateCanvasTransform();
     }
 });

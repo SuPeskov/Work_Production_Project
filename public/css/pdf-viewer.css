@@ -135,7 +135,7 @@ canvas {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    overflow: hidden !important; /* Скрываем скроллбары самого модального окна */
+    overflow: hidden !important; /* Важно: скрываем вылезающие части при перемещении */
 }
 
 .pdf-modal:fullscreen .pdf-modal-content,
@@ -153,60 +153,26 @@ canvas {
     width: 100% !important;
     height: 100% !important;
     padding: 0 !important;
-    /* ВАЖНО: Разрешаем скролл внутри контейнера при зуме */
-    overflow: auto !important; 
+    overflow: hidden !important; /* Скрываем края canvas при панорамировании */
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    /* Запрещаем браузеру обрабатывать тачи, отдаем их нашему JS */
-    touch-action: none !important; 
+    touch-action: none !important; /* Отключаем нативный скролл */
+    cursor: grab; /* Курсор-рука для десктопа */
 }
 
-/* Canvas в полном экране НЕ должен иметь ограничений ширины */
+.pdf-modal:fullscreen .pdf-container:active {
+    cursor: grabbing;
+}
+
+/* Canvas в полном экране */
 .pdf-modal:fullscreen canvas,
 .pdf-modal:-webkit-full-screen canvas {
     max-width: none !important; 
     height: auto !important;
     transform-origin: center center !important;
     box-shadow: none !important;
-    /* Пропорции сохраняются автоматически за счет рендеринга PDF.js */
+    /* Оптимизация производительности при перемещении */
+    will-change: transform; 
+    transition: transform 0.1s linear; /* Небольшая плавность */
 }
-
-/* Скрываем стандартные элементы в полном экране */
-.pdf-modal:fullscreen .pdf-toolbar,
-.pdf-modal:-webkit-full-screen .pdf-toolbar,
-.pdf-modal:fullscreen .pdf-controls,
-.pdf-modal:-webkit-full-screen .pdf-controls {
-    display: none !important;
-}
-
-/* Плавающие кнопки */
-#pdf-floating-controls {
-    position: fixed;
-    bottom: 30px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    gap: 20px;
-    z-index: 10001;
-    pointer-events: auto;
-}
-
-.float-btn {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.9);
-    border: none;
-    font-size: 24px;
-    color: #1e293b;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    backdrop-filter: blur(4px);
-    transition: transform 0.2s;
-}
-
-.float-btn:active { transform: scale(0.9); background: #fff; }
