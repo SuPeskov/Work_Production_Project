@@ -43,13 +43,15 @@
     font-size: 16px;
 }
 
-.btn-close {
+.btn-close, .btn-fullscreen {
     background: none; border: none;
-    font-size: 28px; line-height: 1;
+    font-size: 24px; line-height: 1;
     cursor: pointer; color: #64748b;
     transition: color 0.2s;
+    margin-left: 8px;
 }
-.btn-close:hover { color: #ef4444; }
+
+.btn-close:hover, .btn-fullscreen:hover { color: #ef4444; }
 
 .pdf-container {
     flex: 1;
@@ -60,11 +62,13 @@
     padding: 20px;
 }
 
+/* Обычный режим: canvas адаптируется под экран */
 canvas {
     max-width: 100%;
-    height: auto; /* Сохраняет пропорции при сжатии */
+    height: auto;
     display: block;
     margin: 0 auto;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
 .pdf-controls {
@@ -103,49 +107,25 @@ canvas {
     font-family: 'Inter', sans-serif;
     font-size: 14px;
     color: #64748b;
-    min-width: 120px;
+    min-width: 60px;
     text-align: center;
+    font-variant-numeric: tabular-nums;
 }
 
-/* Стили для кнопок навигации в панели управления */
+/* Кнопки навигации круглые */
 .pdf-controls button#prevPage,
 .pdf-controls button#nextPage {
-    border-radius: 50%; /* Делаем кнопку круглой */
+    border-radius: 50%;
     width: 40px;
     height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 18px;
-    padding: 0 !important; /* Перебиваем inline-стили JS при необходимости */
+    padding: 0 !important;
     min-width: auto;
 }
 
-/* Для счетчика страниц */
-#pageInfo {
-    font-variant-numeric: tabular-nums; /* Чтобы цифры не прыгали */
-    min-width: 60px;
-    text-align: center;
-}
-
-/* Кнопка полноэкранного режима */
-.btn-fullscreen {
-    background: none;
-    border: none;
-    font-size: 20px;
-    cursor: pointer;
-    color: #64748b;
-    margin-right: 12px;
-    padding: 4px 8px;
-    border-radius: 4px;
-    transition: all 0.2s;
-}
-
-.btn-fullscreen:hover {
-    background: #f1f5f9;
-    color: #1e293b;
-}
-
 /* === ПОЛНОЭКРАННЫЙ РЕЖИМ === */
 .pdf-modal:fullscreen,
 .pdf-modal:-webkit-full-screen {
@@ -155,7 +135,8 @@ canvas {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    overflow: hidden !important; /* Убираем скроллбары браузера */
+    /* ВАЖНО: overflow должен быть visible или auto, иначе pinch-to-zoom не работает */
+    overflow: visible !important; 
 }
 
 .pdf-modal:fullscreen .pdf-modal-content,
@@ -165,6 +146,7 @@ canvas {
     max-width: none !important;
     border-radius: 0 !important;
     background: transparent !important;
+    overflow: visible !important;
 }
 
 .pdf-modal:fullscreen .pdf-container,
@@ -172,65 +154,33 @@ canvas {
     width: 100% !important;
     height: 100% !important;
     padding: 0 !important;
-    overflow: visible !important; /* Разрешаем нативный зум */
+    overflow: visible !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
 }
 
-/* === КЛЮЧЕВОЕ ДЛЯ PINCH-TO-ZOOM === */
+/* КЛЮЧЕВОЕ ДЛЯ PINCH-TO-ZOOM В ПОЛНОМ ЭКРАНЕ */
 .pdf-modal:fullscreen canvas,
 .pdf-modal:-webkit-full-screen canvas {
     /* Разрешаем все жесты, включая pinch-to-zoom */
     touch-action: pan-x pan-y pinch-zoom !important; 
-    max-width: none !important; /* Отключаем ограничение ширины в полном экране */
+    /* Отключаем ограничение ширины, чтобы canvas мог расти при зуме */
+    max-width: none !important; 
     height: auto !important;
     transform-origin: center center !important;
+    box-shadow: none !important;
 }
 
-/* === ПОЛНОЭКРАННЫЙ РЕЖИМ === */
-.pdf-modal:fullscreen,
-.pdf-modal:-webkit-full-screen {
-    background: #000 !important;
-    width: 100vw !important;
-    height: 100vh !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    overflow: hidden !important; /* Убираем скроллбары браузера */
+/* Скрываем стандартные элементы в полном экране */
+.pdf-modal:fullscreen .pdf-toolbar,
+.pdf-modal:-webkit-full-screen .pdf-toolbar,
+.pdf-modal:fullscreen .pdf-controls,
+.pdf-modal:-webkit-full-screen .pdf-controls {
+    display: none !important;
 }
 
-.pdf-modal:fullscreen .pdf-modal-content,
-.pdf-modal:-webkit-full-screen .pdf-modal-content {
-    width: 100% !important;
-    height: 100% !important;
-    max-width: none !important;
-    border-radius: 0 !important;
-    background: transparent !important;
-}
-
-.pdf-modal:fullscreen .pdf-container,
-.pdf-modal:-webkit-full-screen .pdf-container {
-    width: 100% !important;
-    height: 100% !important;
-    padding: 0 !important;
-    overflow: visible !important; /* Разрешаем нативный зум */
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-}
-
-/* === КЛЮЧЕВОЕ ДЛЯ PINCH-TO-ZOOM === */
-.pdf-modal:fullscreen canvas,
-.pdf-modal:-webkit-full-screen canvas {
-    /* Разрешаем все жесты, включая pinch-to-zoom */
-    touch-action: pan-x pan-y pinch-zoom !important; 
-    max-width: none !important; /* Отключаем ограничение ширины в полном экране */
-    height: auto !important;
-    transform-origin: center center !important;
-}
-
-/* === ПЛАВАЮЩИЕ КНОПКИ В ПОЛНОМ ЭКРАНЕ === */
+/* Плавающие кнопки в полном экране */
 #pdf-floating-controls {
     position: fixed;
     bottom: 30px;
@@ -262,12 +212,4 @@ canvas {
 .float-btn:active {
     transform: scale(0.9);
     background: #fff;
-}
-
-/* Скрываем стандартные элементы в полном экране */
-.pdf-modal:fullscreen .pdf-toolbar,
-.pdf-modal:-webkit-full-screen .pdf-toolbar,
-.pdf-modal:fullscreen .pdf-controls,
-.pdf-modal:-webkit-full-screen .pdf-controls {
-    display: none !important;
 }

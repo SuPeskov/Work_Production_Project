@@ -20,10 +20,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const pageInfo = document.getElementById('pageInfo');
     const fullscreenBtn = document.getElementById('pdfFullscreen');
     
-    // Элементы интерфейса, которые будем скрывать в полном экране
     const toolbar = document.querySelector('.pdf-toolbar');
     const controls = document.querySelector('.pdf-controls');
-    const titleEl = document.getElementById('pdfTitle');
 
     // === ОТКРЫТИЕ PDF ===
     document.querySelectorAll('.pdf-link').forEach(link => {
@@ -41,6 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 totalPages = currentPdf.numPages;
                 currentPage = 1;
                 
+                // Адаптируем начальный масштаб под текущий размер экрана
                 adjustScaleForMobile();
                 renderPage(currentPage);
             } catch (err) {
@@ -65,26 +64,26 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('fullscreenchange', () => {
         const isFs = !!document.fullscreenElement;
         
-        // Скрываем/показываем элементы интерфейса
         if (isFs) {
-            toolbar.style.display = 'none';      // Скрываем заголовок и кнопку закрытия
-            controls.style.display = 'none';     // Скрываем панель навигации
-            modal.style.background = '#000';     // Черный фон в полном экране
-            
-            // Добавляем плавающие кнопки поверх изображения
+            toolbar.style.display = 'none';
+            controls.style.display = 'none';
+            modal.style.background = '#000';
             addFloatingControls();
+            
+            // В полном экране сбрасываем масштаб к оптимальному для ширины экрана
+            // Но НЕ блокируем дальнейший зум браузера
+            adjustScaleForMobile();
+            renderPage(currentPage);
         } else {
             toolbar.style.display = 'flex';
             controls.style.display = 'flex';
             modal.style.background = '';
             removeFloatingControls();
-        }
-        
-        // Пересчитываем масштаб под новый размер экрана
-        setTimeout(() => {
+            
+            // При выходе возвращаем адаптивный масштаб для обычного режима
             adjustScaleForMobile();
             renderPage(currentPage);
-        }, 300);
+        }
     });
 
     // === ПЛАВАЮЩИЕ КНОПКИ ДЛЯ ПОЛНОГО ЭКРАНА ===
@@ -96,13 +95,12 @@ document.addEventListener('DOMContentLoaded', () => {
         floatingContainer = document.createElement('div');
         floatingContainer.id = 'pdf-floating-controls';
         floatingContainer.innerHTML = `
-            <button id="fs-close" class="float-btn"></button>
+            <button id="fs-close" class="float-btn">✕</button>
             <button id="fs-prev" class="float-btn">←</button>
             <button id="fs-next" class="float-btn">→</button>
         `;
         modal.appendChild(floatingContainer);
         
-        // Привязываем события
         document.getElementById('fs-close').onclick = closeModal;
         document.getElementById('fs-prev').onclick = () => { 
             if (currentPage > 1) { currentPage--; renderPage(currentPage); } 
@@ -119,22 +117,25 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // === АДАПТИВНЫЙ МАСШТАБ ===
+    // === АДАПТИВНЫЙ МАСШТАБ (ТОЛЬКО ДЛЯ НАЧАЛЬНОЙ ОТРИСОВКИ) ===
     function adjustScaleForMobile() {
         if (!currentPdf) return;
         const container = document.querySelector('.pdf-container');
         if (!container) return;
 
-        // В полном экране контейнер может быть другим, берем window.innerWidth
         const isFs = !!document.fullscreenElement;
-        const availableWidth = isFs ? window.innerWidth - 40 : container.clientWidth - 40; 
+        // В полном экране берем ширину окна, в обычном - ширину контейнера
+        const availableWidth = isFs ? window.innerWidth - 20 : container.clientWidth - 40; 
         
         currentPdf.getPage(1).then(page => {
             const viewport = page.getViewport({ scale: 1 });
             const originalWidth = viewport.width;
             let newScale = availableWidth / originalWidth;
+            
+            // Ограничиваем разумными пределами для начальной отрисовки
             newScale = Math.max(0.5, Math.min(newScale, 2.0));
             
+            // Обновляем scale только если разница существенна
             if (Math.abs(scale - newScale) > 0.1) {
                 scale = newScale;
             }
@@ -169,7 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.target === modal) closeModal();
     });
 
-    // === НАВИГАЦИЯ И ЗУМ (ДЛЯ ДЕСКТОПА) ===
+    // === НАВИГАЦИЯ И ЗУМ (ДЛЯ ДЕСКТОПА / ОБЫЧНОГО РЕЖИМА) ===
     document.getElementById('prevPage').onclick = () => { 
         if (currentPage > 1) { currentPage--; renderPage(currentPage); } 
     };
