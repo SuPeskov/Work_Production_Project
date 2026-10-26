@@ -1,15 +1,19 @@
 /**
- * pdf-viewer.js — Встроенный просмотрщик PDF с поддержкой Fullscreen и Pinch-to-Zoom
+ * pdf-viewer.js — Встроенный просмотрщик PDF с ПРОГРАММНЫМ pinch-to-zoom
  */
 import * as pdfjsLib from './pdfjs/build/pdf.min.mjs';
 
-// Абсолютный путь к воркеру
 pdfjsLib.GlobalWorkerOptions.workerSrc = '/js/pdfjs/build/pdf.worker.min.mjs';
 
 let currentPdf = null;
 let currentPage = 1;
 let totalPages = 0;
-let scale = 1.5; // Базовый масштаб для десктопа
+let scale = 1.5; // Текущий масштаб
+
+// Переменные для отслеживания жеста pinch
+let initialDistance = 0;
+let initialScale = 0;
+let isPinching = false;
 
 document.addEventListener('DOMContentLoaded', () => {
     const modal = document.getElementById('pdfModal');
@@ -39,7 +43,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 totalPages = currentPdf.numPages;
                 currentPage = 1;
                 
-                // Адаптируем начальный масштаб под текущий размер экрана
+                // Сбрасываем масштаб при открытии нового файла
+                scale = 1.0; 
                 adjustScaleForMobile();
                 renderPage(currentPage);
             } catch (err) {
@@ -49,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // === ФУНКЦИЯ ПОЛНОЭКРАННОГО РЕЖИМА ===
+    // === ПОЛНОЭКРАННЫЙ РЕЖИМ ===
     function toggleFullscreen() {
         if (!document.fullscreenElement) {
             modal.requestFullscreen().catch(err => console.error(err));
@@ -57,41 +62,30 @@ document.addEventListener('DOMContentLoaded', () => {
             document.exitFullscreen();
         }
     }
-
     if (fullscreenBtn) fullscreenBtn.onclick = toggleFullscreen;
 
-    // === ОБРАБОТЧИК ИЗМЕНЕНИЯ ПОЛНОЭКРАННОГО РЕЖИМА ===
     document.addEventListener('fullscreenchange', () => {
         const isFs = !!document.fullscreenElement;
-        
         if (isFs) {
             toolbar.style.display = 'none';
             controls.style.display = 'none';
-            modal.style.background = '#000';
             addFloatingControls();
-            
-            // В полном экране сбрасываем масштаб к оптимальному для ширины экрана
-            // Но НЕ блокируем дальнейший зум браузера
-            adjustScaleForMobile();
+            // В полном экране сразу подгоняем под ширину
+            adjustScaleForMobile(true);
             renderPage(currentPage);
         } else {
             toolbar.style.display = 'flex';
             controls.style.display = 'flex';
-            modal.style.background = '';
             removeFloatingControls();
-            
-            // При выходе возвращаем адаптивный масштаб для обычного режима
-            adjustScaleForMobile();
+            adjustScaleForMobile(false);
             renderPage(currentPage);
         }
     });
 
-    // === ПЛАВАЮЩИЕ КНОПКИ ДЛЯ ПОЛНОГО ЭКРАНА ===
+    // Плавающие кнопки
     let floatingContainer = null;
-    
     function addFloatingControls() {
         if (floatingContainer) return;
-        
         floatingContainer = document.createElement('div');
         floatingContainer.id = 'pdf-floating-controls';
         floatingContainer.innerHTML = `
@@ -102,44 +96,73 @@ document.addEventListener('DOMContentLoaded', () => {
         modal.appendChild(floatingContainer);
         
         document.getElementById('fs-close').onclick = closeModal;
-        document.getElementById('fs-prev').onclick = () => { 
-            if (currentPage > 1) { currentPage--; renderPage(currentPage); } 
-        };
-        document.getElementById('fs-next').onclick = () => { 
-            if (currentPage < totalPages) { currentPage++; renderPage(currentPage); } 
-        };
+        document.getElementById('fs-prev').onclick = () => { if (currentPage > 1) { currentPage--; renderPage(currentPage); } };
+        document.getElementById('fs-next').onclick = () => { if (currentPage < totalPages) { currentPage++; renderPage(currentPage); } };
     }
-
     function removeFloatingControls() {
-        if (floatingContainer) {
-            floatingContainer.remove();
-            floatingContainer = null;
-        }
+        if (floatingContainer) { floatingContainer.remove(); floatingContainer = null; }
     }
 
     // === АДАПТИВНЫЙ МАСШТАБ (ТОЛЬКО ДЛЯ НАЧАЛЬНОЙ ОТРИСОВКИ) ===
-    function adjustScaleForMobile() {
+    function adjustScaleForMobile(forceFit = false) {
         if (!currentPdf) return;
         const container = document.querySelector('.pdf-container');
         if (!container) return;
 
         const isFs = !!document.fullscreenElement;
-        // В полном экране берем ширину окна, в обычном - ширину контейнера
-        const availableWidth = isFs ? window.innerWidth - 20 : container.clientWidth - 40; 
+        const availableWidth = isFs ? window.innerWidth - 40 : container.clientWidth - 40; 
         
         currentPdf.getPage(1).then(page => {
             const viewport = page.getViewport({ scale: 1 });
             const originalWidth = viewport.width;
             let newScale = availableWidth / originalWidth;
             
-            // Ограничиваем разумными пределами для начальной отрисовки
-            newScale = Math.max(0.5, Math.min(newScale, 2.0));
-            
-            // Обновляем scale только если разница существенна
-            if (Math.abs(scale - newScale) > 0.1) {
+            // Если forceFit (вход в FS или открытие), всегда подгоняем
+            // Иначе обновляем только если разница существенна и мы не в процессе зума
+            if (forceFit || Math.abs(scale - newScale) > 0.1) {
                 scale = newScale;
             }
         });
+    }
+
+    // === ПРОГРАММНЫЙ PINCH-TO-ZOOM ===
+    // Отключаем стандартное поведение браузера для контейнера
+    const container = document.querySelector('.pdf-container');
+    if (container) {
+        container.style.touchAction = 'none'; // Блокируем скролл/зум браузера, берем управление на себя
+        
+        container.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 2) {
+                isPinching = true;
+                initialDistance = getDistance(e.touches[0], e.touches[1]);
+                initialScale = scale;
+            }
+        }, { passive: false });
+
+        container.addEventListener('touchmove', (e) => {
+            if (isPinching && e.touches.length === 2) {
+                e.preventDefault(); // Предотвращаем зум всей страницы
+                const currentDistance = getDistance(e.touches[0], e.touches[1]);
+                const delta = currentDistance / initialDistance;
+                
+                // Ограничиваем зум от 0.5x до 4.0x
+                let newScale = initialScale * delta;
+                newScale = Math.max(0.5, Math.min(newScale, 4.0));
+                
+                scale = newScale;
+                renderPage(currentPage);
+            }
+        }, { passive: false });
+
+        container.addEventListener('touchend', () => {
+            isPinching = false;
+        });
+    }
+
+    function getDistance(touch1, touch2) {
+        const dx = touch1.clientX - touch2.clientX;
+        const dy = touch1.clientY - touch2.clientY;
+        return Math.sqrt(dx * dx + dy * dy);
     }
 
     // Обработчик поворота экрана
@@ -148,7 +171,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentPdf && !modal.classList.contains('hidden')) {
             clearTimeout(resizeTimeout);
             resizeTimeout = setTimeout(() => {
-                adjustScaleForMobile();
+                adjustScaleForMobile(!!document.fullscreenElement);
                 renderPage(currentPage);
             }, 150);
         }
@@ -158,25 +181,14 @@ document.addEventListener('DOMContentLoaded', () => {
     function closeModal() {
         if (document.fullscreenElement) document.exitFullscreen();
         modal.classList.add('hidden');
-        if (currentPdf) {
-            currentPdf.destroy();
-            currentPdf = null;
-        }
+        if (currentPdf) { currentPdf.destroy(); currentPdf = null; }
     }
-
     document.getElementById('pdfClose').onclick = closeModal;
-    
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) closeModal();
-    });
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
 
-    // === НАВИГАЦИЯ И ЗУМ (ДЛЯ ДЕСКТОПА / ОБЫЧНОГО РЕЖИМА) ===
-    document.getElementById('prevPage').onclick = () => { 
-        if (currentPage > 1) { currentPage--; renderPage(currentPage); } 
-    };
-    document.getElementById('nextPage').onclick = () => { 
-        if (currentPage < totalPages) { currentPage++; renderPage(currentPage); } 
-    };
+    // Кнопки зума для десктопа
+    document.getElementById('prevPage').onclick = () => { if (currentPage > 1) { currentPage--; renderPage(currentPage); } };
+    document.getElementById('nextPage').onclick = () => { if (currentPage < totalPages) { currentPage++; renderPage(currentPage); } };
     document.getElementById('zoomIn').onclick = () => { scale += 0.25; renderPage(currentPage); };
     document.getElementById('zoomOut').onclick = () => { if (scale > 0.5) { scale -= 0.25; renderPage(currentPage); } };
 
@@ -186,6 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const page = await currentPdf.getPage(num);
         const viewport = page.getViewport({ scale });
         
+        // Устанавливаем реальные пиксельные размеры canvas
         canvas.height = viewport.height;
         canvas.width = viewport.width;
         

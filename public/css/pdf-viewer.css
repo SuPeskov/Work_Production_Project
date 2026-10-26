@@ -126,7 +126,7 @@ canvas {
     min-width: auto;
 }
 
-/* === ПОЛНОЭКРАННЫЙ РЕЖИМ (ИСПРАВЛЕНО) === */
+/* === ПОЛНОЭКРАННЫЙ РЕЖИМ === */
 .pdf-modal:fullscreen,
 .pdf-modal:-webkit-full-screen {
     background: #000 !important;
@@ -135,8 +135,7 @@ canvas {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    /* ВАЖНО: overflow должен быть visible или auto, иначе pinch-to-zoom не работает */
-    overflow: visible !important; 
+    overflow: hidden !important; /* Скрываем скроллбары самого модального окна */
 }
 
 .pdf-modal:fullscreen .pdf-modal-content,
@@ -154,22 +153,23 @@ canvas {
     width: 100% !important;
     height: 100% !important;
     padding: 0 !important;
-    overflow: visible !important;
+    /* ВАЖНО: Разрешаем скролл внутри контейнера при зуме */
+    overflow: auto !important; 
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
+    /* Запрещаем браузеру обрабатывать тачи, отдаем их нашему JS */
+    touch-action: none !important; 
 }
 
-/* КЛЮЧЕВОЕ ДЛЯ PINCH-TO-ZOOM В ПОЛНОМ ЭКРАНЕ */
+/* Canvas в полном экране НЕ должен иметь ограничений ширины */
 .pdf-modal:fullscreen canvas,
 .pdf-modal:-webkit-full-screen canvas {
-    /* Разрешаем все жесты, включая pinch-to-zoom */
-    touch-action: pan-x pan-y pinch-zoom !important; 
-    /* Отключаем ограничение ширины, чтобы canvas мог расти при зуме */
     max-width: none !important; 
     height: auto !important;
     transform-origin: center center !important;
     box-shadow: none !important;
+    /* Пропорции сохраняются автоматически за счет рендеринга PDF.js */
 }
 
 /* Скрываем стандартные элементы в полном экране */
@@ -180,7 +180,7 @@ canvas {
     display: none !important;
 }
 
-/* Плавающие кнопки в полном экране */
+/* Плавающие кнопки */
 #pdf-floating-controls {
     position: fixed;
     bottom: 30px;
@@ -209,7 +209,4 @@ canvas {
     transition: transform 0.2s;
 }
 
-.float-btn:active {
-    transform: scale(0.9);
-    background: #fff;
-}
+.float-btn:active { transform: scale(0.9); background: #fff; }
