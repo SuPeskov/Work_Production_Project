@@ -188,6 +188,48 @@ canvas {
     transform-origin: center center !important;
 }
 
+/* === ПОЛНОЭКРАННЫЙ РЕЖИМ === */
+.pdf-modal:fullscreen,
+.pdf-modal:-webkit-full-screen {
+    background: #000 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important; /* Убираем скроллбары браузера */
+}
+
+.pdf-modal:fullscreen .pdf-modal-content,
+.pdf-modal:-webkit-full-screen .pdf-modal-content {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: none !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+}
+
+.pdf-modal:fullscreen .pdf-container,
+.pdf-modal:-webkit-full-screen .pdf-container {
+    width: 100% !important;
+    height: 100% !important;
+    padding: 0 !important;
+    overflow: visible !important; /* Разрешаем нативный зум */
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* === КЛЮЧЕВОЕ ДЛЯ PINCH-TO-ZOOM === */
+.pdf-modal:fullscreen canvas,
+.pdf-modal:-webkit-full-screen canvas {
+    /* Разрешаем все жесты, включая pinch-to-zoom */
+    touch-action: pan-x pan-y pinch-zoom !important; 
+    max-width: none !important; /* Отключаем ограничение ширины в полном экране */
+    height: auto !important;
+    transform-origin: center center !important;
+}
+
 /* === ПЛАВАЮЩИЕ КНОПКИ В ПОЛНОМ ЭКРАНЕ === */
 #pdf-floating-controls {
     position: fixed;

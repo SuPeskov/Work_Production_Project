@@ -96,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
         floatingContainer = document.createElement('div');
         floatingContainer.id = 'pdf-floating-controls';
         floatingContainer.innerHTML = `
-            <button id="fs-close" class="float-btn">✕</button>
+            <button id="fs-close" class="float-btn"></button>
             <button id="fs-prev" class="float-btn">←</button>
             <button id="fs-next" class="float-btn">→</button>
         `;
