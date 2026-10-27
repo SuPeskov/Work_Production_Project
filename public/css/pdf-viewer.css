@@ -239,3 +239,29 @@ canvas {
 #fs-close:hover {
     background: #ef4444 !important;
 }
+
+/* Делаем pdf-link похожим на doc-link */
+.pdf-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background-color: #f0fdf4; /* Светло-зеленый фон */
+    border: 1px solid #16a34a; /* Зеленая рамка */
+    border-radius: 8px;
+    color: #15803d; /* Темно-зеленый текст */
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    margin-bottom: 8px;
+}
+
+.pdf-link:hover {
+    background-color: #dcfce7;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(22, 163, 74, 0.1);
+}
+
+.pdf-link svg {
+    flex-shrink: 0; /* Чтобы иконка не сжималась */
+}
