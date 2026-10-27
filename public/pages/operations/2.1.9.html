@@ -166,6 +166,27 @@
         </div>
     </main>
 
+        <!-- Модальное окно PDF Viewer -->
+<div id="pdfModal" class="pdf-modal hidden">
+    <div class="pdf-modal-content">
+        <div class="pdf-toolbar">
+            <span id="pdfTitle" class="pdf-title">Документ</span>
+            <button id="pdfClose" class="btn-close" aria-label="Закрыть">×</button>
+        </div>
+        <div class="pdf-container">
+            <canvas id="pdfCanvas"></canvas>
+        </div>
+            <button id="pdfFullscreen" class="btn-fullscreen" aria-label="Полноэкранный режим">
+             ⛶ Полноэкранный режим
+            </button>
+        <div class="pdf-controls">
+            <button id="prevPage">←</button>
+            <span id="pageInfo"> 1 из ?</span>
+            <button id="nextPage">→</button>
+        </div>
+    </div>
+</div>
+
     <script src="../../js/users.js"></script>
     <script src="../../js/kb.js"></script>
     <script src="../../js/scrollTop.js"></script>
