@@ -40,18 +40,17 @@ const KB_OPERATIONS = [
     { id: '2.1.10', section: 'panels', title: 'Монтаж защитной сетки',      version: 1, status: 'ready',   url: 'pages/operations/2.1.10.html' },
     { id: '2.1.11', section: 'panels', title: 'Монтаж лежней',       version: 1, status: 'ready',   url: 'pages/operations/2.1.11.html' },
     { id: '2.1.12', section: 'panels', title: 'Контроль качества панели. Маркировка',       version: 1, status: 'ready',   url: 'pages/operations/2.1.12.html' },
+    // Подраздел 2.2
     { id: '2.2.1',  section: 'panels', title: 'Сборка каркаса кровельной панели',                    version: 1, status: 'ready',   url: 'pages/operations/2.2.1.html' },
     { id: '2.2.2',  section: 'panels', title: 'Укладка листового материала на каркас панели',                      version: 1, status: 'ready',   url: 'pages/operations/2.2.2.html' },
     { id: '2.2.3',  section: 'panels', title: 'Монтаж финишной отделки',                      version: 1, status: 'ready',   url: 'pages/operations/2.2.3.html' },
     // Подраздел 2.3
-    { id: '2.3.1',  section: 'panels', title: 'Сборка каркаса внешней стены',                version: 1, status: 'draft',   url: 'pages/operations/2.3.1.html' },
-    { id: '2.3.2',  section: 'panels', title: 'Установка оконных и дверных проёмов',         version: 1, status: 'draft',   url: 'pages/operations/2.3.2.html' },
-    { id: '2.3.3',  section: 'panels', title: 'Монтаж плит с внешней стороны',               version: 1, status: 'draft',   url: 'pages/operations/2.3.3.html' },
-    // Подраздел 2.4
+    { id: '2.3.1',  section: 'panels', title: 'Сборка каркаса внешней стены',                version: 1, status: 'ready',   url: 'pages/operations/2.3.1.html' },
+    { id: '2.3.2',  section: 'panels', title: 'Установка оконных и дверных проёмов',         version: 1, status: 'ready',   url: 'pages/operations/2.3.2.html' },
+        // Подраздел 2.4
     { id: '2.4.1',  section: 'panels', title: 'Сборка каркаса внутренней стены',             version: 1, status: 'draft',   url: 'pages/operations/2.4.1.html' },
     { id: '2.4.2',  section: 'panels', title: 'Установка дверных проёмов',                   version: 1, status: 'draft',   url: 'pages/operations/2.4.2.html' },
-    { id: '2.4.3',  section: 'panels', title: 'Монтаж ГВЛ/ОСБ',                              version: 1, status: 'draft',   url: 'pages/operations/2.4.3.html' }
-];
+    ];
 
 const PUBLIC_OP_IDS = undefined;
 
