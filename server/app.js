@@ -204,8 +204,13 @@ app.get('/api/access/:sectionId', auth(), (req, res) => {
 });
 
 const SECTION_BY_PATH = {
-    preparation: 'preparation', panels: 'panels', module: 'module',
-    options: 'options', installation: 'installation', service: 'service'
+    preparation: 'preparation', 
+    panels: 'panels', 
+    module: 'module',
+    options: 'options', 
+    installation: 'installation', 
+    service: 'service',
+    standards: 'standards'
 };
 
 app.use((req, res, next) => {
