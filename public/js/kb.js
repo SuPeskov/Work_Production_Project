@@ -24,6 +24,7 @@ const KB_SECTIONS = [
     { id: 'options',     num: '04', title: 'Сборка опций',     img: 'assets/images/icons/section-4-options.svg', desc: 'Террасы, веранды, навесы и крыльца — дополнительные конструкции к модулю', page: 'pages/options.html' },
     { id: 'installation',num: '05', title: 'Монтаж',           img: 'assets/images/icons/section-5-installation.svg', desc: 'Доставка, установка и стыковка модулей на фундаменте заказчика', page: 'pages/installation.html' },
     { id: 'service',     num: '06', title: 'Сервис',           img: 'assets/images/icons/section-6-service.svg', desc: 'Сезонное обслуживание, гарантийный ремонт и диагностика систем', page: 'pages/service.html' }
+    { id: 'standards',   num: '07', title: 'Стандарты',           img: 'assets/images/icons/section-6-service.svg', desc: 'Регламенты, руководства, инструкции', page: 'pages/standards.html' }
 ];
 
 // === Реестр операций (ИСПРАВЛЕНО: убраны лишние пробелы в url и title) ===
