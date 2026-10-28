@@ -178,58 +178,16 @@ function kbRootPrefix() {
 }
 
 // ============================================================
-// Guard — защита страниц и навигации (ПОЛНОСТЬЮ АСИНХРОННЫЙ)
+// Guard — защита страниц и навигации (ЕДИНАЯ АСИНХРОННАЯ ТОЧКА ВХОДА)
 // ============================================================
 document.addEventListener('DOMContentLoaded', async function () {
     const prefix = kbRootPrefix();
     
-    // --- ЗАЩИТА КОНТЕНТНЫХ СТРАНИЦ ---
-    const isContentPage = window.location.pathname.includes('/pages/');
-    const isPublicPage  = /search\.html$/.test(window.location.pathname);
+    // 1. СРАЗУ ЗАГРУЖАЕМ ПРОФИЛЬ С СЕРВЕРА
+    // Это гарантирует, что _currentUserCache будет заполнен ДО любых проверок
+    const user = await kbGetCurrentUser(); 
     
-    if (isContentPage && !isPublicPage) {
-        // ВАЖНО: Ждем данные с сервера перед проверкой прав
-        const user = await kbGetCurrentUser(); 
-        
-        if (!user) {
-            window.location.href = prefix + 'index.html?need_login=1';
-            return;
-        }
-        
-        const file = window.location.pathname.split('/').pop();
-        if (file !== 'dashboard.html' && !kbCanViewPageByFile(user, file)) {
-            blockPage(user);
-            return;
-        }
-        
-        const opMatch = window.location.pathname.match(/operations\/(\d+\.\d+\.\d+)\.html$/);
-        if (opMatch) {
-            const op = kbGetOperationById(opMatch[1]);
-            if (op && !kbUserCanViewOperation(user, op)) { 
-                blockPage(user); 
-                return; 
-            }
-        }
-    }
-
-    function blockPage(user) {
-        const main = document.querySelector('main') || document.body;
-        main.innerHTML = `
-            <div style="max-width:560px;margin:120px auto;text-align:center;font-family:Inter,sans-serif;padding:0 20px;">
-                <div style="font-size:56px;">🔒</div>
-                <h1 style="font-size:24px;margin:16px 0 8px;">Нет доступа к разделу</h1>
-                <p style="color:#64748b;line-height:1.6;">Пользователю «${user.name}» (${user.role}) не назначен доступ к этому разделу.</p>
-                <a href="/dashboard.html" style="display:inline-block;margin-top:24px;background:#2563eb;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Вернуться в базу знаний</a>
-            </div>`;
-    }
-
-    // --- ПАНЕЛЬ ПОЛЬЗОВАТЕЛЯ В ШАПКЕ ---
-    // Теперь это часть общего async блока, данные уже загружены выше (или загрузятся здесь)
-    let user = _currentUserCache;
-    if (!user && (isContentPage || window.location.pathname.includes('dashboard'))) {
-         user = await kbGetCurrentUser();
-    }
-
+    // --- ЛОГИКА ШАПКИ САЙТА ---
     if (user) {
         const nameEl = document.getElementById('currentUserName') || document.getElementById('userName');
         const roleEl = document.getElementById('currentUserRole') || document.getElementById('userRole');
@@ -287,75 +245,108 @@ document.addEventListener('DOMContentLoaded', async function () {
                 }
             }
         }
-
-        // --- DASHBOARD: КАРТОЧКИ РАЗДЕЛОВ ---
-        const grid = document.getElementById('cardsGrid');
-        if (grid) {
-            grid.innerHTML = '';
-            let visible = 0;
-            KB_SECTIONS.forEach(sec => {
-                const allowed = kbUserCanViewSection(user, sec.id);
-                if (allowed) visible++;
-                
-                const card = document.createElement(allowed ? 'a' : 'div');
-                card.className = 'card card-section' + (allowed ? '' : ' card-disabled');
-                if (allowed) card.href = prefix + sec.page;
-                
-                const opsTotal = KB_OPERATIONS.filter(o => o.section === sec.id).length;
-                card.innerHTML = `
-                    <div class="card-number">${sec.num}</div>
-                    <div class="card-icon"><img src="${sec.img}" alt=""></div>
-                    <h3>${sec.title}</h3>
-                    <p>${sec.desc}</p>
-                    <div class="card-stats">
-                        <span class="card-badge">${opsTotal ? opsTotal + ' операций' : 'в разработке'}</span>
-                        ${!allowed ? '<span class="card-badge card-badge-lock">🔒 Нет доступа</span>' : ''}
-                    </div>`;
-                grid.appendChild(card);
-            });
-            
-            const statSec = document.getElementById('stat-sections');
-            if (statSec) statSec.textContent = String(visible);
-            
-            const statOps = document.getElementById('stat-operations');
-            if (statOps) {
-                const n = KB_OPERATIONS.filter(o => o.status === 'ready' && kbUserCanViewOperation(user, o)).length;
-                statOps.textContent = String(n);
-            }
-        }
-
-        // --- СТРАНИЦЫ РАЗДЕЛА: СКРЫТИЕ ССЫЛОК ---
-        if (isContentPage) {
-            document.querySelectorAll('a[href*="operations/"]').forEach(link => {
-                const m = link.getAttribute('href').match(/(\d+\.\d+\.\d+)\.html/);
-                if (!m) return;
-                const op = kbGetOperationById(m[1]);
-                
-                if (op && !kbUserCanViewOperation(user, op)) {
-                    const li = link.closest('li');
-                    if (li) li.remove(); else link.remove();
-                    return;
-                }
-                if (op && op.status === 'draft' && user.role !== ROLE_ADMIN) {
-                    const li = link.closest('li');
-                    if (li) li.remove(); else link.remove();
-                    return;
-                }
-                if (op && op.status === 'draft' && user.role === ROLE_ADMIN && !link.querySelector('.op-draft-badge')) {
-                    const b = document.createElement('span');
-                    b.className = 'op-draft-badge';
-                    b.textContent = ' ✎ черновик';
-                    b.style.cssText = 'font-size:11px;color:#b45309;background:#fef3c7;padding:2px 6px;border-radius:6px;margin-left:6px;white-space:nowrap;';
-                    link.appendChild(b);
-                }
-            });
-        }
     } else {
-        // Если мы на защищенной странице и пользователь не загрузился
-        if (window.location.pathname.includes('/pages/') || window.location.pathname.includes('dashboard')) {
+        // Если пользователь не авторизован и находится на защищенной странице
+        if (window.location.pathname.includes('/pages/') || window.location.pathname.includes('dashboard') || window.location.pathname.includes('admin-panel')) {
             sessionStorage.removeItem('modular_house_session');
             window.location.href = '/index.html?need_login=1';
+            return; // Прерываем выполнение, так как пользователя нет
         }
+    }
+
+    // --- ЗАЩИТА КОНТЕНТНЫХ СТРАНИЦ (Выполняется ТОЛЬКО если user существует) ---
+    const isContentPage = window.location.pathname.includes('/pages/');
+    const isPublicPage  = /search\.html$/.test(window.location.pathname);
+    
+    if (isContentPage && !isPublicPage && user) {
+        const file = window.location.pathname.split('/').pop();
+        if (file !== 'dashboard.html' && !kbCanViewPageByFile(user, file)) {
+            blockPage(user);
+            return;
+        }
+        
+        const opMatch = window.location.pathname.match(/operations\/(\d+\.\d+\.\d+)\.html$/);
+        if (opMatch) {
+            const op = kbGetOperationById(opMatch[1]);
+            if (op && !kbUserCanViewOperation(user, op)) { 
+                blockPage(user); 
+                return; 
+            }
+        }
+    }
+
+    function blockPage(user) {
+        const main = document.querySelector('main') || document.body;
+        main.innerHTML = `
+            <div style="max-width:560px;margin:120px auto;text-align:center;font-family:Inter,sans-serif;padding:0 20px;">
+                <div style="font-size:56px;">🔒</div>
+                <h1 style="font-size:24px;margin:16px 0 8px;">Нет доступа к разделу</h1>
+                <p style="color:#64748b;line-height:1.6;">Пользователю «${user.name}» (${user.role}) не назначен доступ к этому разделу.</p>
+                <a href="/dashboard.html" style="display:inline-block;margin-top:24px;background:#2563eb;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Вернуться в базу знаний</a>
+            </div>`;
+    }
+
+    // --- DASHBOARD: КАРТОЧКИ РАЗДЕЛОВ ---
+    const grid = document.getElementById('cardsGrid');
+    if (grid && user) {
+        grid.innerHTML = '';
+        let visible = 0;
+        KB_SECTIONS.forEach(sec => {
+            const allowed = kbUserCanViewSection(user, sec.id);
+            if (allowed) visible++;
+            
+            const card = document.createElement(allowed ? 'a' : 'div');
+            card.className = 'card card-section' + (allowed ? '' : ' card-disabled');
+            if (allowed) card.href = prefix + sec.page;
+            
+            const opsTotal = KB_OPERATIONS.filter(o => o.section === sec.id).length;
+            card.innerHTML = `
+                <div class="card-number">${sec.num}</div>
+                <div class="card-icon"><img src="${sec.img}" alt=""></div>
+                <h3>${sec.title}</h3>
+                <p>${sec.desc}</p>
+                <div class="card-stats">
+                    <span class="card-badge">${opsTotal ? opsTotal + ' операций' : 'в разработке'}</span>
+                    ${!allowed ? '<span class="card-badge card-badge-lock">🔒 Нет доступа</span>' : ''}
+                </div>`;
+            grid.appendChild(card);
+        });
+        
+        const statSec = document.getElementById('stat-sections');
+        if (statSec) statSec.textContent = String(visible);
+        
+        const statOps = document.getElementById('stat-operations');
+        if (statOps) {
+            const n = KB_OPERATIONS.filter(o => o.status === 'ready' && kbUserCanViewOperation(user, o)).length;
+            statOps.textContent = String(n);
+        }
+    }
+
+    // --- СТРАНИЦЫ РАЗДЕЛА: СКРЫТИЕ ССЫЛОК ---
+    if (isContentPage && user) {
+        document.querySelectorAll('a[href*="operations/"]').forEach(link => {
+            const m = link.getAttribute('href').match(/(\d+\.\d+\.\d+)\.html/);
+            if (!m) return;
+            const op = kbGetOperationById(m[1]);
+            
+            if (op && !kbUserCanViewOperation(user, op)) {
+                const li = link.closest('li');
+                if (li) li.remove(); else link.remove();
+                return;
+            }
+            if (op && op.status === 'draft' && user.role !== ROLE_ADMIN) {
+                const li = link.closest('li');
+                if (li) li.remove(); else link.remove();
+                return;
+            }
+            if (op && op.status === 'draft' && user.role === ROLE_ADMIN && !link.querySelector('.op-draft-badge')) {
+                const b = document.createElement('span');
+                b.className = 'op-draft-badge';
+                b.textContent = ' ✎ черновик';
+                b.style.cssText = 'font-size:11px;color:#b45309;background:#fef3c7;padding:2px 6px;border-radius:6px;margin-left:6px;white-space:nowrap;';
+                link.appendChild(b);
+            }
+        });
     }
 });
 
