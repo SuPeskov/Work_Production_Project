@@ -1,9 +1,9 @@
 /**
  * kb.js — Реестр разделов и операций базы знаний + клиентская логика
  * ИСПРАВЛЕНО: 
- * 1. Добавлена кнопка "Мониторинг" для ролей Гость и Сотрудник производства.
- * 2. Убраны пробелы в URL операций.
- * 3. Исправлен редирект при блокировке доступа (абсолютный путь).
+ * 1. Убраны дубликаты функций isAuthenticated/logout
+ * 2. Все вызовы kbGetCurrentUser() переведены в async/await
+ * 3. Защита страниц (Guard) теперь корректно ждет данные с сервера
  */
 
 // === Роли ===
@@ -12,9 +12,8 @@ const ROLE_WORKER  = 'Сотрудник производства';
 const ROLE_GUEST   = 'Гость';
 
 // === Ключи хранилища (используются для отметок ознакомления) ===
-const KB_READ_KEY  = 'kb_reads_v1'; 
+const KB_READ_KEY  = 'kb_reads_v1';
 const KB_ARCHIVE_KEY = 'kb_reads_archive_v1';
-
 
 // === Разделы базы знаний ===
 const KB_SECTIONS = [
@@ -27,31 +26,31 @@ const KB_SECTIONS = [
     { id: 'standards',   num: '07', title: 'Стандарты',        img: 'assets/images/icons/section-6-service.svg', desc: 'Регламенты, руководства, инструкции', page: 'pages/standards.html' }
 ];
 
-// === Реестр операций (ИСПРАВЛЕНО: убраны лишние пробелы в url и title) ===
+// === Реестр операций ===
 const KB_OPERATIONS = [
     { id: '2.1.1',  section: 'panels', title: 'Сборка каркаса панели',            version: 1, status: 'ready',   url: 'pages/operations/2.1.1.html' },
     { id: '2.1.2',  section: 'panels', title: 'Монтаж листового материала на каркас',              version: 1, status: 'ready',   url: 'pages/operations/2.1.2.html' },
-    { id: '2.1.3',  section: 'panels', title: 'Монтаж второго слоя листового материала',                         version: 1, status: 'ready',   url: 'pages/operations/2.1.3.html' },
+    { id: '2.1.3',  section: 'panels', title: 'Монтаж второго слоя листового материала',                         version: 1, status:  'ready',   url: 'pages/operations/2.1.3.html' },
     { id: '2.1.4',  section: 'panels', title: 'Монтаж трассы канализации',                          version: 1, status: 'ready',   url: 'pages/operations/2.1.4.html' },
     { id: '2.1.5',  section: 'panels', title: 'Прокладка электролиний',                          version: 1, status: 'ready',   url: 'pages/operations/2.1.5.html' },
-    { id: '2.1.6',  section: 'panels', title: 'Монтаж гильз под коммуникации',                     version: 1, status: 'ready',   url: 'pages/operations/2.1.6.html' },
+    { id: '2.1.6',  section: 'panels', title: 'Монтаж гильз под коммуникации',                     version: 1, status: 'ready',   url: 'pages/operations/2.1.6.html' }, 
     { id: '2.1.7',  section: 'panels', title: 'Утепление панели ППУ',                        version: 1, status: 'ready',   url: 'pages/operations/2.1.7.html' },
     { id: '2.1.8',  section: 'panels', title: 'Утепление панели мин.ватой',                 version: 1, status: 'ready',   url: 'pages/operations/2.1.8.html' },
     { id: '2.1.9',  section: 'panels', title: 'Монтаж ветрозащиты, монтаж уплотнительных манжет / проклейка гильз пароизоляционным скотчем',      version: 1, status: 'ready',   url: 'pages/operations/2.1.9.html' },
     { id: '2.1.10', section: 'panels', title: 'Монтаж защитной сетки',      version: 1, status: 'ready',   url: 'pages/operations/2.1.10.html' },
     { id: '2.1.11', section: 'panels', title: 'Монтаж лежней',       version: 1, status: 'ready',   url: 'pages/operations/2.1.11.html' },
-    { id: '2.1.12', section: 'panels', title: 'Контроль качества панели. Маркировка',       version: 1, status: 'ready',   url: 'pages/operations/2.1.12.html' },
+    { id: '2.1.12', section: 'panels', title: 'Контроль качества панели. Маркировка',       version:  1, status: 'ready',   url: 'pages/operations/2.1.12.html' },
     // Подраздел 2.2
     { id: '2.2.1',  section: 'panels', title: 'Сборка каркаса кровельной панели',                    version: 1, status: 'ready',   url: 'pages/operations/2.2.1.html' },
     { id: '2.2.2',  section: 'panels', title: 'Укладка листового материала на каркас панели',                      version: 1, status: 'ready',   url: 'pages/operations/2.2.2.html' },
     { id: '2.2.3',  section: 'panels', title: 'Монтаж финишной отделки',                      version: 1, status: 'ready',   url: 'pages/operations/2.2.3.html' },
     // Подраздел 2.3
-    { id: '2.3.1',  section: 'panels', title: 'Сборка каркаса внешней стены',                version: 1, status: 'ready',   url: 'pages/operations/2.3.1.html' },
+    { id: '2.3.1',  section: 'panels', title: 'Сборка каркаса внешней стены',                version: 1, status: 'ready',    url: 'pages/operations/2.3.1.html' },
     { id: '2.3.2',  section: 'panels', title: 'Установка оконных и дверных проёмов',         version: 1, status: 'ready',   url: 'pages/operations/2.3.2.html' },
-        // Подраздел 2.4
+    // Подраздел 2.4
     { id: '2.4.1',  section: 'panels', title: 'Сборка каркаса внутренней стены',             version: 1, status: 'draft',   url: 'pages/operations/2.4.1.html' },
     { id: '2.4.2',  section: 'panels', title: 'Установка дверных проёмов',                   version: 1, status: 'draft',   url: 'pages/operations/2.4.2.html' },
-    ];
+];
 
 const PUBLIC_OP_IDS = undefined;
 
@@ -62,12 +61,11 @@ function kbUserCanConfirmRead(user) {
 
 /**
  * Актуальный профиль текущего пользователя.
- * ИСПРАВЛЕНО: Читает данные с сервера (/api/me), а не из sessionStorage.
+ * Читает данные ТОЛЬКО с сервера (/api/me).
  */
-let _currentUserCache = null; // Кэш для текущей сессии страницы
+let _currentUserCache = null;
 
 async function kbGetCurrentUser() {
-    // Если уже загружали на этой странице, возвращаем из памяти
     if (_currentUserCache) return _currentUserCache;
     
     try {
@@ -76,21 +74,18 @@ async function kbGetCurrentUser() {
         const data = await response.json();
         
         if (data.user) {
-            // Нормализация роли для совместимости со старым кодом интерфейса
             const roleMap = { 
                 'admin': 'Администратор', 
                 'worker': 'Сотрудник производства', 
                 'guest': 'Гость' 
             };
             
-            // Формируем объект, понятный вашему UI
             _currentUserCache = {
                 username: data.user.username,
                 name: data.user.name,
-                role: roleMap[data.user.role] || data.user.role, // Русское название роли
-                access: data.sections || [] // Список доступных разделов
+                role: roleMap[data.user.role] || data.user.role,
+                access: data.sections || []
             };
-            
             return _currentUserCache;
         }
     } catch (e) {
@@ -99,28 +94,12 @@ async function kbGetCurrentUser() {
     return null;
 }
 
-// Вспомогательная функция проверки авторизации (синхронная обертка)
+// Вспомогательная функция проверки авторизации
 function isAuthenticated() {
     return !!_currentUserCache;
 }
 
-// Функция выхода (теперь через API)
-async function logout() {
-    try {
-        await fetch('/api/logout', { method: 'POST', credentials: 'include' });
-    } catch(e) {}
-    _currentUserCache = null;
-    // Очищаем старый мусор, если он еще остался
-    sessionStorage.removeItem('modular_house_session');
-    window.location.href = '/index.html';
-}
-
-// Функция проверки авторизации (заменяет isAuthenticated)
-function isAuthenticated() {
-    return !!_currentUserCache;
-}
-
-// Функция выхода (теперь через API)
+// Функция выхода через API
 async function logout() {
     try {
         await fetch('/api/logout', { method: 'POST', credentials: 'include' });
@@ -155,19 +134,9 @@ function kbAddRead(userId, opId, version) {
 // ============================================================
 // Права доступа
 // ============================================================
-/**
- * Проверяет, имеет ли пользователь доступ к разделу.
- * ИСПРАВЛЕНО: Админ и Гость всегда имеют доступ ко всем разделам.
- */
 function kbUserCanViewSection(user, sectionId) {
     if (!user) return false;
-    
-    // Администратор и Гость имеют ДОСТУП КО ВСЕМ РАЗДЕЛАМ БЕЗ ПРОВЕРКИ МАССИВА ACCESS
-    if (user.role === 'Администратор' || user.role === 'Гость') {
-        return true;
-    }
-    
-    // Для Сотрудника производства проверяем массив access
+    if (user.role === 'Администратор' || user.role === 'Гость') return true;
     if (!Array.isArray(user.access) || user.access.length === 0) return false;
     return user.access.includes(sectionId);
 }
@@ -176,7 +145,6 @@ function kbUserCanViewOperation(user, op) {
     if (!user) return false;
     if (user.role === ROLE_ADMIN) return true;
     if (!kbUserCanViewSection(user, op.section)) return false;
-    
     if (user.role === ROLE_GUEST && Array.isArray(PUBLIC_OP_IDS)) {
         return PUBLIC_OP_IDS.includes(op.id);
     }
@@ -184,13 +152,13 @@ function kbUserCanViewOperation(user, op) {
 }
 
 function kbCanViewPageByFile(user, fileName) {
-    const opMatch = fileName.match(/^(\d+\.\d+\.\d+)\.html$/);
+    const opMatch = fileName.match(/^(\d+.\d+.\d+).html$/);
     if (opMatch) {
         const op = kbGetOperationById(opMatch[1]);
         if (op && op.status === 'draft' && user.role !== ROLE_ADMIN) return false;
     }
     const sec = KB_SECTIONS.find(s => s.page.endsWith(fileName));
-    if (!sec) return true; 
+    if (!sec) return true;
     return kbUserCanViewSection(user, sec.id);
 }
 
@@ -210,58 +178,59 @@ function kbRootPrefix() {
 }
 
 // ============================================================
-// Guard — защита страниц и навигации
+// Guard — защита страниц и навигации (ПОЛНОСТЬЮ АСИНХРОННЫЙ)
 // ============================================================
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', async function () {
     const prefix = kbRootPrefix();
-
-    // --- Защита контентных страниц ---
+    
+    // --- ЗАЩИТА КОНТЕНТНЫХ СТРАНИЦ ---
     const isContentPage = window.location.pathname.includes('/pages/');
     const isPublicPage  = /search\.html$/.test(window.location.pathname);
-
+    
     if (isContentPage && !isPublicPage) {
-        const user = (typeof kbGetCurrentUser === 'function') ? kbGetCurrentUser() : null;
+        // ВАЖНО: Ждем данные с сервера перед проверкой прав
+        const user = await kbGetCurrentUser(); 
         
         if (!user) {
-            if (typeof isAuthenticated === 'function' && !isAuthenticated()) {
-                 window.location.href = prefix + 'index.html';
-                 return;
-            }
+            window.location.href = prefix + 'index.html?need_login=1';
+            return;
         }
-
-        if (user) {
-            const file = window.location.pathname.split('/').pop();
-            if (file !== 'dashboard.html' && !kbCanViewPageByFile(user, file)) {
-                blockPage(user);
-                return;
-            }
-            
-            const opMatch = window.location.pathname.match(/operations\/(\d+\.\d+\.\d+)\.html$/);
-            if (opMatch) {
-                const op = kbGetOperationById(opMatch[1]);
-                if (op && !kbUserCanViewOperation(user, op)) { blockPage(user); return; }
+        
+        const file = window.location.pathname.split('/').pop();
+        if (file !== 'dashboard.html' && !kbCanViewPageByFile(user, file)) {
+            blockPage(user);
+            return;
+        }
+        
+        const opMatch = window.location.pathname.match(/operations\/(\d+\.\d+\.\d+)\.html$/);
+        if (opMatch) {
+            const op = kbGetOperationById(opMatch[1]);
+            if (op && !kbUserCanViewOperation(user, op)) { 
+                blockPage(user); 
+                return; 
             }
         }
     }
 
     function blockPage(user) {
         const main = document.querySelector('main') || document.body;
-        // ИСПРАВЛЕНО: Абсолютный путь /dashboard.html
         main.innerHTML = `
             <div style="max-width:560px;margin:120px auto;text-align:center;font-family:Inter,sans-serif;padding:0 20px;">
                 <div style="font-size:56px;">🔒</div>
                 <h1 style="font-size:24px;margin:16px 0 8px;">Нет доступа к разделу</h1>
-                <p style="color:#64748b;line-height:1.6;">Пользователю «${user.name}» (${user.role}) не назначен доступ к этому разделу базы знаний. Обратитесь к администратору.</p>
+                <p style="color:#64748b;line-height:1.6;">Пользователю «${user.name}» (${user.role}) не назначен доступ к этому разделу.</p>
                 <a href="/dashboard.html" style="display:inline-block;margin-top:24px;background:#2563eb;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Вернуться в базу знаний</a>
             </div>`;
     }
 
-// --- Панель пользователя в шапке + выход (АСИНХРОННАЯ ВЕРСИЯ) ---
-(async () => {
-    const user = await kbGetCurrentUser();
-    
+    // --- ПАНЕЛЬ ПОЛЬЗОВАТЕЛЯ В ШАПКЕ ---
+    // Теперь это часть общего async блока, данные уже загружены выше (или загрузятся здесь)
+    let user = _currentUserCache;
+    if (!user && (isContentPage || window.location.pathname.includes('dashboard'))) {
+         user = await kbGetCurrentUser();
+    }
+
     if (user) {
-        // Обновляем имя и роль
         const nameEl = document.getElementById('currentUserName') || document.getElementById('userName');
         const roleEl = document.getElementById('currentUserRole') || document.getElementById('userRole');
         const avatarEl = document.getElementById('userAvatar');
@@ -270,7 +239,6 @@ document.addEventListener('DOMContentLoaded', function () {
         if (roleEl) roleEl.textContent = user.role || 'Пользователь';
         if (avatarEl) avatarEl.textContent = (user.name || user.username || '?').charAt(0).toUpperCase();
         
-        // Кнопка выхода
         const logoutBtn = document.getElementById('logoutBtn') || 
                           document.querySelector('button[class*="logout"]') ||
                           document.querySelector('a[href*="logout"]');
@@ -281,20 +249,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 logout();
             };
         }
-    } else {
-        sessionStorage.removeItem('modular_house_session');
-        // Если пользователь не авторизован и находится на защищенной странице
-        if (window.location.pathname.includes('/pages/') || window.location.pathname.includes('dashboard')) {
-            window.location.href = '/index.html?need_login=1';
-        }
-    }
-})();
 
-    // --- Кнопки в шапке по ролям ---
-    if (typeof isAuthenticated === 'function' && isAuthenticated()) {
-        const user = kbGetCurrentUser();
+        // --- КНОПКИ НАВИГАЦИИ ПО РОЛЯМ ---
         const right = document.querySelector('.top-bar-right');
-        if (right && user) {
+        if (right) {
             const ICON_BACK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>';
             const ICON_GEAR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06-.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l-.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
             const ICON_CHART = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>';
@@ -309,45 +267,30 @@ document.addEventListener('DOMContentLoaded', function () {
                 return a;
             };
 
-            // 1. Логика для АДМИНИСТРАТОРА и ГОСТЯ (Контролера)
-            if (user.role === ROLE_ADMIN || user.role === ROLE_GUEST) {
-                const onMonitoring = /monitoring\.html/.test(window.location.pathname);
-                const onAdminPanel = /admin-panel\.html/.test(window.location.pathname);
-                const isDashboard = window.location.pathname.endsWith('dashboard.html') || window.location.pathname === '/';
+            const onMonitoring = /monitoring\.html/.test(window.location.pathname);
+            const onAdminPanel = /admin-panel\.html/.test(window.location.pathname);
+            const isDashboard = window.location.pathname.endsWith('dashboard.html') || window.location.pathname === '/';
 
-                // Кнопка "Мониторинг" (если мы не на самой странице мониторинга)
+            if (user.role === ROLE_ADMIN || user.role === ROLE_GUEST) {
                 if (!onMonitoring && !right.querySelector('.btn-monitoring')) {
                     mkBtn('btn-admin btn-monitoring', 'monitoring.html', 'Мониторинг ознакомления', ICON_CHART + '<span>Мониторинг</span>');
                 }
-
-                // Кнопка "Управление" (ТОЛЬКО для Админа, если мы не в панели управления)
                 if (user.role === ROLE_ADMIN && !onAdminPanel && !right.querySelector('.btn-manage')) {
                     mkBtn('btn-admin btn-manage', 'admin-panel.html', 'Панель управления', ICON_GEAR + '<span>Управление</span>');
                 }
-                
-                // Кнопка "В базу знаний" (если мы не на дашборде)
                 if (!isDashboard && !right.querySelector('.btn-back-kb')) {
                     mkBtn('btn-admin btn-back-kb', 'dashboard.html', 'Вернуться к разделам базы знаний', ICON_BACK + '<span>В базу знаний</span>');
                 }
-            } 
-            // 2. Логика ТОЛЬКО для СОТРУДНИКА производства
-            else if (user.role === ROLE_WORKER) {
-                const isDashboard = window.location.pathname.endsWith('dashboard.html') || window.location.pathname === '/';
-                
-                // Сотруднику показываем ТОЛЬКО кнопку "В базу знаний" (и то, если он не на дашборде)
-                // Кнопки "Мониторинг" и "Управление" для него НЕ создаются.
+            } else if (user.role === ROLE_WORKER) {
                 if (!isDashboard && !right.querySelector('.btn-back-kb')) {
                     mkBtn('btn-admin btn-back-kb', 'dashboard.html', 'Вернуться к разделам базы знаний', ICON_BACK + '<span>В базу знаний</span>');
                 }
             }
         }
-    }
 
-    // --- Dashboard: карточки разделов ---
-    const grid = document.getElementById('cardsGrid');
-    if (grid && typeof isAuthenticated === 'function' && isAuthenticated()) {
-        const user = kbGetCurrentUser();
-        if (user) {
+        // --- DASHBOARD: КАРТОЧКИ РАЗДЕЛОВ ---
+        const grid = document.getElementById('cardsGrid');
+        if (grid) {
             grid.innerHTML = '';
             let visible = 0;
             KB_SECTIONS.forEach(sec => {
@@ -373,22 +316,21 @@ document.addEventListener('DOMContentLoaded', function () {
             
             const statSec = document.getElementById('stat-sections');
             if (statSec) statSec.textContent = String(visible);
+            
             const statOps = document.getElementById('stat-operations');
             if (statOps) {
                 const n = KB_OPERATIONS.filter(o => o.status === 'ready' && kbUserCanViewOperation(user, o)).length;
                 statOps.textContent = String(n);
             }
         }
-    }
 
-    // --- Страницы раздела: скрыть ссылки на операции без права ---
-    if (isContentPage && typeof isAuthenticated === 'function' && isAuthenticated()) {
-        const user = kbGetCurrentUser();
-        if (user) {
+        // --- СТРАНИЦЫ РАЗДЕЛА: СКРЫТИЕ ССЫЛОК ---
+        if (isContentPage) {
             document.querySelectorAll('a[href*="operations/"]').forEach(link => {
                 const m = link.getAttribute('href').match(/(\d+\.\d+\.\d+)\.html/);
                 if (!m) return;
                 const op = kbGetOperationById(m[1]);
+                
                 if (op && !kbUserCanViewOperation(user, op)) {
                     const li = link.closest('li');
                     if (li) li.remove(); else link.remove();
@@ -408,43 +350,37 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
         }
+    } else {
+        // Если мы на защищенной странице и пользователь не загрузился
+        if (window.location.pathname.includes('/pages/') || window.location.pathname.includes('dashboard')) {
+            sessionStorage.removeItem('modular_house_session');
+            window.location.href = '/index.html?need_login=1';
+        }
     }
 });
 
 /**
  * operation-status.js — Визуальная индикация статуса ознакомления
- * ИСПРАВЛЕНО: 
- * 1. Поддержка относительных путей (operations/X.X.X.html)
- * 2. Добавлены необходимые CSS стили прямо в JS (чтобы не править style.css)
- * 3. Экранирование точек в регулярном выражении
  */
 document.addEventListener('DOMContentLoaded', async () => {
-    // Проверяем авторизацию
     if (typeof isAuthenticated === 'function' && !isAuthenticated()) return;
     
-    // Находим все ссылки на операции на странице
-    // Ищем как абсолютные (/pages/operations/...), так и относительные (operations/...) пути
     const opLinks = document.querySelectorAll('a[href*="operations/"]');
     if (opLinks.length === 0) return;
-
-    // Собираем ID операций из ссылок
-    const opIds = [];
-    const linkMap = {}; 
     
+    const opIds = [];
+    const linkMap = {};
     opLinks.forEach(link => {
-        // Исправленное регулярное выражение с экранированными точками
-        const match = link.getAttribute('href').match(/(\d+\.\d+\.\d+)\.html/);
+        const match = link.getAttribute('href').match(/(\d+.\d+.\d+).html/);
         if (match) {
-            const id = match[1];
-            opIds.push(id);
-            linkMap[id] = link;
+            opIds.push(match[1]);
+            linkMap[match[1]] = link;
         }
     });
-
+    
     if (opIds.length === 0) return;
-
+    
     try {
-        // Запрашиваем статусы у сервера
         const response = await fetch('/api/read-status', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -454,53 +390,31 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         if (!response.ok) throw new Error('Ошибка загрузки статусов');
         const statuses = await response.json();
-
-        // Динамически добавляем стили, если их нет на странице
+        
         if (!document.getElementById('dynamic-op-status-styles')) {
             const style = document.createElement('style');
             style.id = 'dynamic-op-status-styles';
             style.textContent = `
-                /* НЕ ознакомленная операция — привлекает внимание */
-                .unread-operation {
-                    background-color: #fff7ed !important; /* Светло-оранжевый фон */
-                    border-left: 4px solid #f97316 !important; /* Оранжевая полоса слева */
-                }
-                .unread-operation a {
-                    color: #c2410c !important; /* Темно-оранжевый текст */
-                    font-weight: 600;
-                }
-                
-                /* Ознакомленная операция — спокойный вид */
-                .read-operation {
-                    background-color: #ffffff !important; /* Белый/светлый фон */
-                    border-left: 4px solid transparent !important;
-                }
-                
-                /* Плавный переход при изменении статуса */
-                li, .operation-item {
-                    transition: background-color 0.3s ease, border-color 0.3s ease;
-                }
+                .unread-operation { background-color: #fff7ed !important; border-left: 4px solid #f97316 !important; }
+                .unread-operation a { color: #c2410c !important; font-weight: 600; }
+                .read-operation { background-color: #ffffff !important; border-left: 4px solid transparent !important; }
+                li, .operation-item { transition: background-color 0.3s ease, border-color 0.3s ease; }
             `;
             document.head.appendChild(style);
         }
-
-        // Применяем стили
-Object.entries(statuses).forEach(([id, statusObj]) => {
-    const link = linkMap[id];
-    if (!link) return;
-    const parentItem = link.closest('li');
-    
-    // Теперь мы точно знаем, актуальна ли прочитанная версия
-    const isCurrent = statusObj.isRead; 
-    
-    if (isCurrent) {
-        parentItem.classList.remove('unread-operation');
-        parentItem.classList.add('read-operation');
-    } else {
-        parentItem.classList.remove('read-operation');
-        parentItem.classList.add('unread-operation');
-    }
-});
+        
+        Object.entries(statuses).forEach(([id, statusObj]) => {
+            const link = linkMap[id];
+            if (!link) return;
+            const parentItem = link.closest('li');
+            if (statusObj.isRead) {
+                parentItem.classList.remove('unread-operation');
+                parentItem.classList.add('read-operation');
+            } else {
+                parentItem.classList.remove('read-operation');
+                parentItem.classList.add('unread-operation');
+            }
+        });
     } catch (error) {
         console.error('Не удалось загрузить статусы ознакомления:', error);
     }
@@ -508,40 +422,30 @@ Object.entries(statuses).forEach(([id, statusObj]) => {
 
 /**
  * auto-check-read-btn.js — Автоматическая синхронизация кнопки "Ознакомлен"
- * Добавляется в конец kb.js
  */
 document.addEventListener('DOMContentLoaded', async () => {
-    // Проверяем, находимся ли мы на странице операции и есть ли кнопка
     const readBtn = document.getElementById('readBtn');
     if (!readBtn || !window.location.pathname.includes('/operations/')) return;
-
-    // Проверяем авторизацию
     if (typeof isAuthenticated !== 'function' || !isAuthenticated()) return;
-
+    
     const opId = readBtn.dataset.opId;
     const opVersion = readBtn.dataset.opVersion;
-    
     if (!opId || !opVersion) return;
-
+    
     try {
-        // Запрашиваем статус именно для этой операции у сервера
         const response = await fetch('/api/read-status', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
             body: JSON.stringify({ opIds: [opId] })
         });
-
-        if (!response.ok) throw new Error('Ошибка загрузки статуса');
         
+        if (!response.ok) throw new Error('Ошибка загрузки статуса');
         const statuses = await response.json();
         const statusObj = statuses[opId];
-
-        // Если сервер подтверждает, что версия прочитана — переключаем кнопку
+        
         if (statusObj && statusObj.isRead) {
             readBtn.classList.add('read');
-            
-            // Меняем иконки и текст (предполагая стандартную структуру кнопки из вашего HTML)
             const iconUnread = readBtn.querySelector('.icon-unread');
             const iconRead = readBtn.querySelector('.icon-read');
             const btnText = readBtn.querySelector('.btn-text');
@@ -550,7 +454,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (iconRead) iconRead.style.display = 'inline-block';
             if (btnText) btnText.textContent = 'Ознакомлен';
             
-            // Блокируем повторное нажатие (опционально)
             readBtn.disabled = true;
             readBtn.style.opacity = '0.7';
             readBtn.style.cursor = 'default';
