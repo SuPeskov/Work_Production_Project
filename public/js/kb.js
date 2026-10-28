@@ -60,28 +60,51 @@ function kbUserCanConfirmRead(user) {
     return !!user && user.role === ROLE_WORKER;
 }
 
-/**
- Актуальный профиль текущего пользователя.
- Читает ТОЛЬКО из sessionStorage.
- */
-function kbGetCurrentUser() {
-    try {
-        const data = sessionStorage.getItem('modular_house_session');
-        if (!data) return null;
-        
-        let user = JSON.parse(data);
-        if (!user || !user.role) return null;
+// СТАЛО (правильно - асинхронный запрос к серверу):
+let _currentUserCache = null;
 
-        // Нормализация роли (на случай, если в хранилище лежит технический код)
-        if (user.role === 'admin') user.role = 'Администратор';
-        else if (user.role === 'worker') user.role = 'Сотрудник производства';
-        else if (user.role === 'guest') user.role = 'Гость';
+async function kbGetCurrentUser() {
+    if (_currentUserCache) return _currentUserCache;
+    
+    try {
+        const response = await fetch('/api/me', { credentials: 'include' });
+        if (!response.ok) throw new Error('Not authenticated');
+        const data = await response.json();
         
-        return user;
+        if (data.user) {
+            // Нормализация роли для совместимости со старым кодом
+            const roleMap = { 
+                'admin': 'Администратор', 
+                'worker': 'Сотрудник производства', 
+                'guest': 'Гость' 
+            };
+            data.user.roleLabel = roleMap[data.user.role] || data.user.role;
+            
+            // Сохраняем массив разделов в поле access для совместимости
+            data.user.access = data.sections || [];
+            
+            _currentUserCache = data.user;
+            return data.user;
+        }
     } catch (e) {
-        console.error('Ошибка чтения сессии:', e);
-        return null;
+        console.warn('Не удалось загрузить профиль пользователя:', e);
     }
+    return null;
+}
+
+// Функция проверки авторизации (заменяет isAuthenticated)
+function isAuthenticated() {
+    return !!_currentUserCache;
+}
+
+// Функция выхода (теперь через API)
+async function logout() {
+    try {
+        await fetch('/api/logout', { method: 'POST', credentials: 'include' });
+    } catch(e) {}
+    _currentUserCache = null;
+    sessionStorage.removeItem('modular_house_session');
+    window.location.href = '/index.html';
 }
 
 // ============================================================
