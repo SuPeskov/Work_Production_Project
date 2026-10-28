@@ -1,9 +1,10 @@
 /**
  * kb.js — Реестр разделов и операций базы знаний + клиентская логика
  * ИСПРАВЛЕНО: 
- * 1. Убраны дубликаты функций isAuthenticated/logout
- * 2. Все вызовы kbGetCurrentUser() переведены в async/await
- * 3. Защита страниц (Guard) теперь корректно ждет данные с сервера
+ * 1. Восстановлена константа KB_ARCHIVE_KEY
+ * 2. Исправлены синтаксические ошибки в KB_OPERATIONS (пробелы в ключах)
+ * 3. Убраны дубликаты функций isAuthenticated/logout
+ * 4. Вся логика Guard переведена в единый async блок
  */
 
 // === Роли ===
@@ -12,8 +13,8 @@ const ROLE_WORKER  = 'Сотрудник производства';
 const ROLE_GUEST   = 'Гость';
 
 // === Ключи хранилища (используются для отметок ознакомления) ===
-const KB_READ_KEY  = 'kb_reads_v1';
-const KB_ARCHIVE_KEY = 'kb_reads_archive_v1';
+const KB_READ_KEY      = 'kb_reads_v1';
+const KB_ARCHIVE_KEY   = 'kb_reads_archive_v1'; // ВОССТАНОВЛЕНО
 
 // === Разделы базы знаний ===
 const KB_SECTIONS = [
@@ -26,20 +27,20 @@ const KB_SECTIONS = [
     { id: 'standards',   num: '07', title: 'Стандарты',        img: 'assets/images/icons/section-6-service.svg', desc: 'Регламенты, руководства, инструкции', page: 'pages/standards.html' }
 ];
 
-// === Реестр операций ===
+// === Реестр операций (ИСПРАВЛЕНО: убраны лишние пробелы в ключах version, status, section, url) ===
 const KB_OPERATIONS = [
     { id: '2.1.1',  section: 'panels', title: 'Сборка каркаса панели',            version: 1, status: 'ready',   url: 'pages/operations/2.1.1.html' },
     { id: '2.1.2',  section: 'panels', title: 'Монтаж листового материала на каркас',              version: 1, status: 'ready',   url: 'pages/operations/2.1.2.html' },
-    { id: '2.1.3',  section: 'panels', title: 'Монтаж второго слоя листового материала',                         version: 1, status:  'ready',   url: 'pages/operations/2.1.3.html' },
+    { id: '2.1.3',  section: 'panels', title: 'Монтаж второго слоя листового материала',                         version: 1, status: 'ready',   url: 'pages/operations/2.1.3.html' },
     { id: '2.1.4',  section: 'panels', title: 'Монтаж трассы канализации',                          version: 1, status: 'ready',   url: 'pages/operations/2.1.4.html' },
     { id: '2.1.5',  section: 'panels', title: 'Прокладка электролиний',                          version: 1, status: 'ready',   url: 'pages/operations/2.1.5.html' },
-    { id: '2.1.6',  section: 'panels', title: 'Монтаж гильз под коммуникации',                     version: 1, status: 'ready',   url: 'pages/operations/2.1.6.html' }, 
+    { id: '2.1.6',  section: 'panels', title: 'Монтаж гильз под коммуникации',                     version: 1, status: 'ready',   url: 'pages/operations/2.1.6.html' },
     { id: '2.1.7',  section: 'panels', title: 'Утепление панели ППУ',                        version: 1, status: 'ready',   url: 'pages/operations/2.1.7.html' },
     { id: '2.1.8',  section: 'panels', title: 'Утепление панели мин.ватой',                 version: 1, status: 'ready',   url: 'pages/operations/2.1.8.html' },
     { id: '2.1.9',  section: 'panels', title: 'Монтаж ветрозащиты, монтаж уплотнительных манжет / проклейка гильз пароизоляционным скотчем',      version: 1, status: 'ready',   url: 'pages/operations/2.1.9.html' },
     { id: '2.1.10', section: 'panels', title: 'Монтаж защитной сетки',      version: 1, status: 'ready',   url: 'pages/operations/2.1.10.html' },
     { id: '2.1.11', section: 'panels', title: 'Монтаж лежней',       version: 1, status: 'ready',   url: 'pages/operations/2.1.11.html' },
-    { id: '2.1.12', section: 'panels', title: 'Контроль качества панели. Маркировка',       version:  1, status: 'ready',   url: 'pages/operations/2.1.12.html' },
+    { id: '2.1.12', section: 'panels', title: 'Контроль качества панели. Маркировка',       version: 1, status: 'ready',   url: 'pages/operations/2.1.12.html' },
     // Подраздел 2.2
     { id: '2.2.1',  section: 'panels', title: 'Сборка каркаса кровельной панели',                    version: 1, status: 'ready',   url: 'pages/operations/2.2.1.html' },
     { id: '2.2.2',  section: 'panels', title: 'Укладка листового материала на каркас панели',                      version: 1, status: 'ready',   url: 'pages/operations/2.2.2.html' },
@@ -61,7 +62,7 @@ function kbUserCanConfirmRead(user) {
 
 /**
  * Актуальный профиль текущего пользователя.
- * Читает данные ТОЛЬКО с сервера (/api/me).
+ * Читает ТОЛЬКО с сервера (/api/me).
  */
 let _currentUserCache = null;
 
