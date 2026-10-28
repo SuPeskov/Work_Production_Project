@@ -60,10 +60,14 @@ function kbUserCanConfirmRead(user) {
     return !!user && user.role === ROLE_WORKER;
 }
 
-// СТАЛО (правильно - асинхронный запрос к серверу):
-let _currentUserCache = null;
+/**
+ * Актуальный профиль текущего пользователя.
+ * ИСПРАВЛЕНО: Читает данные с сервера (/api/me), а не из sessionStorage.
+ */
+let _currentUserCache = null; // Кэш для текущей сессии страницы
 
 async function kbGetCurrentUser() {
+    // Если уже загружали на этой странице, возвращаем из памяти
     if (_currentUserCache) return _currentUserCache;
     
     try {
@@ -72,24 +76,43 @@ async function kbGetCurrentUser() {
         const data = await response.json();
         
         if (data.user) {
-            // Нормализация роли для совместимости со старым кодом
+            // Нормализация роли для совместимости со старым кодом интерфейса
             const roleMap = { 
                 'admin': 'Администратор', 
                 'worker': 'Сотрудник производства', 
                 'guest': 'Гость' 
             };
-            data.user.roleLabel = roleMap[data.user.role] || data.user.role;
             
-            // Сохраняем массив разделов в поле access для совместимости
-            data.user.access = data.sections || [];
+            // Формируем объект, понятный вашему UI
+            _currentUserCache = {
+                username: data.user.username,
+                name: data.user.name,
+                role: roleMap[data.user.role] || data.user.role, // Русское название роли
+                access: data.sections || [] // Список доступных разделов
+            };
             
-            _currentUserCache = data.user;
-            return data.user;
+            return _currentUserCache;
         }
     } catch (e) {
         console.warn('Не удалось загрузить профиль пользователя:', e);
     }
     return null;
+}
+
+// Вспомогательная функция проверки авторизации (синхронная обертка)
+function isAuthenticated() {
+    return !!_currentUserCache;
+}
+
+// Функция выхода (теперь через API)
+async function logout() {
+    try {
+        await fetch('/api/logout', { method: 'POST', credentials: 'include' });
+    } catch(e) {}
+    _currentUserCache = null;
+    // Очищаем старый мусор, если он еще остался
+    sessionStorage.removeItem('modular_house_session');
+    window.location.href = '/index.html';
 }
 
 // Функция проверки авторизации (заменяет isAuthenticated)
@@ -233,42 +256,38 @@ document.addEventListener('DOMContentLoaded', function () {
             </div>`;
     }
 
-    // --- Панель пользователя в шапке + выход ---
-    if (typeof isAuthenticated === 'function' && isAuthenticated()) {
-        const user = kbGetCurrentUser();
-        console.log('[KB.JS] Текущий пользователь:', user); // ДИАГНОСТИКА
+// --- Панель пользователя в шапке + выход (АСИНХРОННАЯ ВЕРСИЯ) ---
+(async () => {
+    const user = await kbGetCurrentUser();
+    
+    if (user) {
+        // Обновляем имя и роль
+        const nameEl = document.getElementById('currentUserName') || document.getElementById('userName');
+        const roleEl = document.getElementById('currentUserRole') || document.getElementById('userRole');
+        const avatarEl = document.getElementById('userAvatar');
         
-        if (user) {
-            // Обновляем имя и роль (ищем по разным ID для совместимости)
-            const nameEl = document.getElementById('currentUserName') || document.getElementById('userName');
-            const roleEl = document.getElementById('currentUserRole') || document.getElementById('userRole');
-            const avatarEl = document.getElementById('userAvatar');
-            
-            if (nameEl) nameEl.textContent = user.name || user.username;
-            if (roleEl) roleEl.textContent = user.role || 'Пользователь';
-            if (avatarEl) avatarEl.textContent = (user.name || user.username || '?').charAt(0).toUpperCase();
-
-            // КНОПКА ВЫХОДА (ИСПРАВЛЕНО: надежный поиск)
-            const logoutBtn = document.getElementById('logoutBtn') || 
-                              document.querySelector('button[class*="logout"]') ||
-                              document.querySelector('a[href*="logout"]');
-                              
-            if (logoutBtn) {
-                logoutBtn.onclick = function (e) {
-                    e.preventDefault();
-                    console.log('[KB.JS] Нажата кнопка выхода');
-                    if (typeof logout === 'function') {
-                        logout();
-                    } else {
-                        sessionStorage.removeItem('modular_house_session');
-                        window.location.href = '/index.html';
-                    }
-                };
-            } else {
-                console.warn('[KB.JS] Кнопка выхода не найдена в DOM!');
-            }
+        if (nameEl) nameEl.textContent = user.name || user.username;
+        if (roleEl) roleEl.textContent = user.role || 'Пользователь';
+        if (avatarEl) avatarEl.textContent = (user.name || user.username || '?').charAt(0).toUpperCase();
+        
+        // Кнопка выхода
+        const logoutBtn = document.getElementById('logoutBtn') || 
+                          document.querySelector('button[class*="logout"]') ||
+                          document.querySelector('a[href*="logout"]');
+                          
+        if (logoutBtn) {
+            logoutBtn.onclick = function (e) {
+                e.preventDefault();
+                logout();
+            };
+        }
+    } else {
+        // Если пользователь не авторизован и находится на защищенной странице
+        if (window.location.pathname.includes('/pages/') || window.location.pathname.includes('dashboard')) {
+            window.location.href = '/index.html?need_login=1';
         }
     }
+})();
 
     // --- Кнопки в шапке по ролям ---
     if (typeof isAuthenticated === 'function' && isAuthenticated()) {
