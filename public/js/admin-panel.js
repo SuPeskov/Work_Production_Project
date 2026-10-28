@@ -145,10 +145,15 @@ document.addEventListener('DOMContentLoaded', function () {
 function renderUsers(users) {
     tableBody.innerHTML = '';
     const sectionNames = {
-        'preparation': 'Заготовка', 'panels': 'Сборка панелей', 'module': 'Сборка модуля',
-        'options': 'Сборка опций', 'installation': 'Монтаж', 'service': 'Сервис'
+        'preparation': 'Заготовка', 
+        'panels': 'Сборка панелей', 
+        'module': 'Сборка модуля',
+        'options': 'Сборка опций', 
+        'installation': 'Монтаж', 
+        'service': 'Сервис',
+        'standards': 'Стандарты'
     };
-    const sectionOrder = ['preparation', 'panels', 'module', 'options', 'installation', 'service'];
+    const sectionOrder = ['preparation', 'panels', 'module', 'options', 'installation', 'service', 'standards'];
 
     users.forEach(user => {
         const tr = document.createElement('tr');
