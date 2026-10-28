@@ -265,7 +265,7 @@ form.addEventListener('submit', async function (e) {
     if (role === 'worker') {
         sections = Array.from(document.querySelectorAll('input[name="sections"]:checked')).map(cb => cb.value);
     } else if (role === 'guest' || role === 'admin') {
-        sections = ['preparation', 'panels', 'module', 'options', 'installation', 'service'];
+        sections = ['preparation', 'panels', 'module', 'options', 'installation', 'service', 'standards'];
     }
     
     if (!name || !username || !password || !role) {
