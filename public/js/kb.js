@@ -282,6 +282,7 @@ document.addEventListener('DOMContentLoaded', function () {
             };
         }
     } else {
+        sessionStorage.removeItem('modular_house_session');
         // Если пользователь не авторизован и находится на защищенной странице
         if (window.location.pathname.includes('/pages/') || window.location.pathname.includes('dashboard')) {
             window.location.href = '/index.html?need_login=1';
