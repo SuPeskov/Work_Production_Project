@@ -150,11 +150,23 @@ const loginLimiter = rateLimit({
 
 app.post('/api/login', loginLimiter, (req, res) => {
     const { username, password } = req.body || {};
-    if (!username || !password) return res.status(400).json({ error: 'Укажите логин и пароль' });
+    console.log('[LOGIN DEBUG] Попытка входа:', { 
+        username: String(username).trim().toLowerCase(), 
+        passLen: String(password).length 
+    });
     
-    const user = db.prepare('SELECT * FROM users WHERE username=? AND active=1').get(String(username).trim().toLowerCase());
+    const user = db.prepare('SELECT * FROM users WHERE username=? AND active=1')
+        .get(String(username).trim().toLowerCase());
+        
+    if (!user) {
+        console.log('[LOGIN DEBUG] Пользователь не найден или не активен');
+        return res.status(401).json({ error: 'Неверный логин или пароль' });
+    }
     
-    if (!user || !bcrypt.compareSync(String(password), user.pass_hash)) {
+    const isMatch = bcrypt.compareSync(String(password), user.pass_hash);
+    console.log('[LOGIN DEBUG] Bcrypt сравнение:', isMatch, '| Хеш в БД:', user.pass_hash.substring(0, 20));
+    
+    if (!isMatch) {
         return res.status(401).json({ error: 'Неверный логин или пароль' });
     }
     
