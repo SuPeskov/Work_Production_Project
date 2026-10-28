@@ -1,41 +1,14 @@
 /**
- * auth.js — Минимальная логика авторизации и защита сессии
- * ИСПРАВЛЕНО: 
- * 1. Убрана дублирующая проверка прав (делегировано kb.js)
- * 2. Сохранен перехват 401 для принудительного выхода при новом входе
- * 3. Форма входа просто устанавливает куку и редиректит
+ * auth.js — ТОЛЬКО обработка формы входа.
+ * ИСПРАВЛЕНО: Убран автоматический редирект по sessionStorage.
+ * Проверка сессии теперь полностью делегирована kb.js и серверным кукам.
  */
-
-const SESSION_KEY = 'modular_house_session'; // Оставлен только для совместимости со старым UI
-
-// === ПЕРЕХВАТЧИК ЗАВЕРШЕНИЯ СЕССИИ (Защита от параллельных входов) ===
-(function() {
-    const originalFetch = window.fetch;
-    window.fetch = async function(...args) {
-        const response = await originalFetch.apply(this, args);
-        
-        // Если получили 401 и мы НЕ на странице входа/предупреждения
-        if (response.status === 401 && 
-            !window.location.pathname.includes('index.html') && 
-            !window.location.pathname.includes('session-terminated')) {
-            
-            // Очищаем локальную сессию ПЕРЕД редиректом
-            sessionStorage.removeItem(SESSION_KEY);
-            
-            try {
-                const session = JSON.parse(sessionStorage.getItem(SESSION_KEY) || '{}');
-                const username = session.username || 'пользователя';
-                window.location.href = `/session-terminated.html?user=${encodeURIComponent(username)}`;
-            } catch (e) {
-                window.location.href = '/session-terminated.html';
-            }
-        }
-        return response;
-    };
-})();
+const SESSION_KEY = 'modular_house_session'; // Оставлен только для совместимости, если где-то еще используется
 
 document.addEventListener('DOMContentLoaded', function () {
     const loginForm = document.getElementById('loginForm');
+    
+    // Если формы нет на странице — выходим (это нормально для других страниц)
     if (!loginForm) return;
 
     const errorDiv = document.getElementById('errorMessage');
@@ -43,24 +16,10 @@ document.addEventListener('DOMContentLoaded', function () {
     const toggleBtn = document.getElementById('togglePassword');
     const passwordInput = document.getElementById('password');
 
-    // Проверка валидности сессии при загрузке страницы входа
-    if (sessionStorage.getItem(SESSION_KEY)) {
-        fetch('/api/me', { credentials: 'include' })
-        .then(res => res.json())
-        .then(data => {
-            if (data.user) {
-                window.location.href = 'dashboard.html';
-            } else {
-                sessionStorage.removeItem(SESSION_KEY);
-            }
-        })
-        .catch(() => sessionStorage.removeItem(SESSION_KEY));
-        return;
-    }
-
     // Обработка формы входа
     loginForm.addEventListener('submit', async function (e) {
         e.preventDefault();
+        
         const username = document.getElementById('username').value.trim();
         const password = document.getElementById('password').value;
         
@@ -85,12 +44,13 @@ document.addEventListener('DOMContentLoaded', function () {
             const data = await response.json();
             
             if (response.ok && data.ok) {
-                // Сохраняем базовые данные для быстрого отображения до загрузки полного профиля
-                setSession(data.user);
+                // Сервер установил куку kb_token. 
+                // Мы НЕ пишем ничего в sessionStorage для авторизации.
+                // Просто показываем успех и редиректим.
+                hideError();
                 btn.classList.add('success');
                 btn.querySelector('span').textContent = 'Вход выполнен!';
                 
-                // Небольшая задержка для визуального подтверждения
                 setTimeout(() => {
                     window.location.href = 'dashboard.html';
                 }, 500);
@@ -117,18 +77,12 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    function setSession(user) {
-        const session = {
-            username: user.username,
-            name: user.name,
-            role: user.roleLabel || user.role,
-            loginTime: new Date().toISOString()
-        };
-        sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
-    }
-
     function showError(msg) {
         if (errorText) errorText.textContent = msg;
         if (errorDiv) errorDiv.classList.remove('hidden');
+    }
+
+    function hideError() {
+        if (errorDiv) errorDiv.classList.add('hidden');
     }
 });

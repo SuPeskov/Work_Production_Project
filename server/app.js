@@ -83,7 +83,7 @@ const OP_MAP = Object.fromEntries(OPERATIONS.map(o => [o.id, o]));
 const app = express();
 // ИСПРАВЛЕНИЕ RATE-LIMIT: Доверяем прокси, но отключаем проверку безопасности, 
 // так как мы находимся за Nginx и знаем, что X-Forwarded-For корректен
-app.set('trust proxy', true); 
+app.set('trust proxy', 1); 
 app.disable('x-powered-by');
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(express.json());
@@ -142,8 +142,10 @@ const loginLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, 
     max: 20, 
     standardHeaders: true,
+    legacyHeaders: false,
     // ИСПРАВЛЕНИЕ: Отключаем строгую проверку trustProxy для rate-limit
-    validate: { xForwardedForHeader: false } 
+    validate: { xForwardedForHeader: false },
+    skipFailedRequests: true, // Не блокируем после неудачных попыток 
 });
 
 app.post('/api/login', loginLimiter, (req, res) => {
