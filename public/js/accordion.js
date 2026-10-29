@@ -1,9 +1,11 @@
 /**
  * accordion.js — Логика аккордеона для страниц разделов
- * ИСПРАВЛЕНО: Убрана проверка авторизации (теперь этим занимается kb.js)
+ * Теперь каждый подраздел — это отдельный accordion-section
  */
+
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('accordion.js загружен');
+    console.log(' accordion.js загружен');
+    
     const accordionSections = document.querySelectorAll('.accordion-section');
     
     accordionSections.forEach(section => {
@@ -30,14 +32,30 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
-
-    // Кнопка выхода (можно оставить, если она есть в HTML, но лучше делегировать kb.js)
+    
+    // Инициализация пользователя
+    if (typeof isAuthenticated === 'function' && !isAuthenticated()) {
+        window.location.href = '../index.html';
+        return;
+    }
+    
+    const user = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
+    if (user) {
+        // currentUserName/currentUserRole — чтобы не конфликтовать с полями формы admin-panel
+        const userNameEl = document.getElementById('currentUserName') || document.getElementById('userName');
+        const userRoleEl = document.getElementById('currentUserRole') || document.getElementById('userRole');
+        const userAvatarEl = document.getElementById('userAvatar');
+        
+        if (userNameEl && userNameEl.tagName === 'SPAN') userNameEl.textContent = user.name;
+        if (userRoleEl && userRoleEl.tagName === 'SPAN') userRoleEl.textContent = user.role;
+        if (userAvatarEl) userAvatarEl.textContent = user.name.charAt(0).toUpperCase();
+    }
+    
     const logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) {
-        logoutBtn.addEventListener('click', function(e) {
-            e.preventDefault();
+        logoutBtn.addEventListener('click', function() {
             if (typeof logout === 'function') logout();
-            else window.location.href = '../index.html';
+            window.location.href = '../index.html';
         });
     }
 });
@@ -48,6 +66,7 @@ window.addEventListener('load', function() {
         const hash = window.location.hash.substring(1);
         if (!hash || !hash.startsWith('section-')) return;
         
+        console.log('📍 Якорь:', hash);
         const target = document.getElementById(hash);
         if (!target) return;
         

@@ -96,37 +96,33 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Сохранение изменений
-async function saveAccessChanges() {
-    if (!currentEditingUserId) return;
-    
-    // Собираем ВСЕ отмеченные чекбоксы с именем modal_sections
-    const selectedSections = Array.from(document.querySelectorAll('input[name="modal_sections"]:checked'))
-        .map(cb => cb.value);
-        
-    console.log(' Отправляемые разделы:', selectedSections); // ДИАГНОСТИКА
-    
-    try {
-        const response = await fetch(`/api/admin/users/${currentEditingUserId}/access`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({ sections: selectedSections })
-        });
-        
-        const data = await response.json();
-        console.log('📥 Ответ сервера:', data); // ДИАГНОСТИКА
-        
-        if (response.ok && data.ok) {
-            closeAccessModal();
-            await loadUsers();
-        } else {
-            alert('Ошибка: ' + (data.error || 'Не удалось сохранить'));
+    async function saveAccessChanges() {
+        if (!currentEditingUserId) return;
+
+        const selectedSections = Array.from(modalCheckboxes)
+            .filter(cb => cb.checked)
+            .map(cb => cb.value);
+
+        try {
+            const response = await fetch(`/api/admin/users/${currentEditingUserId}/access`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ sections: selectedSections })
+            });
+
+            const data = await response.json();
+            if (response.ok && data.ok) {
+                closeAccessModal();
+                await loadUsers(); // Обновляем таблицу
+            } else {
+                alert('Ошибка: ' + (data.error || 'Не удалось сохранить'));
+            }
+        } catch (error) {
+            console.error('Ошибка сохранения доступа:', error);
+            alert('Ошибка соединения с сервером');
         }
-    } catch (error) {
-        console.error('Ошибка сохранения доступа:', error);
-        alert('Ошибка соединения с сервером');
     }
-}
 
     // Обработчики событий для модалки
     if (closeAccessModalBtn) closeAccessModalBtn.onclick = closeAccessModal;
@@ -149,15 +145,10 @@ async function saveAccessChanges() {
 function renderUsers(users) {
     tableBody.innerHTML = '';
     const sectionNames = {
-        'preparation': 'Заготовка', 
-        'panels': 'Сборка панелей', 
-        'module': 'Сборка модуля',
-        'options': 'Сборка опций', 
-        'installation': 'Монтаж', 
-        'service': 'Сервис',
-        'standards': 'Стандарты'
+        'preparation': 'Заготовка', 'panels': 'Сборка панелей', 'module': 'Сборка модуля',
+        'options': 'Сборка опций', 'installation': 'Монтаж', 'service': 'Сервис'
     };
-    const sectionOrder = ['preparation', 'panels', 'module', 'options', 'installation', 'service', 'standards'];
+    const sectionOrder = ['preparation', 'panels', 'module', 'options', 'installation', 'service'];
 
     users.forEach(user => {
         const tr = document.createElement('tr');
@@ -265,7 +256,7 @@ form.addEventListener('submit', async function (e) {
     if (role === 'worker') {
         sections = Array.from(document.querySelectorAll('input[name="sections"]:checked')).map(cb => cb.value);
     } else if (role === 'guest' || role === 'admin') {
-        sections = ['preparation', 'panels', 'module', 'options', 'installation', 'service', 'standards'];
+        sections = ['preparation', 'panels', 'module', 'options', 'installation', 'service'];
     }
     
     if (!name || !username || !password || !role) {

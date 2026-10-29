@@ -23,8 +23,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         { file: 'pages/module.html',       card: 2 },
         { file: 'pages/options.html',      card: 3 },
         { file: 'pages/installation.html', card: 4 },
-        { file: 'pages/service.html',      card: 5 },
-        { file: 'pages/standards.html',    card: 6 }
+        { file: 'pages/service.html',      card: 5 }
     ];
     
     let totalSubsections = 0;

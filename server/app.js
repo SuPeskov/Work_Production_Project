@@ -83,7 +83,7 @@ const OP_MAP = Object.fromEntries(OPERATIONS.map(o => [o.id, o]));
 const app = express();
 // ИСПРАВЛЕНИЕ RATE-LIMIT: Доверяем прокси, но отключаем проверку безопасности, 
 // так как мы находимся за Nginx и знаем, что X-Forwarded-For корректен
-app.set('trust proxy', 1); 
+app.set('trust proxy', true); 
 app.disable('x-powered-by');
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(express.json());
@@ -142,31 +142,17 @@ const loginLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, 
     max: 20, 
     standardHeaders: true,
-    legacyHeaders: false,
     // ИСПРАВЛЕНИЕ: Отключаем строгую проверку trustProxy для rate-limit
-    validate: { xForwardedForHeader: false },
-    skipFailedRequests: true, // Не блокируем после неудачных попыток 
+    validate: { xForwardedForHeader: false } 
 });
 
 app.post('/api/login', loginLimiter, (req, res) => {
     const { username, password } = req.body || {};
-    console.log('[LOGIN DEBUG] Попытка входа:', { 
-        username: String(username).trim().toLowerCase(), 
-        passLen: String(password).length 
-    });
+    if (!username || !password) return res.status(400).json({ error: 'Укажите логин и пароль' });
     
-    const user = db.prepare('SELECT * FROM users WHERE username=? AND active=1')
-        .get(String(username).trim().toLowerCase());
-        
-    if (!user) {
-        console.log('[LOGIN DEBUG] Пользователь не найден или не активен');
-        return res.status(401).json({ error: 'Неверный логин или пароль' });
-    }
+    const user = db.prepare('SELECT * FROM users WHERE username=? AND active=1').get(String(username).trim().toLowerCase());
     
-    const isMatch = bcrypt.compareSync(String(password), user.pass_hash);
-    console.log('[LOGIN DEBUG] Bcrypt сравнение:', isMatch, '| Хеш в БД:', user.pass_hash.substring(0, 20));
-    
-    if (!isMatch) {
+    if (!user || !bcrypt.compareSync(String(password), user.pass_hash)) {
         return res.status(401).json({ error: 'Неверный логин или пароль' });
     }
     
@@ -218,13 +204,8 @@ app.get('/api/access/:sectionId', auth(), (req, res) => {
 });
 
 const SECTION_BY_PATH = {
-    preparation: 'preparation', 
-    panels: 'panels', 
-    module: 'module',
-    options: 'options', 
-    installation: 'installation', 
-    service: 'service',
-    standards: 'standards'
+    preparation: 'preparation', panels: 'panels', module: 'module',
+    options: 'options', installation: 'installation', service: 'service'
 };
 
 app.use((req, res, next) => {
@@ -239,18 +220,10 @@ app.use((req, res, next) => {
             if (req.path.includes(key + '.html')) { sectionId = key; break; }
         }
     }
-
+    
     if (!sectionId) return next();
-
-    console.log('[SERVER GUARD] Проверка доступа:', { 
-        path: req.path, 
-        sectionId: sectionId, 
-        hasCookie: !!req.cookies.kb_token,
-        user: req.user ? req.user.username : 'NULL' // <-- ДОБАВИТЬ ЭТО
-    });
-
+    
     auth(false)(req, res, () => {
-        console.log('[SERVER GUARD] Результат auth:', req.user ? 'OK' : 'FAIL'); // <-- ДОБАВИТЬ ЭТО
         if (!req.user) return res.redirect('/index.html?need_login=1');
         if (!canAccess(req.user, sectionId)) {
             return res.status(403).sendFile(path.join(PUBLIC_DIR, 'no-access.html'));
