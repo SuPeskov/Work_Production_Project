@@ -69,10 +69,18 @@ let _currentUserCache = null;
 async function kbGetCurrentUser() {
     if (_currentUserCache) return _currentUserCache;
     
+    console.log('[KB] Начало загрузки профиля...');
     try {
         const response = await fetch('/api/me', { credentials: 'include' });
-        if (!response.ok) throw new Error('Not authenticated');
+        console.log('[KB] Статус ответа /api/me:', response.status);
+        
+        if (!response.ok) {
+            console.error('[KB] Ошибка ответа /api/me:', response.statusText);
+            throw new Error('Not authenticated');
+        }
+        
         const data = await response.json();
+        console.log('[KB] Данные /api/me:', data);
         
         if (data.user) {
             const roleMap = { 
@@ -80,18 +88,21 @@ async function kbGetCurrentUser() {
                 'worker': 'Сотрудник производства', 
                 'guest': 'Гость' 
             };
-            
             _currentUserCache = {
                 username: data.user.username,
                 name: data.user.name,
                 role: roleMap[data.user.role] || data.user.role,
                 access: data.sections || []
             };
+            console.log('[KB] Профиль успешно загружен:', _currentUserCache);
             return _currentUserCache;
+        } else {
+            console.warn('[KB] В ответе нет поля user');
         }
     } catch (e) {
-        console.warn('Не удалось загрузить профиль пользователя:', e);
+        console.error('[KB] Исключение при загрузке профиля:', e);
     }
+    console.warn('[KB] Возвращаем null (пользователь не авторизован)');
     return null;
 }
 
@@ -246,14 +257,16 @@ document.addEventListener('DOMContentLoaded', async function () {
                 }
             }
         }
-    } else {
-        // Если пользователь не авторизован и находится на защищенной странице
-        if (window.location.pathname.includes('/pages/') || window.location.pathname.includes('dashboard') || window.location.pathname.includes('admin-panel')) {
-            sessionStorage.removeItem('modular_house_session');
-            window.location.href = '/index.html?need_login=1';
-            return; // Прерываем выполнение, так как пользователя нет
-        }
-    }
+ } else {
+     console.log('[KB] Guard: user is null. Проверка пути...');
+     // Если пользователь не авторизован и находится на защищенной странице
+     if (window.location.pathname.includes('/pages/') || window.location.pathname.includes('dashboard') || window.location.pathname.includes('admin-panel')) {
+         console.log('[KB] Guard: Редирект на /index.html');
+         sessionStorage.removeItem('modular_house_session');
+         window.location.href = '/index.html?need_login=1';
+         return;
+     }
+ }
 
     // --- ЗАЩИТА КОНТЕНТНЫХ СТРАНИЦ (Выполняется ТОЛЬКО если user существует) ---
     const isContentPage = window.location.pathname.includes('/pages/');
