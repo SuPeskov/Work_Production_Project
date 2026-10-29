@@ -239,10 +239,18 @@ app.use((req, res, next) => {
             if (req.path.includes(key + '.html')) { sectionId = key; break; }
         }
     }
-    
+
     if (!sectionId) return next();
-    
+
+    console.log('[SERVER GUARD] Проверка доступа:', { 
+        path: req.path, 
+        sectionId: sectionId, 
+        hasCookie: !!req.cookies.kb_token,
+        user: req.user ? req.user.username : 'NULL' // <-- ДОБАВИТЬ ЭТО
+    });
+
     auth(false)(req, res, () => {
+        console.log('[SERVER GUARD] Результат auth:', req.user ? 'OK' : 'FAIL'); // <-- ДОБАВИТЬ ЭТО
         if (!req.user) return res.redirect('/index.html?need_login=1');
         if (!canAccess(req.user, sectionId)) {
             return res.status(403).sendFile(path.join(PUBLIC_DIR, 'no-access.html'));
