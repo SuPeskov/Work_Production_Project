@@ -375,8 +375,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     const opIds = [];
     const linkMap = {};
+    
     opLinks.forEach(link => {
-        const match = link.getAttribute('href').match(/(\d+.\d+.\d+).html/);
+        // Исправлено: экранирование точек в regex
+        const match = link.getAttribute('href').match(/(\d+\.\d+\.\d+)\.html/);
         if (match) {
             opIds.push(match[1]);
             linkMap[match[1]] = link;
@@ -393,17 +395,29 @@ document.addEventListener('DOMContentLoaded', async () => {
             body: JSON.stringify({ opIds })
         });
         
-        if (!response.ok) throw new Error('Ошибка загрузки статусов');
+        if (!response.ok) throw new Error(`Ошибка загрузки статусов: ${response.status}`);
         const statuses = await response.json();
         
+        // Добавляем стили только один раз
         if (!document.getElementById('dynamic-op-status-styles')) {
             const style = document.createElement('style');
             style.id = 'dynamic-op-status-styles';
             style.textContent = `
-                .unread-operation { background-color: #fff7ed !important; border-left: 4px solid #f97316 !important; }
-                .unread-operation a { color: #c2410c !important; font-weight: 600; }
-                .read-operation { background-color: #ffffff !important; border-left: 4px solid transparent !important; }
-                li, .operation-item { transition: background-color 0.3s ease, border-color 0.3s ease; }
+                .unread-operation { 
+                    background-color: #fff7ed !important; 
+                    border-left: 4px solid #f97316 !important; 
+                }
+                .unread-operation a { 
+                    color: #c2410c !important; 
+                    font-weight: 600; 
+                }
+                .read-operation { 
+                    background-color: #ffffff !important; 
+                    border-left: 4px solid transparent !important; 
+                }
+                li, .operation-item { 
+                    transition: background-color 0.3s ease, border-color 0.3s ease; 
+                }
             `;
             document.head.appendChild(style);
         }
@@ -411,7 +425,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         Object.entries(statuses).forEach(([id, statusObj]) => {
             const link = linkMap[id];
             if (!link) return;
-            const parentItem = link.closest('li');
+            
+            // Исправлено: проверка на null + поддержка обоих селекторов
+            const parentItem = link.closest('li') || link.closest('.operation-item');
+            if (!parentItem) return;
+            
             if (statusObj.isRead) {
                 parentItem.classList.remove('unread-operation');
                 parentItem.classList.add('read-operation');
@@ -420,6 +438,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 parentItem.classList.add('unread-operation');
             }
         });
+        
     } catch (error) {
         console.error('Не удалось загрузить статусы ознакомления:', error);
     }
@@ -430,12 +449,17 @@ document.addEventListener('DOMContentLoaded', async () => {
  */
 document.addEventListener('DOMContentLoaded', async () => {
     const readBtn = document.getElementById('readBtn');
-    if (!readBtn || !window.location.pathname.includes('/operations/')) return;
+    if (!readBtn) return;
+    if (!window.location.pathname.includes('/operations/')) return;
     if (typeof isAuthenticated !== 'function' || !isAuthenticated()) return;
     
     const opId = readBtn.dataset.opId;
     const opVersion = readBtn.dataset.opVersion;
-    if (!opId || !opVersion) return;
+    
+    if (!opId || !opVersion) {
+        console.warn('Отсутствуют data-op-id или data-op-version у кнопки');
+        return;
+    }
     
     try {
         const response = await fetch('/api/read-status', {
@@ -445,12 +469,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             body: JSON.stringify({ opIds: [opId] })
         });
         
-        if (!response.ok) throw new Error('Ошибка загрузки статуса');
+        if (!response.ok) throw new Error(`Ошибка загрузки статуса: ${response.status}`);
         const statuses = await response.json();
         const statusObj = statuses[opId];
         
         if (statusObj && statusObj.isRead) {
             readBtn.classList.add('read');
+            
             const iconUnread = readBtn.querySelector('.icon-unread');
             const iconRead = readBtn.querySelector('.icon-read');
             const btnText = readBtn.querySelector('.btn-text');
@@ -462,7 +487,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             readBtn.disabled = true;
             readBtn.style.opacity = '0.7';
             readBtn.style.cursor = 'default';
+            readBtn.setAttribute('aria-disabled', 'true');
         }
+        
     } catch (error) {
         console.error('Не удалось проверить статус кнопки:', error);
     }
