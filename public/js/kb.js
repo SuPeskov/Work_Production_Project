@@ -28,6 +28,7 @@ const KB_SECTIONS = [
 
 // === Реестр операций (ИСПРАВЛЕНО: убраны лишние пробелы в url и title) ===
 const KB_OPERATIONS = [
+    // Подраздел 2.1
     { id: '2.1.1',  section: 'panels', title: 'Сборка каркаса панели',            
         version: 1, status: 'ready',   url: 'pages/operations/2.1.1.html' },
     { id: '2.1.2',  section: 'panels', title: 'Монтаж листового материала на каркас',              
@@ -73,8 +74,58 @@ const KB_OPERATIONS = [
         version: 1, status: 'ready',   url: 'pages/operations/2.4.2.html' },
     { id: '2.4.3',  section: 'panels', title: 'Монтаж листового материала',                  
         version: 1, status: 'ready',   url: 'pages/operations/2.4.3.html' },
-
+    // Подраздел 3.1
+    { id: '3.1.1',  section: 'module', title: 'Подготовка панелей к сборке модуля',
+    version: 1, status: 'draft',   url: 'pages/operations/3.1.1.html' },
+    { id: '3.1.2',  section: 'module', title: 'Сборка модуля из панелей',
+    version: 1, status: 'draft',   url: 'pages/operations/3.1.2.html' },
+    { id: '3.1.3',  section: 'module', title: 'Утепление модуля ППУ',
+    version: 1, status: 'draft',   url: 'pages/operations/3.1.3.html' },
+    { id: '3.1.4',  section: 'module', title: 'Утепление модуля минеральной ватой',
+    version: 1, status: 'draft',   url: 'pages/operations/3.1.4.html' },
+    { id: '3.1.5',  section: 'module', title: 'Установка оконных конструкций',
+    version: 1, status: 'draft',   url: 'pages/operations/3.1.5.html' },
+    { id: '3.1.6',  section: 'module', title: 'Монтаж ветрозащиты',
+    version: 1, status: 'draft',   url: 'pages/operations/3.1.6.html' },
+    { id: '3.1.7',  section: 'module', title: 'Монтаж уплотнительных манжет / проклейка гильз пароизоляционным скотчем',
+    version: 1, status: 'draft',   url: 'pages/operations/3.1.7.html' },
+    { id: '3.1.8',  section: 'module', title: 'Монтаж стенового контрбруса',
+    version: 1, status: 'draft',   url: 'pages/operations/3.1.8.html' },
+    { id: '3.1.9',  section: 'module', title: 'Монтаж внешней отделки',
+    version: 1, status: 'draft',   url: 'pages/operations/3.1.9.html' },
+    { id: '3.1.10',  section: 'module', title: 'Монтаж внешних оконных обкладов',
+    version: 1, status: 'draft',   url: 'pages/operations/3.1.10.html' },
+    { id: '3.1.11',  section: 'module', title: 'Монтаж отливов',
+    version: 1, status: 'draft',   url: 'pages/operations/3.1.11.html' },
+    { id: '3.1.12',  section: 'module', title: 'Монтаж фанеры на стыке модулей',
+    version: 1, status: 'draft',   url: 'pages/operations/3.1.12.html' },
+    // Подраздел 3.2
+    { id: '3.2.1',  section: 'module', title: 'Монтаж кровельного контрбруса',
+    version: 1, status: 'draft',   url: 'pages/operations/3.2.1.html' },
+    { id: '3.2.2',  section: 'module', title: 'Монтаж парапетных рам',
+    version: 1, status: 'draft',   url: 'pages/operations/3.2.2.html' },
+    { id: '3.2.3',  section: 'module', title: 'Монтаж обрешетки',
+    version: 1, status: 'draft',   url: 'pages/operations/3.2.3.html' },
+    { id: '3.2.4',  section: 'module', title: 'Монтаж листового материала',
+    version: 1, status: 'draft',   url: 'pages/operations/3.2.4.html' },
+    { id: '3.2.5',  section: 'module', title: 'Монтаж ПВХ-воронки',
+    version: 1, status: 'draft',   url: 'pages/operations/3.2.5.html' },
+    { id: '3.2.6',  section: 'module', title: 'Монтаж водосточной системы',
+    version: 1, status: 'draft',   url: 'pages/operations/3.2.6.html' },
+    { id: '3.2.7',  section: 'module', title: 'Монтаж системы обогрева воронок',
+    version: 1, status: 'draft',   url: 'pages/operations/3.2.7.html' },
+    { id: '3.2.8',  section: 'module', title: 'Монтаж ПВХ-мембраны',
+    version: 1, status: 'draft',   url: 'pages/operations/3.2.8.html' },
+    { id: '3.2.9',  section: 'module', title: 'Монтаж аэраторов фановой трубы',
+    version: 1, status: 'draft',   url: 'pages/operations/3.2.9.html' },
+    { id: '3.2.10',  section: 'module', title: 'Монаж аэратора вентиляции подкровельного пространства',
+    version: 1, status: 'draft',   url: 'pages/operations/3.2.10.html' },
+    { id: '3.2.11',  section: 'module', title: 'Устройство проходки вентиляционной трубы через крышу',
+    version: 1, status: 'draft',   url: 'pages/operations/3.2.11.html' },
+    { id: '3.2.12',  section: 'module', title: 'Устройство проходки печной трубы',
+    version: 1, status: 'draft',   url: 'pages/operations/3.2.12.html' },
 ];
+
 
 const PUBLIC_OP_IDS = undefined;
 
