@@ -10,8 +10,14 @@
     <link rel="stylesheet" href="../../css/style.css">
     <link rel="stylesheet" href="../../css/pdf-viewer.css">
     <style>
-        .step-image.hidden-photo { display: none !important; }
-        .steps-list > li.no-photo { grid-template-columns: 1fr !important; }
+        /* Дополнительные стили для скрытия пустых блоков с фото */
+        .step-image.hidden-photo {
+            display: none !important;
+        }
+        /* Если фото скрыто, текст занимает всю ширину */
+        .steps-list > li.no-photo {
+            grid-template-columns: 1fr !important;
+        }
     </style>
 </head>
 <body class="operation-page">
