@@ -49,7 +49,7 @@ const KB_OPERATIONS = [
     { id: '2.3.2',  section: 'panels', title: 'Сборка каркаса панели',                       version: 1, status: 'draft',   url: 'pages/operations/2.3.2.html' },
     { id: '2.3.3',  section: 'panels', title: 'Монтаж листового материала',                  version: 1, status: 'draft',   url: 'pages/operations/2.3.3.html' },
     // Подраздел 2.4
-    { id: '2.4.1',  section: 'panels', title: 'Сборка сдвоенных элементов каркаса',          version: 1, status: 'draft',   url: 'pages/operations/2.4.1.html' },
+    { id: '2.4.1',  section: 'panels', title: 'Сборка сдвоенных элементов каркаса',          version: 1, status: 'ready',   url: 'pages/operations/2.4.1.html' },
     { id: '2.4.2',  section: 'panels', title: 'Сборка каркаса панели',                       version: 1, status: 'draft',   url: 'pages/operations/2.4.2.html' },
     { id: '2.4.3',  section: 'panels', title: 'Монтаж листового материала',                  version: 1, status: 'draft',   url: 'pages/operations/2.4.3.html' },
 

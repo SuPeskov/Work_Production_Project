@@ -3,15 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2.4.1 — Сборка каркаса внутренней стены | Скаут Хаус</title>
+    <title>2.4.1 — Сборка сдвоенных элементов каркаса | Скаут Хаус</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../css/style.css">
     <link rel="stylesheet" href="../../css/pdf-viewer.css">
     <style>
-        .step-image.hidden-photo { display: none !important; }
-        .steps-list > li.no-photo { grid-template-columns: 1fr !important; }
+        /* Дополнительные стили для скрытия пустых блоков с фото */
+        .step-image.hidden-photo {
+            display: none !important;
+        }
+        /* Если фото скрыто, текст занимает всю ширину */
+        .steps-list > li.no-photo {
+            grid-template-columns: 1fr !important;
+        }
     </style>
 </head>
 <body class="operation-page">
@@ -30,7 +36,7 @@
                 <span class="separator">/</span>
                 <a href="../panels.html">Сборка панелей</a>
                 <span class="separator">/</span>
-                <span class="current">2.4.1 — Сборка каркаса внутренней стены</span>
+                <span class="current">2.4.1 — Сборка сдвоенных элементов каркаса</span>
             </nav>
         </div>
         <div class="top-bar-right">
@@ -46,56 +52,52 @@
 
     <main class="operation-main">
         <div class="operation-header">
-            <div class="operation-number">Операция 2.4.1</div>
-            <h1>Сборка каркаса внутренней стены</h1>
+            <div class="operation-number">Операция 2.3.1</div>
+            <h1>Сборка сдвоенных элементов каркаса</h1>
         </div>
 
         <section class="operation-section documentation">
             <h2>📋 Необходимая документация</h2>
             <div class="section-content">
-                <p>Раздел ___.</p>
+                <p>Раздел КС.ПВ.</p>
                 <div class="info-block">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
                         <circle cx="12" cy="12" r="10"/>
                         <line x1="12" y1="16" x2="12" y2="12"/>
                         <line x1="12" y1="8" x2="12.01" y2="8"/>
                     </svg>
-                    <span>Заполнить: примечания по документации.</span>
+                    <span>Данная операция выполняется при наличии сдвоенных элементов каркаса.</span>
                 </div>
             </div>
         </section>
 
         <section class="operation-section operations">
-            <h2> Производимые операции</h2>
+            <h2>🔧 Производимые операции</h2>
             <div class="section-content">
                 <ol class="steps-list">
                     <li data-step="1">
-                        <div class="step-text">Заполнить: описание шага 1.</div>
-                        <div class="step-image"><img src="../../assets/images/operations/2.4.1/step1.jpg" alt="Шаг 1"></div>
+                        <div class="step-text">Отсортировать сдвоенные элементы. Разложить их рядом друг с другом, согласно схемы сборки.</div>
+                        <div class="step-image"><img src="../../assets/images/operations/2.4.1/step1.jpg" alt="..."></div>
                     </li>
                     <li data-step="2">
-                        <div class="step-text">Заполнить: описание шага 2.</div>
-                        <div class="step-image"><img src="../../assets/images/operations/2.4.1/step2.jpg" alt="Шаг 2"></div>
+                        <div class="step-text">В одном из сдвоенных элементов просверлить отверстия под саморезы. Шаг и расположение отверстий взять из Альбома сборки типовых узлов каркаса.</div>
+                        <div class="step-image"><img src="../../assets/images/operations/2.4.1/step2.jpg" alt="..."></div>
                     </li>
+
                     <li data-step="3">
-                        <div class="step-text">Заполнить: описание шага 3.</div>
-                        <div class="step-image"><img src="../../assets/images/operations/2.4.1/step3.jpg" alt="Шаг 3"></div>
+                        <div class="step-text">Нанести клей ПВА-М на соприкасающиеся поверхности элементов. Собрать детали между собой и закрепить саморезами ЖЦ 6х80.</div>
+                        <div class="step-image"><img src="../../assets/images/operations/2.4.1/step3.jpg" alt="..."></div>
                     </li>
                 </ol>
             </div>
         </section>
-
         <section class="operation-section quality-checklist" id="qualitySection">
             <h2>✅ Контрольные параметры</h2>
             <div class="section-content">
                 <div class="checklist-container">
-                    <label class="checklist-item"><input type="checkbox" class="quality-checkbox"><span class="checkmark"></span><span class="check-text"><strong>Параметр 1.</strong> Допуск: ___.</span></label>
-                    <label class="checklist-item"><input type="checkbox" class="quality-checkbox"><span class="checkmark"></span><span class="check-text"><strong>Параметр 2.</strong> Допуск: ___.</span></label>
-                    <label class="checklist-item"><input type="checkbox" class="quality-checkbox"><span class="checkmark"></span><span class="check-text"><strong>Параметр 3.</strong> Допуск: ___.</span></label>
-                </div>
-                <div class="quality-note">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                    <span>По факту контрольных замеров ставится отметка в паспорте ОТК.</span>
+                    <label class="checklist-item"><input type="checkbox" class="quality-checkbox"><span class="checkmark"></span><span class="check-text"><strong>Отклонение сечения собранного элемента после сборки.</strong> Допуск: 0 -1мм.</span></label>
+                    <label class="checklist-item"><input type="checkbox" class="quality-checkbox"><span class="checkmark"></span><span class="check-text"><strong>Отклонения от плоскости панели, зашиваемой листовым материалом.</strong> Допуск: 0 -2мм.</span></label>
+                    <label class="checklist-item"><input type="checkbox" class="quality-checkbox"><span class="checkmark"></span><span class="check-text"><strong>Количество саморезов в узлах крепления:</strong> соответствует требованиям конструкционного узла.</span></label>
                 </div>
             </div>
         </section>
@@ -104,9 +106,14 @@
             <h2>🛠️ Необходимый инструмент и оборудование</h2>
             <div class="section-content">
                 <div class="simple-checklist-container">
-                    <label class="simple-checklist-item"><input type="checkbox" class="simple-checkbox"><span class="simple-checkmark"></span><span class="simple-check-text">Инструмент 1</span></label>
-                    <label class="simple-checklist-item"><input type="checkbox" class="simple-checkbox"><span class="simple-checkmark"></span><span class="simple-check-text">Инструмент 2</span></label>
-                    <label class="simple-checklist-item"><input type="checkbox" class="simple-checkbox"><span class="simple-checkmark"></span><span class="simple-check-text">Инструмент 3</span></label>
+                    <label class="simple-checklist-item"><input type="checkbox" class="simple-checkbox"><span class="simple-checkmark"></span><span class="simple-check-text">Аккумуляторный шуруповерт с зажимным патроном</span></label>
+                    <label class="simple-checklist-item"><input type="checkbox" class="simple-checkbox"><span class="simple-checkmark"></span><span class="simple-check-text">Аккумуляторный шуруповерт ударный</span></label>
+                    <label class="simple-checklist-item"><input type="checkbox" class="simple-checkbox"><span class="simple-checkmark"></span><span class="simple-check-text">Рулетка 7,5м</span></label>
+                    <label class="simple-checklist-item"><input type="checkbox" class="simple-checkbox"><span class="simple-checkmark"></span><span class="simple-check-text">Уголок плотницкий металлический 150мм</span></label>
+                    <label class="simple-checklist-item"><input type="checkbox" class="simple-checkbox"><span class="simple-checkmark"></span><span class="simple-check-text">Карандаш простой</span></label>
+                    <label class="simple-checklist-item"><input type="checkbox" class="simple-checkbox"><span class="simple-checkmark"></span><span class="simple-check-text">Сверло d6х100мм</span></label>
+                    <label class="simple-checklist-item"><input type="checkbox" class="simple-checkbox"><span class="simple-checkmark"></span><span class="simple-check-text">Бита PZ3</span></label>
+                    <label class="simple-checklist-item"><input type="checkbox" class="simple-checkbox"><span class="simple-checkmark"></span><span class="simple-check-text">Кисть флейцевая 100мм</span></label>
                 </div>
             </div>
         </section>
@@ -115,9 +122,9 @@
             <h2>📦 Расходные материалы</h2>
             <div class="section-content">
                 <div class="simple-checklist-container">
-                    <label class="simple-checklist-item"><input type="checkbox" class="simple-checkbox"><span class="simple-checkmark"></span><span class="simple-check-text">Материал 1</span></label>
-                    <label class="simple-checklist-item"><input type="checkbox" class="simple-checkbox"><span class="simple-checkmark"></span><span class="simple-check-text">Материал 2</span></label>
-                    <label class="simple-checklist-item"><input type="checkbox" class="simple-checkbox"><span class="simple-checkmark"></span><span class="simple-check-text">Материал 3</span></label>
+                    <label class="simple-checklist-item"><input type="checkbox" class="simple-checkbox"><span class="simple-checkmark"></span><span class="simple-check-text">Саморез ЖЦ 6х80</span></label>
+                    <label class="simple-checklist-item"><input type="checkbox" class="simple-checkbox"><span class="simple-checkmark"></span><span class="simple-check-text">Клей ПВА-М</span></label>
+                    <label class="simple-checklist-item"><input type="checkbox" class="simple-checkbox"><span class="simple-checkmark"></span><span class="simple-check-text">Ветошь</span></label>
                 </div>
             </div>
         </section>
@@ -126,7 +133,7 @@
             <h2>📷 Фотоальбом операции</h2>
             <div class="section-content">
                 <div class="qr-container">
-                    <div class="qr-code"><img src="../../assets/images/qr/2.4.1.png" alt="QR-код операции"></div>
+                    <div class="qr-code"><img src="../../assets/images/qr/2.3.1.png" alt="QR-код операции"></div>
                     <div class="qr-info">
                         <p>Отсканируйте QR-код для просмотра фотоальбома с примерами выполнения данной операции</p>
                         <a href="#" target="_blank" class="btn-qr">
@@ -142,7 +149,7 @@
 <section class="operation-section read-status-section">
     <div class="read-status-container">
         <button id="readBtn" class="btn-read-status"
-                data-op-id="2.4.1"
+                data-op-id="2.3.1"
                 data-op-version="1">
             <svg class="icon-unread" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
@@ -193,6 +200,10 @@
         </div>
     </div>
 </div>
+    <!-- Lunr.js для поиска -->
+    <script src="https://unpkg.com/lunr@2.3.9/lunr.min.js"></script>
+    <script src="https://unpkg.com/lunr-languages@1.14.0/lunr.stemmer.support.js"></script>
+    <script src="https://unpkg.com/lunr-languages@1.14.0/lunr.ru.js"></script>
 
     <script src="../../js/users.js"></script>
     <script src="../../js/kb.js"></script>
