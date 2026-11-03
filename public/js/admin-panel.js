@@ -153,7 +153,7 @@ function renderUsers(users) {
         'service': 'Сервис',
         'standards': 'Стандарты'
     };
-    const sectionOrder = ['preparation', 'panels', 'module', 'options', 'installation', 'service', 'standsrds'];
+    const sectionOrder = ['preparation', 'panels', 'module', 'options', 'installation', 'service', 'standards'];
 
     users.forEach(user => {
         const tr = document.createElement('tr');
