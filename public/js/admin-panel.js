@@ -145,10 +145,15 @@ document.addEventListener('DOMContentLoaded', function () {
 function renderUsers(users) {
     tableBody.innerHTML = '';
     const sectionNames = {
-        'preparation': 'Заготовка', 'panels': 'Сборка панелей', 'module': 'Сборка модуля',
-        'options': 'Сборка опций', 'installation': 'Монтаж', 'service': 'Сервис'
+        'preparation': 'Заготовка', 
+        'panels': 'Сборка панелей', 
+        'module': 'Сборка модуля',
+        'options': 'Сборка опций', 
+        'installation': 'Монтаж', 
+        'service': 'Сервис',
+        'standards': 'Стандарты'
     };
-    const sectionOrder = ['preparation', 'panels', 'module', 'options', 'installation', 'service'];
+    const sectionOrder = ['preparation', 'panels', 'module', 'options', 'installation', 'service', 'standsrds'];
 
     users.forEach(user => {
         const tr = document.createElement('tr');
@@ -256,7 +261,7 @@ form.addEventListener('submit', async function (e) {
     if (role === 'worker') {
         sections = Array.from(document.querySelectorAll('input[name="sections"]:checked')).map(cb => cb.value);
     } else if (role === 'guest' || role === 'admin') {
-        sections = ['preparation', 'panels', 'module', 'options', 'installation', 'service'];
+        sections = ['preparation', 'panels', 'module', 'options', 'installation', 'service', 'standards'];
     }
     
     if (!name || !username || !password || !role) {
