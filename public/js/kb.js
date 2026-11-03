@@ -421,6 +421,10 @@ document.addEventListener('DOMContentLoaded', function () {
             const avatarEl = document.getElementById('userAvatar');
             
             if (nameEl) nameEl.textContent = user.name || user.username;
+                // === ИСПРАВЛЕНО: Обновляем имя также в блоке приветствия ===
+                const welcomeNameEl = document.getElementById('welcomeNameDisplay');
+                if (welcomeNameEl) welcomeNameEl.textContent = user.name || user.username;
+                // ============================================================
             if (roleEl) roleEl.textContent = user.role || 'Пользователь';
             if (avatarEl) avatarEl.textContent = (user.name || user.username || '?').charAt(0).toUpperCase();
 
