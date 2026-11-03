@@ -450,58 +450,65 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // --- Кнопки в шапке по ролям ---
-    if (typeof isAuthenticated === 'function' && isAuthenticated()) {
-        const user = kbGetCurrentUser();
-        const right = document.querySelector('.top-bar-right');
-        if (right && user) {
-            const ICON_BACK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>';
-            const ICON_GEAR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06-.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l-.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
-            const ICON_CHART = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>';
-            
-            const mkBtn = (cls, href, title, html) => {
-                const a = document.createElement('a');
-                a.className = cls;
-                a.href = prefix + href;
-                a.title = title;
-                a.innerHTML = html;
-                right.insertBefore(a, right.firstChild);
-                return a;
-            };
+ // --- Кнопки в шапке по ролям ---
+ if (typeof isAuthenticated === 'function' && isAuthenticated()) {
+     const user = kbGetCurrentUser();
+     const right = document.querySelector('.top-bar-right');
+     
+     // Определяем, находимся ли мы на одной из "главных" страниц
+     const path = window.location.pathname;
+     const isMainPage = path.endsWith('dashboard.html') || 
+                        path.endsWith('monitoring.html') || 
+                        path.endsWith('admin-panel.html') || 
+                        path === '/';
+     
+     // Если мы НЕ на главной странице (т.е. внутри раздела), скрываем навигационные кнопки
+     // и выходим из функции, чтобы не создавать лишние элементы
+     if (!isMainPage) return; 
 
-            // 1. Логика для АДМИНИСТРАТОРА и ГОСТЯ (Контролера)
-            if (user.role === ROLE_ADMIN || user.role === ROLE_GUEST) {
-                const onMonitoring = /monitoring\.html/.test(window.location.pathname);
-                const onAdminPanel = /admin-panel\.html/.test(window.location.pathname);
-                const isDashboard = window.location.pathname.endsWith('dashboard.html') || window.location.pathname === '/';
+     if (right && user) {
+         const ICON_BACK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>';
+         const ICON_GEAR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06-.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l-.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
+         const ICON_CHART = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>';
+         
+         const mkBtn = (cls, href, title, html) => {
+             // Удаляем старую кнопку если она есть, чтобы не дублировать при перезагрузке
+             const old = right.querySelector('.' + cls.split(' ')[0]);
+             if (old) old.remove();
 
-                // Кнопка "Мониторинг" (если мы не на самой странице мониторинга)
-                if (!onMonitoring && !right.querySelector('.btn-monitoring')) {
-                    mkBtn('btn-admin btn-monitoring', 'monitoring.html', 'Мониторинг ознакомления', ICON_CHART + '<span>Мониторинг</span>');
-                }
+             const a = document.createElement('a');
+             a.className = cls;
+             a.href = prefix + href;
+             a.title = title;
+             a.innerHTML = html;
+             right.insertBefore(a, right.firstChild);
+             return a;
+         };
 
-                // Кнопка "Управление" (ТОЛЬКО для Админа, если мы не в панели управления)
-                if (user.role === ROLE_ADMIN && !onAdminPanel && !right.querySelector('.btn-manage')) {
-                    mkBtn('btn-admin btn-manage', 'admin-panel.html', 'Панель управления', ICON_GEAR + '<span>Управление</span>');
-                }
-                
-                // Кнопка "В базу знаний" (если мы не на дашборде)
-                if (!isDashboard && !right.querySelector('.btn-back-kb')) {
-                    mkBtn('btn-admin btn-back-kb', 'dashboard.html', 'Вернуться к разделам базы знаний', ICON_BACK + '<span>В базу знаний</span>');
-                }
-            } 
-            // 2. Логика ТОЛЬКО для СОТРУДНИКА производства
-            else if (user.role === ROLE_WORKER) {
-                const isDashboard = window.location.pathname.endsWith('dashboard.html') || window.location.pathname === '/';
-                
-                // Сотруднику показываем ТОЛЬКО кнопку "В базу знаний" (и то, если он не на дашборде)
-                // Кнопки "Мониторинг" и "Управление" для него НЕ создаются.
-                if (!isDashboard && !right.querySelector('.btn-back-kb')) {
-                    mkBtn('btn-admin btn-back-kb', 'dashboard.html', 'Вернуться к разделам базы знаний', ICON_BACK + '<span>В базу знаний</span>');
-                }
-            }
-        }
-    }
+         // 1. Логика для АДМИНИСТРАТОРА и ГОСТЯ
+         if (user.role === ROLE_ADMIN || user.role === ROLE_GUEST) {
+             // Кнопка "Мониторинг" (всегда видна на главных страницах)
+             mkBtn('btn-admin btn-monitoring', 'monitoring.html', 'Мониторинг ознакомления', ICON_CHART + '<span>Мониторинг</span>');
+             
+             // Кнопка "Управление" (ТОЛЬКО для Админа)
+             if (user.role === ROLE_ADMIN) {
+                 mkBtn('btn-admin btn-manage', 'admin-panel.html', 'Панель управления', ICON_GEAR + '<span>Управление</span>');
+             }
+             
+             // Кнопка "В базу знаний" (если мы не на самом дашборде)
+             if (!path.endsWith('dashboard.html') && path !== '/') {
+                 mkBtn('btn-admin btn-back-kb', 'dashboard.html', 'Вернуться к разделам базы знаний', ICON_BACK + '<span>В базу знаний</span>');
+             }
+         } 
+         // 2. Логика ТОЛЬКО для СОТРУДНИКА производства
+         else if (user.role === ROLE_WORKER) {
+             // Сотруднику показываем ТОЛЬКО кнопку "В базу знаний" (если он не на дашборде)
+             if (!path.endsWith('dashboard.html') && path !== '/') {
+                 mkBtn('btn-admin btn-back-kb', 'dashboard.html', 'Вернуться к разделам базы знаний', ICON_BACK + '<span>В базу знаний</span>');
+             }
+         }
+     }
+ }
 
     // --- Dashboard: карточки разделов ---
     const grid = document.getElementById('cardsGrid');
