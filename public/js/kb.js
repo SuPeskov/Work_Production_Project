@@ -455,7 +455,7 @@ document.addEventListener('DOMContentLoaded', function () {
      const user = kbGetCurrentUser();
      const right = document.querySelector('.top-bar-right');
      
-     // Определяем, находимся ли мы на одной из "главных" страниц
+     // Определяем тип страницы
      const path = window.location.pathname;
      const isMainPage = path.endsWith('dashboard.html') || 
                         path.endsWith('monitoring.html') || 
@@ -463,7 +463,6 @@ document.addEventListener('DOMContentLoaded', function () {
                         path === '/';
      
      // Если мы НЕ на главной странице (т.е. внутри раздела), скрываем навигационные кнопки
-     // и выходим из функции, чтобы не создавать лишние элементы
      if (!isMainPage) return; 
 
      if (right && user) {
@@ -487,7 +486,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
          // 1. Логика для АДМИНИСТРАТОРА и ГОСТЯ
          if (user.role === ROLE_ADMIN || user.role === ROLE_GUEST) {
-             // Кнопка "Мониторинг" (всегда видна на главных страницах)
+             // Кнопка "Мониторинг" (ВСЕГДА видна на главных страницах)
              mkBtn('btn-admin btn-monitoring', 'monitoring.html', 'Мониторинг ознакомления', ICON_CHART + '<span>Мониторинг</span>');
              
              // Кнопка "Управление" (ТОЛЬКО для Админа)
@@ -509,7 +508,6 @@ document.addEventListener('DOMContentLoaded', function () {
          }
      }
  }
-
     // --- Dashboard: карточки разделов ---
     const grid = document.getElementById('cardsGrid');
     if (grid && typeof isAuthenticated === 'function' && isAuthenticated()) {
