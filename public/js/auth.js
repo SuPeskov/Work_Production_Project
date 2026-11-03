@@ -1,8 +1,8 @@
 /**
-auth.js — Логика авторизации и управления сессией
-Включает защиту от параллельных входов (перехват 401 -> session-terminated)
-и обработку ошибки 409 (пользователь уже активен).
-*/
+ * auth.js — Логика авторизации и управления сессией
+ * Включает защиту от параллельных входов (перехват 401 -> session-terminated)
+ * и обработку ошибки 409 (пользователь уже активен).
+ */
 const SESSION_KEY = 'modular_house_session';
 
 function setSession(user) {
@@ -28,35 +28,11 @@ function isAuthenticated() {
     return getCurrentUser() !== null;
 }
 
-// === НОВАЯ ФУНКЦИЯ: Обновление информации о пользователе на странице ===
-function updateUserInfoOnPage() {
-    const user = getCurrentUser();
-    if (!user) return;
-    
-    // Обновляем имя в шапке
-    const currentUserName = document.getElementById('currentUserName');
-    if (currentUserName) {
-        currentUserName.textContent = user.name || 'Пользователь';
-    }
-    
-    // Обновляем роль в шапке
-    const currentUserRole = document.getElementById('currentUserRole');
-    if (currentUserRole) {
-        currentUserRole.textContent = user.role || 'Роль';
-    }
-    
-    // Обновляем имя в блоке приветствия
-    const welcomeName = document.getElementById('welcomeName');
-    if (welcomeName) {
-        welcomeName.textContent = user.name || 'Пользователь';
-    }
-}
-
 function logout() {
     // Сначала отправляем запрос на сервер и ЖДЕМ ответа
-    fetch('/api/logout', {
-        method: 'POST',
-        credentials: 'include'
+    fetch('/api/logout', { 
+        method: 'POST', 
+        credentials: 'include' 
     })
     .then(response => {
         if (response.ok) {
@@ -115,12 +91,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const toggleBtn = document.getElementById('togglePassword');
     const passwordInput = document.getElementById('password');
     
-    // Проверяем не только наличие сессии в браузере, но и её валидность на сервере
-    if (isAuthenticated()) {
-        // ОБНОВЛЯЕМ ИНФОРМАЦИЮ О ПОЛЬЗОВАТЕЛЕ НА СТРАНИЦЕ
-        updateUserInfoOnPage();
-        
-        fetch('/api/me', { credentials: 'include' })
+// Проверяем не только наличие сессии в браузере, но и её валидность на сервере
+if (isAuthenticated()) {
+    fetch('/api/me', { credentials: 'include' })
         .then(res => res.json())
         .then(data => {
             if (data.user) {
@@ -135,8 +108,8 @@ document.addEventListener('DOMContentLoaded', function () {
             // Ошибка сети — очищаем сессию на всякий случай
             sessionStorage.removeItem(SESSION_KEY);
         });
-        return;
-    }
+    return;
+}
     
     if (toggleBtn && passwordInput) {
         toggleBtn.addEventListener('click', function () {
@@ -173,7 +146,6 @@ document.addEventListener('DOMContentLoaded', function () {
             
             if (response.ok && data.ok) {
                 hideError();
-                
                 // Запрашиваем полные данные пользователя (с разделами)
                 const meResponse = await fetch('/api/me', { credentials: 'include' });
                 const meData = await meResponse.json();
@@ -187,12 +159,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     setSession(data.user);
                 }
                 
-                // ОБНОВЛЯЕМ ИНФОРМАЦИЮ О ПОЛЬЗОВАТЕЛЕ НА СТРАНИЦЕ ПОСЛЕ ВХОДА
-                updateUserInfoOnPage();
-                
                 btn.classList.add('success');
                 btn.querySelector('span').textContent = 'Вход выполнен!';
-                
                 setTimeout(() => {
                     window.location.href = 'dashboard.html';
                 }, 800);
