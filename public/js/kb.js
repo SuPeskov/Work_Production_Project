@@ -203,7 +203,52 @@ const KB_OPERATIONS = [
     { id: '3.4.12',  section: 'module', title: 'Монтаж системы защиты от протечек',
     version: 1, status: 'draft',   url: 'pages/operations/3.4.12.html' },
     { id: '3.4.13',  section: 'module', title: 'Требования для наклеек, схем расключения РК и схемы электрощита',
-    version: 1, status: 'draft',   url: 'pages/operations/3.4.13.html' }
+    version: 1, status: 'draft',   url: 'pages/operations/3.4.13.html' },
+    // Подраздел 3.5
+    { id: '3.5.1',  section: 'module', title: 'Прокладка трасс водопровода',
+    version: 1, status: 'draft',   url: 'pages/operations/3.5.1.html' },
+    { id: '3.5.2',  section: 'module', title: 'Монтаж водорозеток',
+    version: 1, status: 'draft',   url: 'pages/operations/3.5.2.html' },
+    { id: '3.5.3',  section: 'module', title: 'Монтаж узла гигиенического душа',
+    version: 1, status: 'draft',   url: 'pages/operations/3.5.3.html' },
+    { id: '3.5.4',  section: 'module', title: 'Монтаж бойлера',
+    version: 1, status: 'draft',   url: 'pages/operations/3.5.4.html' },
+    { id: '3.5.5',  section: 'module', title: 'Сборка коллектора водоснабжения',
+    version: 1, status: 'draft',   url: 'pages/operations/3.5.5.html' },
+    { id: '3.5.6',  section: 'module', title: 'Монтаж коллектора и подключение',
+    version: 1, status: 'draft',   url: 'pages/operations/3.5.6.html' },
+    { id: '3.5.7',  section: 'module', title: 'Опрессовка коллектора и системы водоснабжения',
+    version: 1, status: 'draft',   url: 'pages/operations/3.5.7.html' },
+    { id: '3.5.8',  section: 'module', title: 'Требования для наклеек и схемы коллектора',
+    version: 1, status: 'draft',   url: 'pages/operations/3.5.8.html' },
+    // Подраздел 3.6
+    { id: '3.6.1',  section: 'module', title: 'Прокладка трасс канализации в стенах',
+    version: 1, status: 'draft',   url: 'pages/operations/3.6.1.html' },
+    { id: '3.6.2',  section: 'module', title: 'Монтаж трапов',
+    version: 1, status: 'draft',   url: 'pages/operations/3.6.2.html' },
+    // Подраздел 3.7
+    { id: '3.7.1',  section: 'module', title: 'Монтаж вентканалов',
+    version: 1, status: 'draft',   url: 'pages/operations/3.7.1.html' },
+    { id: '3.7.2',  section: 'module', title: 'Монтаж приточных каналов',
+    version: 1, status: 'draft',   url: 'pages/operations/3.7.2.html' },
+    { id: '3.7.3',  section: 'module', title: 'Монтаж вент.установки',
+    version: 1, status: 'draft',   url: 'pages/operations/3.7.3.html' },
+    { id: '3.7.4',  section: 'module', title: 'Подключение вент.установки',
+    version: 1, status: 'draft',   url: 'pages/operations/3.7.4.html' },
+    // Подраздел 3.8
+    { id: '3.8.1',  section: 'module', title: 'Монтаж контрбруса для прокладки труб водяного отопления',
+    version: 1, status: 'draft',   url: 'pages/operations/3.8.1.html' },
+    { id: '3.8.2',  section: 'module', title: 'Монтаж труб водяного отопления',
+    version: 1, status: 'draft',   url: 'pages/operations/3.8.2.html' },
+    { id: '3.8.3',  section: 'module', title: 'Монтаж коллектора водяного отопления',
+    version: 1, status: 'draft',   url: 'pages/operations/3.8.3.html' },
+    // Подраздел 3.9
+    { id: '3.9.1',  section: 'module', title: 'Укладка комплектовки в модуль',
+    version: 1, status: 'draft',   url: 'pages/operations/3.9.1.html' },
+    { id: '3.9.2',  section: 'module', title: 'Упаковка модуля в тент',
+    version: 1, status: 'draft',   url: 'pages/operations/3.9.2.html' },
+    { id: '3.9.3',  section: 'module', title: 'Правила укладки пирогов',
+    version: 1, status: 'draft',   url: 'pages/operations/3.9.3.html' }
 ];
 
 
