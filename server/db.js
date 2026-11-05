@@ -18,14 +18,17 @@ db.pragma('foreign_keys = ON');
 
 db.exec(`
 CREATE TABLE IF NOT EXISTS users (
-  id          INTEGER PRIMARY KEY AUTOINCREMENT,
-  username    TEXT NOT NULL UNIQUE,
-  name        TEXT NOT NULL,
-  role        TEXT NOT NULL CHECK (role IN ('admin','worker','guest')),
-  pass_hash   TEXT NOT NULL,
-  active      INTEGER NOT NULL DEFAULT 1,   -- 0 = удалён администратором
-  created_at  TEXT NOT NULL DEFAULT (datetime('now')),
-  deleted_at  TEXT
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    username    TEXT NOT NULL UNIQUE,
+    name        TEXT NOT NULL,
+    role        TEXT NOT NULL CHECK (role IN ('admin','worker','guest')),
+    pass_hash   TEXT NOT NULL,
+    active      INTEGER NOT NULL DEFAULT 1, -- 0 = удален админстратором
+    session_token TEXT,              -- ДОБАВЛЕНО: токен текущей сессии
+    is_active_session INTEGER NOT NULL DEFAULT 0, -- ДОБАВЛЕНО: флаг активности
+    last_active INTEGER DEFAULT 0,   -- ДОБАВЛЕНО: время последнего пульса (для таймаута)
+    created_at  TEXT NOT NULL DEFAULT (datetime('now')),
+    deleted_at  TEXT
 );
 
 CREATE TABLE IF NOT EXISTS sections (
@@ -57,17 +60,29 @@ CREATE INDEX IF NOT EXISTS idx_read_user ON read_log(user_id);
 CREATE INDEX IF NOT EXISTS idx_read_op   ON read_log(op_id, version);
 `);
 
-// Справочник разделов (идемпотентно)
+// Справочник разделов (идемпотентно) — СИНХРОНИЗИРОВАНО С kb.js
 const upsertSection = db.prepare(
-  'INSERT INTO sections (id, title) VALUES (?, ?) ON CONFLICT(id) DO UPDATE SET title=excluded.title'
+    'INSERT INTO sections (id, title) VALUES (?, ?) ON CONFLICT(id) DO UPDATE SET title=excluded.title'
 );
+
 [
-  ['preparation', 'Заготовка'],
-  ['panels',      'Сборка панелей'],
-  ['module',      'Сборка модуля'],
-  ['options',     'Опции и доработки'],
-  ['assembly',    'Монтаж на объекте'],
-  ['safety',      'Охрана труда и безопасность'],
+    ['preparation', 'Заготовка'],
+    ['panels',      'Сборка панелей'],
+    ['module',      'Сборка модуля'],
+    ['options',     'Сборка опций'],
+    ['installation','Монтаж'],
+    ['service',     'Сервис'],
+    ['standards',   'Стандарты']
 ].forEach(([id, title]) => upsertSection.run(id, title));
+
+// Автоматическое добавление колонок для защиты сессии, если их нет
+try {
+    db.prepare("SELECT session_token, is_active_session, last_active FROM users LIMIT 1").get();
+} catch (e) {
+    console.log('Миграция БД: добавление колонок сессии...');
+    try { db.exec("ALTER TABLE users ADD COLUMN session_token TEXT"); } catch(_) {}
+    try { db.exec("ALTER TABLE users ADD COLUMN is_active_session INTEGER DEFAULT 0"); } catch(_) {}
+    try { db.exec("ALTER TABLE users ADD COLUMN last_active INTEGER DEFAULT 0"); } catch(_) {}
+}
 
 module.exports = { db, DB_PATH };
