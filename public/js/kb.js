@@ -677,19 +677,17 @@ Object.entries(statuses).forEach(([id, statusObj]) => {
 
 /**
  * heartbeat.js — Автоматическая проверка активности сессии
- * Запускается только если пользователь авторизован
  */
 let heartbeatInterval = null;
 
 function startHeartbeat() {
-    // Очищаем предыдущий интервал, чтобы не было дублей
     if (heartbeatInterval) clearInterval(heartbeatInterval);
     
-    // Проверка сразу при старте, затем каждые 5 минут (300000 мс)
+    // Первая проверка сразу, затем каждые 3 минуты (180000 мс)
     checkSessionStatus();
-    heartbeatInterval = setInterval(checkSessionStatus, 5 * 60 * 1000);
+    heartbeatInterval = setInterval(checkSessionStatus, 3 * 60 * 1000);
     
-    console.log('[HEARTBEAT] Мониторинг сессии запущен (интервал: 5 мин)');
+    console.log('[HEARTBEAT] Мониторинг сессии запущен (интервал: 3 мин, TTL: 10 мин)');
 }
 
 async function checkSessionStatus() {
@@ -705,7 +703,6 @@ async function checkSessionStatus() {
         
         if (!data.active) {
             console.warn('[HEARTBEAT] Сессия неактивна! Выполняется выход...');
-            // Принудительный выход
             if (typeof logout === 'function') {
                 await logout();
             } else {
@@ -721,7 +718,6 @@ async function checkSessionStatus() {
 
 // Запускаем heartbeat после загрузки DOM, если пользователь авторизован
 document.addEventListener('DOMContentLoaded', () => {
-    // Небольшая задержка, чтобы kbGetCurrentUser() успел отработать
     setTimeout(() => {
         if (typeof isAuthenticated === 'function' && isAuthenticated()) {
             startHeartbeat();

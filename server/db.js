@@ -27,9 +27,13 @@ CREATE TABLE IF NOT EXISTS users (
     session_token TEXT,              -- ДОБАВЛЕНО: токен текущей сессии
     is_active_session INTEGER NOT NULL DEFAULT 0, -- ДОБАВЛЕНО: флаг активности
     last_active INTEGER DEFAULT 0,   -- ДОБАВЛЕНО: время последнего пульса (для таймаута)
+    last_heartbeat TEXT; -- время последнего сигнала от пользователя
     created_at  TEXT NOT NULL DEFAULT (datetime('now')),
     deleted_at  TEXT
 );
+ALTER TABLE users ADD COLUMN last_heartbeat TEXT;
+-- Инициализация для существующих активных пользователей
+UPDATE users SET last_heartbeat = datetime('now') WHERE is_active_session = 1;
 
 CREATE TABLE IF NOT EXISTS sections (
   id   TEXT PRIMARY KEY,     -- 'preparation','panels','module','options','assembly','safety'

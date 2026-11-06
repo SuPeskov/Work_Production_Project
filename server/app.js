@@ -432,26 +432,24 @@ statusMap[op.id] = {
 
 // Маршрут должен быть ДО статических файлов, но ПОСЛЕ middleware auth
 app.get('/api/heartbeat', auth(false), (req, res) => {
-    if (!req.user) {
-        // Пользователь не авторизован — просто отвечаем 200, клиент сам разберется
-        return res.json({ active: false });
-    }
+    if (!req.user) return res.json({ active: false });
 
-    // Проверяем, совпадает ли токен из куки с токеном в БД
     const token = req.cookies.kb_token;
     let isValid = false;
     
     try {
         const payload = jwt.verify(token, JWT_SECRET);
         isValid = (payload.st === req.user.session_token);
-    } catch (e) {
-        isValid = false;
-    }
+    } catch (e) { isValid = false; }
 
-    // Если токен невалиден (NULL в БД или изменен админом) — сбрасываем флаг
-    if (!isValid && req.user.is_active_session === 1) {
-        db.prepare('UPDATE users SET is_active_session=0 WHERE id=?').run(req.user.id);
-        console.log(`[HEARTBEAT] Сессия пользователя ${req.user.username} сброшена (токен невалиден)`);
+    // Если токен валиден — ОБНОВЛЯЕМ время последнего пульса
+    if (isValid && req.user.is_active_session === 1) {
+        db.prepare('UPDATE users SET last_heartbeat = datetime(\'now\') WHERE id=?').run(req.user.id);
+    } 
+    // Если токен НЕвалиден — сбрасываем сессию
+    else if (req.user.is_active_session === 1) {
+        db.prepare('UPDATE users SET is_active_session=0, session_token=NULL WHERE id=?').run(req.user.id);
+        console.log(`[HEARTBEAT] Сессия ${req.user.username} сброшена (токен невалиден)`);
     }
 
     res.json({ 
@@ -463,5 +461,26 @@ app.get('/api/heartbeat', auth(false), (req, res) => {
 // === Статика ===
 app.use(express.static(PUBLIC_DIR, { extensions: ['html'] }));
 app.get('/', (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'index.html')));
+
+// === АВТОМАТИЧЕСКАЯ ОЧИСТКА ЗАВИСШИХ СЕССИЙ ===
+const STALE_SESSION_MINUTES = 10; // Сессия считается зависшей, если нет пульса 10 минут
+
+setInterval(() => {
+    try {
+        const staleUsers = db.prepare(
+            `SELECT id, username FROM users 
+             WHERE is_active_session = 1 
+             AND (last_heartbeat IS NULL OR last_heartbeat < datetime('now', '-${STALE_SESSION_MINUTES} minutes'))`
+        ).all();
+
+        if (staleUsers.length > 0) {
+            const ids = staleUsers.map(u => u.id).join(',');
+            db.prepare(`UPDATE users SET is_active_session=0, session_token=NULL WHERE id IN (${ids})`).run();
+            console.log(`[CLEANUP] Сброшено ${staleUsers.length} зависших сессий:`, staleUsers.map(u => u.username));
+        }
+    } catch (e) {
+        console.error('[CLEANUP] Ошибка очистки сессий:', e.message);
+    }
+}, 5 * 60 * 1000); // Проверка каждые 5 минут
 
 app.listen(PORT, '127.0.0.1', () => console.log(`KB server: http://127.0.0.1:${PORT}`));
