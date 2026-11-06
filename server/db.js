@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS users (
     session_token TEXT,              -- ДОБАВЛЕНО: токен текущей сессии
     is_active_session INTEGER NOT NULL DEFAULT 0, -- ДОБАВЛЕНО: флаг активности
     last_active INTEGER DEFAULT 0,   -- ДОБАВЛЕНО: время последнего пульса (для таймаута)
-    last_heartbeat TEXT; -- время последнего сигнала от пользователя
+    last_heartbeat TEXT, -- время последнего сигнала от пользователя
     created_at  TEXT NOT NULL DEFAULT (datetime('now')),
     deleted_at  TEXT
 );
