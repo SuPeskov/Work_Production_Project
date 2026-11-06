@@ -31,9 +31,16 @@ CREATE TABLE IF NOT EXISTS users (
     created_at  TEXT NOT NULL DEFAULT (datetime('now')),
     deleted_at  TEXT
 );
-ALTER TABLE users ADD COLUMN last_heartbeat TEXT;
--- Инициализация для существующих активных пользователей
-UPDATE users SET last_heartbeat = datetime('now') WHERE is_active_session = 1;
+
+// Безопасно добавляем поле только если его нет (для старых версий БД)
+try {
+    db.exec("ALTER TABLE users ADD COLUMN last_heartbeat TEXT");
+} catch (e) {
+    // Игнорируем ошибку "duplicate column", если поле уже существует
+}
+
+// Инициализируем heartbeat для активных пользователей
+db.prepare("UPDATE users SET last_heartbeat = datetime('now') WHERE is_active_session = 1 AND last_heartbeat IS NULL").run();
 
 CREATE TABLE IF NOT EXISTS sections (
   id   TEXT PRIMARY KEY,     -- 'preparation','panels','module','options','assembly','safety'
