@@ -249,7 +249,10 @@ const KB_OPERATIONS = [
     { id: '3.9.2',  section: 'module', title: 'Упаковка модуля в тент',
     version: 1, status: 'draft',   url: 'pages/operations/3.9.2.html' },
     { id: '3.9.3',  section: 'module', title: 'Правила укладки пирогов',
-    version: 1, status: 'draft',   url: 'pages/operations/3.9.3.html' }
+    version: 1, status: 'draft',   url: 'pages/operations/3.9.3.html' },
+    // Подраздел 7.2
+    { id: '7.2.1',  section: 'standards', title: 'Правила фотоактирования',
+    version: 1, status: 'draft',   url: 'pages/operations/7.2.1.html' }
 ];
 
 

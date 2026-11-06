@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Правила фотоактирования | Скаут Хаус</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/style.css">
+    <link rel="stylesheet" href="../../css/pdf-viewer.css">
+    <style>
+        /* Дополнительные стили для скрытия пустых блоков с фото */
+        .step-image.hidden-photo {
+            display: none !important;
+        }
+        /* Если фото скрыто, текст занимает всю ширину */
+        .steps-list > li.no-photo {
+            grid-template-columns: 1fr !important;
+        }
+    </style>
+</head>
+<body class="operation-page">
+
+    <header class="top-bar">
+        <div class="top-bar-left">
+            <div class="logo-small">
+                <a href="../../dashboard.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 10px;">
+                    <img src="../../assets/images/logo.svg" alt="Скаут Хаус" class="logo-small-img">
+                    <span>Скаут Хаус</span>
+                </a>
+            </div>
+            <div class="top-bar-divider"></div>
+            <nav class="breadcrumb">
+                <a href="../../dashboard.html">Главная</a>
+                <span class="separator">/</span>
+                <a href="../standards.html">Стандарты</a>
+                <span class="separator">/</span>
+                <span class="current">Правила фотоактирования/span>
+            </nav>
+        </div>
+        <div class="top-bar-right">
+            <button class="btn-back" onclick="history.back()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                    <line x1="19" y1="12" x2="5" y2="12"/>
+                    <polyline points="12 19 5 12 12 5"/>
+                </svg>
+                <span>Назад</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="operation-main">
+        <div class="operation-header">
+            <div class="operation-number">Стандарт 7.2.1</div>
+            <h1>Правила фотоактирования</h1>
+        </div>
+
+        <section class="operation-section documentation">
+            <h2>📋 Необходимая документация</h2>
+            <!-- <div class="section-content">
+                <p>Раздел КС.ПВ.</p>
+                <div class="info-block">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="16" x2="12" y2="12"/>
+                        <line x1="12" y1="8" x2="12.01" y2="8"/>
+                    </svg>
+                    <span>Данная операция выполняется при наличии сдвоенных элементов каркаса.</span>
+                </div>
+            </div> -->
+        </section>
+
+        <section class="operation-section operations">
+            <h2>Порядок действий</h2>
+            <div class="section-content">
+                <ol class="steps-list">
+                    <li data-step="1">
+                        <div class="step-text">Отсортировать сдвоенные элементы. Разложить их рядом друг с другом, согласно схемы сборки.</div>
+                        <div class="step-image"><img src="../../assets/images/operations/2.4.1/step1.jpg" alt="..."></div>
+                    </li>
+                    <li data-step="2">
+                        <div class="step-text">В одном из сдвоенных элементов просверлить отверстия под саморезы. Шаг и расположение отверстий взять из Альбома сборки типовых узлов каркаса.</div>
+                        <div class="step-image"><img src="../../assets/images/operations/2.4.1/step2.jpg" alt="..."></div>
+                    </li>
+
+                    <li data-step="3">
+                        <div class="step-text">Нанести клей ПВА-М на соприкасающиеся поверхности элементов. Собрать детали между собой и закрепить саморезами ЖЦ 6х80.</div>
+                        <div class="step-image"><img src="../../assets/images/operations/2.4.1/step3.jpg" alt="..."></div>
+                    </li>
+                </ol>
+            </div>
+        </section>
+        <section class="operation-section quality-checklist" id="qualitySection">
+            <h2>✅ Контрольные параметры</h2>
+            <div class="section-content">
+                <div class="checklist-container">
+                    <label class="checklist-item"><input type="checkbox" class="quality-checkbox"><span class="checkmark"></span><span class="check-text"><strong>Отклонение сечения собранного элемента после сборки.</strong> Допуск: 0 -1мм.</span></label>
+                    <label class="checklist-item"><input type="checkbox" class="quality-checkbox"><span class="checkmark"></span><span class="check-text"><strong>Отклонения от плоскости панели, зашиваемой листовым материалом.</strong> Допуск: 0 -2мм.</span></label>
+                    <label class="checklist-item"><input type="checkbox" class="quality-checkbox"><span class="checkmark"></span><span class="check-text"><strong>Количество саморезов в узлах крепления:</strong> соответствует требованиям конструкционного узла.</span></label>
+                </div>
+            </div>
+        </section>
+
+        <section class="operation-section tools-checklist">
+            <h2>🛠️ Необходимый инструмент и оборудование</h2>
+            <div class="section-content">
+                <div class="simple-checklist-container">
+                    <label class="simple-checklist-item"><input type="checkbox" class="simple-checkbox"><span class="simple-checkmark"></span><span class="simple-check-text">Аккумуляторный шуруповерт с зажимным патроном</span></label>
+                    <label class="simple-checklist-item"><input type="checkbox" class="simple-checkbox"><span class="simple-checkmark"></span><span class="simple-check-text">Аккумуляторный шуруповерт ударный</span></label>
+                    <label class="simple-checklist-item"><input type="checkbox" class="simple-checkbox"><span class="simple-checkmark"></span><span class="simple-check-text">Рулетка 7,5м</span></label>
+                    <label class="simple-checklist-item"><input type="checkbox" class="simple-checkbox"><span class="simple-checkmark"></span><span class="simple-check-text">Уголок плотницкий металлический 150мм</span></label>
+                    <label class="simple-checklist-item"><input type="checkbox" class="simple-checkbox"><span class="simple-checkmark"></span><span class="simple-check-text">Карандаш простой</span></label>
+                    <label class="simple-checklist-item"><input type="checkbox" class="simple-checkbox"><span class="simple-checkmark"></span><span class="simple-check-text">Сверло d6х100мм</span></label>
+                    <label class="simple-checklist-item"><input type="checkbox" class="simple-checkbox"><span class="simple-checkmark"></span><span class="simple-check-text">Бита PZ3</span></label>
+                    <label class="simple-checklist-item"><input type="checkbox" class="simple-checkbox"><span class="simple-checkmark"></span><span class="simple-check-text">Кисть флейцевая 100мм</span></label>
+                </div>
+            </div>
+        </section>
+
+        <section class="operation-section materials-checklist">
+            <h2>📦 Расходные материалы</h2>
+            <div class="section-content">
+                <div class="simple-checklist-container">
+                    <label class="simple-checklist-item"><input type="checkbox" class="simple-checkbox"><span class="simple-checkmark"></span><span class="simple-check-text">Саморез ЖЦ 6х80</span></label>
+                    <label class="simple-checklist-item"><input type="checkbox" class="simple-checkbox"><span class="simple-checkmark"></span><span class="simple-check-text">Клей ПВА-М</span></label>
+                    <label class="simple-checklist-item"><input type="checkbox" class="simple-checkbox"><span class="simple-checkmark"></span><span class="simple-check-text">Ветошь</span></label>
+                </div>
+            </div>
+        </section>
+
+        <!-- БЛОК 6: переход на фотоальбом -->
+        <section class="operation-section photos">
+            <h2> Фотоальбом операции</h2>
+            <div class="section-content">
+                <div class="qr-container">
+                    <div class="qr-info">
+                        <p>Перейти в фотоальбома с примерами выполнения данной операции</p>
+                            <div class="info-block">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <line x1="12" y1="16" x2="12" y2="12"/>
+                                    <line x1="12" y1="8" x2="12.01" y2="8"/>
+                                </svg>
+                                <span>В данный момент происходит формирование фотоальбома. Данная кнопка не активна.</span>
+                            </div>                        
+                        <a href="#" target="_blank" class="btn-qr">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                                <polyline points="15 3 21 3 21 9"/>
+                                <line x1="10" y1="14" x2="21" y2="3"/>
+                            </svg>
+                            Открыть фотоальбом
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+<!-- КНОПКА "ОЗНАКОМЛЕН" -->
+<section class="operation-section read-status-section">
+    <div class="read-status-container">
+        <button id="readBtn" class="btn-read-status"
+                data-op-id="2.3.1"
+                data-op-version="1">
+            <svg class="icon-unread" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+            </svg>
+            <svg class="icon-read" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20" style="display:none;">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+            <span class="btn-text">Ознакомлен</span>
+        </button>
+        <p class="read-status-disclaimer">
+            Нажимая данную кнопку, вы подтверждаете, что ознакомились с вышеизложенной информацией
+        </p>
+        <div class="read-status-info" id="readStatusInfo"></div>
+    </div>
+</section>
+
+        <div class="operation-navigation">
+            <a href="../panels.html" class="btn-nav btn-prev">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                <span>К разделу Сборка панелей</span>
+            </a>
+            <a href="2.4.2.html" class="btn-nav btn-next">
+                <span>Следующая операция: 2.4.2</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </a>
+        </div>
+    </main>
+
+        <!-- Модальное окно PDF Viewer -->
+<div id="pdfModal" class="pdf-modal hidden">
+    <div class="pdf-modal-content">
+        <div class="pdf-toolbar">
+            <span id="pdfTitle" class="pdf-title">Документ</span>
+            <button id="pdfClose" class="btn-close" aria-label="Закрыть">×</button>
+        </div>
+        <div class="pdf-container">
+            <canvas id="pdfCanvas"></canvas>
+        </div>
+            <button id="pdfFullscreen" class="btn-fullscreen" aria-label="Полноэкранный режим">
+             ⛶ Полноэкранный режим
+            </button>
+        <div class="pdf-controls">
+            <button id="prevPage">←</button>
+            <span id="pageInfo"> 1 из ?</span>
+            <button id="nextPage">→</button>
+        </div>
+    </div>
+</div>
+    <!-- Lunr.js для поиска -->
+    <script src="https://unpkg.com/lunr@2.3.9/lunr.min.js"></script>
+    <script src="https://unpkg.com/lunr-languages@1.14.0/lunr.stemmer.support.js"></script>
+    <script src="https://unpkg.com/lunr-languages@1.14.0/lunr.ru.js"></script>
+
+    <script src="../../js/users.js"></script>
+    <script src="../../js/kb.js"></script>
+    <script src="../../js/scrollTop.js"></script>
+    <script src="../../js/readStatus.js"></script>
+    <script src="../../js/access-guard.js"></script>
+    <script src="../../js/pdfjs/build/pdf.min.mjs" type="module"></script>
+    <script src="../../js/pdf-viewer.js" type="module"></script>
+    <script src="../../js/hiding-empty-blocks.js"></script>
+</body>
+</html>
