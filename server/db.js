@@ -32,16 +32,6 @@ CREATE TABLE IF NOT EXISTS users (
     deleted_at  TEXT
 );
 
-// Безопасно добавляем поле только если его нет (для старых версий БД)
-try {
-    db.exec("ALTER TABLE users ADD COLUMN last_heartbeat TEXT");
-} catch (e) {
-    // Игнорируем ошибку "duplicate column", если поле уже существует
-}
-
-// Инициализируем heartbeat для активных пользователей
-db.prepare("UPDATE users SET last_heartbeat = datetime('now') WHERE is_active_session = 1 AND last_heartbeat IS NULL").run();
-
 CREATE TABLE IF NOT EXISTS sections (
   id   TEXT PRIMARY KEY,     -- 'preparation','panels','module','options','assembly','safety'
   title TEXT NOT NULL
@@ -70,6 +60,16 @@ CREATE TABLE IF NOT EXISTS read_log (
 CREATE INDEX IF NOT EXISTS idx_read_user ON read_log(user_id);
 CREATE INDEX IF NOT EXISTS idx_read_op   ON read_log(op_id, version);
 `);
+
+// Безопасно добавляем поле только если его нет (для старых версий БД)
+try {
+    db.exec("ALTER TABLE users ADD COLUMN last_heartbeat TEXT");
+} catch (e) {
+    // Игнорируем ошибку "duplicate column", если поле уже существует
+}
+
+// Инициализируем heartbeat для активных пользователей
+db.prepare("UPDATE users SET last_heartbeat = datetime('now') WHERE is_active_session = 1 AND last_heartbeat IS NULL").run();
 
 // Справочник разделов (идемпотентно) — СИНХРОНИЗИРОВАНО С kb.js
 const upsertSection = db.prepare(
