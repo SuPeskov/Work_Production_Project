@@ -164,17 +164,35 @@ app.post('/api/login', loginLimiter, (req, res) => {
     // Это гарантирует "одну активную сессию" без риска, что пользователь не сможет 
     // войти после закрытия вкладки (когда запрос /api/logout не отправляется).
     
-    const newSessionToken = crypto.randomBytes(32).toString('hex');
+    // const newSessionToken = crypto.randomBytes(32).toString('hex');
     
     // Перезаписываем токен и активируем сессию
-    db.prepare('UPDATE users SET session_token=?, is_active_session=1 WHERE id=?').run(newSessionToken, user.id);
+    //db.prepare('UPDATE users SET session_token=?, is_active_session=1 WHERE id=?').run(newSessionToken, user.id);
     
-    const token = jwt.sign({ uid: user.id, st: newSessionToken }, JWT_SECRET, { expiresIn: '12h' });
+    //const token = jwt.sign({ uid: user.id, st: newSessionToken }, JWT_SECRET, { expiresIn: '12h' });
     
-    res.cookie('kb_token', token, {
-        httpOnly: true, sameSite: 'lax', secure: process.env.KB_SECURE_COOKIE === '1', maxAge: 12 * 3600 * 1000,
+    //res.cookie('kb_token', token, {
+    //    httpOnly: true, sameSite: 'lax', secure: process.env.KB_SECURE_COOKIE === '1', maxAge: 12 * 3600 * 1000,
+    //});
+    //res.json({ ok: true, user: publicUser(user) });
+// === ЖЕСТКАЯ ПРОВЕРКА ДУБЛИРОВАННОГО ВХОДА ===
+if (user.is_active_session === 1 && user.session_token) {
+    return res.status(409).json({ 
+        error: '⚠️ Этот сотрудник уже работает в системе!\nПовторный вход под одним логином запрещен.' 
     });
-    res.json({ ok: true, user: publicUser(user) });
+}
+// ==========================================
+
+const newSessionToken = crypto.randomBytes(32).toString('hex');
+db.prepare('UPDATE users SET session_token=?, is_active_session=1 WHERE id=?')
+  .run(newSessionToken, user.id);
+
+const token = jwt.sign({ uid: user.id, st: newSessionToken }, JWT_SECRET, { expiresIn: '12h' });
+res.cookie('kb_token', token, {
+    httpOnly: true, sameSite: 'lax', secure: process.env.KB_SECURE_COOKIE === '1', maxAge: 12 * 3600 * 1000,
+});
+res.json({ ok: true, user: publicUser(user) });
+
 });
 
 // СБРОС ФЛАГА ПРИ ВЫХОДЕ
@@ -301,7 +319,7 @@ const ROLES = ['admin', 'worker', 'guest'];
 
 app.get('/api/admin/users', auth(true, ['admin']), (req, res) => {
     cleanupDemoAccounts();
-    const users = db.prepare("SELECT id, username, name, role, active FROM users WHERE active=1 ORDER BY username").all();
+    const users = db.prepare("SELECT id, username, name, role, active, is_active_session FROM users WHERE active=1 ORDER BY username").all();
     users.forEach(u => u.sections = sectionsOf(u.id));
     res.json(users);
 });
@@ -337,6 +355,20 @@ app.post('/api/admin/users/:id/access', auth(true, ['admin']), (req, res) => {
     res.json({ ok: true });
 });
 
+// Принудительный сброс сессии администратором
+app.post('/api/admin/users/:id/kick', auth(true, ['admin']), (req, res) => {
+    const userId = parseInt(req.params.id);
+    const targetUser = db.prepare('SELECT id, username, role FROM users WHERE id=? AND active=1').get(userId);
+    
+    if (!targetUser) return res.status(404).json({ error: 'Пользователь не найден' });
+    if (targetUser.role === 'admin') return res.status(403).json({ error: 'Нельзя выкинуть администратора' });
+
+    // Обнуляем токен и флаг активности
+    db.prepare('UPDATE users SET session_token=NULL, is_active_session=0 WHERE id=?').run(userId);
+    
+    console.log(`[ADMIN KICK] Админ ${req.user.username} завершил сессию пользователя ${targetUser.username}`);
+    res.json({ ok: true, message: `Сессия "${targetUser.username}" завершена` });
+});
 app.delete('/api/admin/users/:id', auth(true, ['admin']), (req, res) => {
     const u = db.prepare('SELECT * FROM users WHERE id=? AND active=1').get(req.params.id);
     if (!u) return res.status(404).json({ error: 'Пользователь не найден' });
@@ -396,6 +428,36 @@ statusMap[op.id] = {
     });
 
     res.json(statusMap);
+});
+
+// Маршрут должен быть ДО статических файлов, но ПОСЛЕ middleware auth
+app.get('/api/heartbeat', auth(false), (req, res) => {
+    if (!req.user) {
+        // Пользователь не авторизован — просто отвечаем 200, клиент сам разберется
+        return res.json({ active: false });
+    }
+
+    // Проверяем, совпадает ли токен из куки с токеном в БД
+    const token = req.cookies.kb_token;
+    let isValid = false;
+    
+    try {
+        const payload = jwt.verify(token, JWT_SECRET);
+        isValid = (payload.st === req.user.session_token);
+    } catch (e) {
+        isValid = false;
+    }
+
+    // Если токен невалиден (NULL в БД или изменен админом) — сбрасываем флаг
+    if (!isValid && req.user.is_active_session === 1) {
+        db.prepare('UPDATE users SET is_active_session=0 WHERE id=?').run(req.user.id);
+        console.log(`[HEARTBEAT] Сессия пользователя ${req.user.username} сброшена (токен невалиден)`);
+    }
+
+    res.json({ 
+        active: isValid && req.user.is_active_session === 1,
+        timestamp: new Date().toISOString()
+    });
 });
 
 // === Статика ===

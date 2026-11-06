@@ -173,7 +173,58 @@ function renderUsers(users) {
         const roleLabels = { admin: 'Администратор', worker: 'Сотрудник производства', guest: 'Гость' };
         tdRole.textContent = roleLabels[user.role] || user.role;
         tr.appendChild(tdRole);
+
+                // === НОВЫЙ СТОЛБЕЦ: СТАТУС В СИСТЕМЕ ===
+        const tdOnline = document.createElement('td');
+        tdOnline.style.textAlign = 'center';
+        tdOnline.style.verticalAlign = 'middle';
         
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.checked = user.is_active_session === 1;
+        checkbox.disabled = true; // Только просмотр
+        
+        if (user.is_active_session === 1) {
+            checkbox.title = 'Сотрудник сейчас в системе';
+            checkbox.style.accentColor = '#16a34a';
+            
+            // Кнопка "Выкинуть" рядом с чекбоксом
+            const kickBtn = document.createElement('button');
+            kickBtn.textContent = '🚪';
+            kickBtn.title = 'Завершить сессию';
+            kickBtn.className = 'btn-sm btn-danger';
+            kickBtn.style.marginLeft = '8px';
+            kickBtn.style.padding = '2px 6px';
+            kickBtn.onclick = async () => {
+                if (!confirm(`Завершить сессию "${user.name}"?\nПользователь будет автоматически выведен из системы.`)) return;
+                
+                try {
+                    const res = await fetch(`/api/admin/users/${user.id}/kick`, { 
+                        method: 'POST', credentials: 'include' 
+                    });
+                    const data = await res.json();
+                    if (res.ok) {
+                        await loadUsers(); // Обновляем таблицу
+                    } else {
+                        alert(data.error || 'Ошибка');
+                    }
+                } catch (e) {
+                    alert('Ошибка соединения');
+                }
+            };
+            
+            tdOnline.appendChild(checkbox);
+            tdOnline.appendChild(kickBtn);
+        } else {
+            checkbox.title = 'Не в сети';
+            checkbox.style.opacity = '0.3';
+            tdOnline.appendChild(checkbox);
+        }
+        
+        // Вставляем перед столбцом "Доступ к разделам" (индекс 3)
+        tr.insertBefore(tdOnline, tr.children[3]); 
+        // ==========================================
+
         // Доступ
         const tdAccess = document.createElement('td');
         if (user.role === 'admin' || user.role === 'guest') {

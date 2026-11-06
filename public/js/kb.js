@@ -673,6 +673,60 @@ Object.entries(statuses).forEach(([id, statusObj]) => {
 });
 
 /**
+ * heartbeat.js — Автоматическая проверка активности сессии
+ * Запускается только если пользователь авторизован
+ */
+let heartbeatInterval = null;
+
+function startHeartbeat() {
+    // Очищаем предыдущий интервал, чтобы не было дублей
+    if (heartbeatInterval) clearInterval(heartbeatInterval);
+    
+    // Проверка сразу при старте, затем каждые 5 минут (300000 мс)
+    checkSessionStatus();
+    heartbeatInterval = setInterval(checkSessionStatus, 5 * 60 * 1000);
+    
+    console.log('[HEARTBEAT] Мониторинг сессии запущен (интервал: 5 мин)');
+}
+
+async function checkSessionStatus() {
+    // Не проверяем, если пользователь не авторизован
+    if (typeof isAuthenticated !== 'function' || !isAuthenticated()) {
+        if (heartbeatInterval) clearInterval(heartbeatInterval);
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/heartbeat', { credentials: 'include' });
+        const data = await response.json();
+        
+        if (!data.active) {
+            console.warn('[HEARTBEAT] Сессия неактивна! Выполняется выход...');
+            // Принудительный выход
+            if (typeof logout === 'function') {
+                await logout();
+            } else {
+                sessionStorage.removeItem('modular_house_session');
+                window.location.href = '/index.html?session_expired=1';
+            }
+        }
+    } catch (error) {
+        console.error('[HEARTBEAT] Ошибка проверки:', error);
+        // При сетевой ошибке не выбрасываем, ждем следующего цикла
+    }
+}
+
+// Запускаем heartbeat после загрузки DOM, если пользователь авторизован
+document.addEventListener('DOMContentLoaded', () => {
+    // Небольшая задержка, чтобы kbGetCurrentUser() успел отработать
+    setTimeout(() => {
+        if (typeof isAuthenticated === 'function' && isAuthenticated()) {
+            startHeartbeat();
+        }
+    }, 2000);
+});
+
+/**
  * auto-check-read-btn.js — Автоматическая синхронизация кнопки "Ознакомлен"
  * Добавляется в конец kb.js
  */
