@@ -3012,8 +3012,12 @@ h1, h2, h3, h4, h5, h6 {
     
     .steps-list > li .step-image img,
     .steps-list > li .image-placeholder {
-        height: 200px;
-        object-fit: cover;
+        /* height: 200px;
+        object-fit: cover; */
+        height: auto !important;      /* <--- УБИРАЕМ 200px */
+        object-fit: contain !important; /* <--- Вписываем целиком, не обрезая */
+        max-height: 400px;            /* Опционально: ограничение макс. высоты, если фото огромные */
+        width: 100%;                  /* Растягиваем на всю ширину контейнера */
     }
 }
 
