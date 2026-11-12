@@ -1406,10 +1406,20 @@ h1, h2, h3, h4, h5, h6 {
 
 /* === RESPONSIVE === */
 @media (max-width: 768px) {
+
+    /* Убираем центрирование и отступы у body/страницы */
+    .login-page {
+        padding: 0; /* Убираем внешние отступы */
+        align-items: stretch; /* Растягиваем на всю высоту */
+    }    
+
+    /* Контейнер на всю ширину и высоту */
     .login-wrapper {
         flex-direction: column;
-        max-width: 440px;
-        min-height: auto;
+        width: 100%;
+        max-width: 100%; /* Было 440px - стало 100% */
+        min-height: 100vh; /* На всю высоту экрана */
+        margin: 0;
     }
 
     .login-brand {
