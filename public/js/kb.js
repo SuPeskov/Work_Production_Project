@@ -85,7 +85,7 @@ const KB_OPERATIONS = [
     { id: '3.1.4',  section: 'module', title: 'Утепление модуля минеральной ватой',
     version: 1, status: 'draft',   url: 'pages/operations/3.1.4.html' },
     { id: '3.1.5',  section: 'module', title: 'Установка оконных конструкций',
-    version: 1, status: 'draft',   url: 'pages/operations/3.1.5.html' },
+    version: 1, status: 'ready',   url: 'pages/operations/3.1.5.html' },
     { id: '3.1.6',  section: 'module', title: 'Монтаж ветрозащиты',
     version: 1, status: 'draft',   url: 'pages/operations/3.1.6.html' },
     { id: '3.1.7',  section: 'module', title: 'Монтаж уплотнительных манжет / проклейка гильз пароизоляционным скотчем',
