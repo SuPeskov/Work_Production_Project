@@ -3408,3 +3408,42 @@ li, .operation-item {
     transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
+/* === ПОДСВЕТКА НАЙДЕННОГО ТЕКСТА (ЖЕЛТЫЙ ФОН) === */
+
+/* 1. Базовый стиль для всех тегов mark (в поиске и на страницах) */
+mark {
+    background-color: #fef08a !important; /* Чистый желтый цвет (как на скрине) */
+    color: inherit !important;            /* Наследуем цвет текста (черный) */
+    padding: 0 2px;                       /* Минимальные отступы, только чтобы текст не слипался */
+    border-radius: 0 !important;          /* Убираем скругления */
+    box-shadow: none !important;          /* Убираем тени/обводку */
+    font-weight: inherit !important;      /* Наследуем жирность шрифта (не делаем жирным принудительно) */
+}
+
+/* 2. Специфично для результатов поиска в выпадающем списке */
+.search-result-title mark,
+.search-result-excerpt mark,
+.result-card-title mark,
+.result-card-excerpt mark {
+    background-color: #fef08a !important;
+    color: #1a1a2e !important;
+    padding: 0 2px;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+
+/* 3. Специфично для подсветки на странице операции (после перехода) */
+mark.search-highlight {
+    background-color: #fef08a !important; /* Тот же желтый */
+    color: inherit !important;
+    padding: 0 2px;
+    border-radius: 0 !important;
+    box-shadow: none !important;          /* Убираем свечение */
+    font-weight: inherit !important;
+}
+
+/* Убираем анимацию пульсации, если она была добавлена ранее для .first-match */
+mark.search-highlight.first-match {
+    animation: none !important;
+    background-color: #fde047 !important; /* Можно сделать чуть темнее для первого совпадения, или оставить таким же */
+}
