@@ -1405,13 +1405,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* === RESPONSIVE === */
-@media (max-width: 768px) {
-
-    /* Убираем центрирование и отступы у body/страницы */
-    .login-page {
-        padding: 0; /* Убираем внешние отступы */
-        align-items: stretch; /* Растягиваем на всю высоту */
-    }    
+@media (max-width: 768px) { 
 
     /* Контейнер на всю ширину и высоту */
     .login-wrapper {
