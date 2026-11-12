@@ -82,17 +82,42 @@ class SearchEngine {
         }
     }
     
+   // highlightText(text, query) {
+   //     if (!query || !text) return text || '';
+   //     const words = query.split(/\s+/).filter(w => w.length > 2);
+   //     let highlighted = text;
+   //     words.forEach(word => {
+   //         const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+   //         const regex = new RegExp(`(${escaped})`, 'gi');
+   //         highlighted = highlighted.replace(regex, '<mark>$1</mark>');
+   //     });
+   //     return highlighted;
+   // }
+
     highlightText(text, query) {
-        if (!query || !text) return text || '';
-        const words = query.split(/\s+/).filter(w => w.length > 2);
-        let highlighted = text;
-        words.forEach(word => {
-            const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            const regex = new RegExp(`(${escaped})`, 'gi');
-            highlighted = highlighted.replace(regex, '<mark>$1</mark>');
-        });
-        return highlighted;
-    }
+    if (!query || !text) return text || '';
+    
+    // 1. Убираем фильтр длины слова, чтобы подсвечивались и короткие совпадения (если нужно)
+    // Если хотите оставить только слова > 2 букв, верните .filter(w => w.length > 2)
+    const words = query.split(/\s+/).filter(w => w.length > 2); 
+    
+    if (words.length === 0) return text;
+
+    let highlighted = text;
+
+    // 2. Создаем одно регулярное выражение для всех слов сразу (оптимизация)
+    // Экранируем спецсимволы в каждом слове
+    const escapedWords = words.map(word => word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    
+    // Объединяем слова через ИЛИ (|)
+    // Флаг 'gi' — глобальный поиск (все совпадения) и без учета регистра
+    const regex = new RegExp(`(${escapedWords.join('|')})`, 'gi');
+
+    // 3. Заменяем все совпадения на обертку <mark>
+    highlighted = highlighted.replace(regex, '<mark>$1</mark>');
+
+    return highlighted;
+}
 }
 
 const searchEngine = new SearchEngine();
