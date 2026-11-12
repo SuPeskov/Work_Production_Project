@@ -1409,11 +1409,9 @@ h1, h2, h3, h4, h5, h6 {
 
     /* Контейнер на всю ширину и высоту */
     .login-wrapper {
-        flex-direction: column;
         width: 100%;
-        max-width: 100%; /* Было 440px - стало 100% */
-        min-height: 100vh; /* На всю высоту экрана */
-        margin: 0;
+        max-width: 440px;
+        min-height: auto;
     }
 
     .login-brand {
