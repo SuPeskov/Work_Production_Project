@@ -239,34 +239,65 @@ document.addEventListener('DOMContentLoaded', async function() {
  * Вычисляет правильный относительный URL к документу
  * в зависимости от расположения текущей страницы
  */
-function buildUrl(result) {
+//function buildUrl(result) {
     // 1. Получаем чистый путь (убираем ./ или ../ если вдруг есть)
-    let targetPath = result.url.replace(/^\.\.?\//, '');
+    //  let targetPath = result.url.replace(/^\.\.?\//, '');
 
     // 2. Определяем, где мы сейчас находимся
-    const currentPath = window.location.pathname; 
-    let finalUrl = '';
+    //const currentPath = window.location.pathname; 
+    //let finalUrl = '';
 
     // 3. Логика формирования относительного пути
-    if (currentPath.includes('/pages/operations/')) {
+    //if (currentPath.includes('/pages/operations/')) {
         // Мы внутри операции (глубина 2). Чтобы попасть в pages/, нужно выйти на уровень вверх (../)
-        finalUrl = '../' + targetPath;
-    } else if (currentPath.includes('/pages/')) {
+    //    finalUrl = '../' + targetPath;
+    //} else if (currentPath.includes('/pages/')) {
         // Мы уже в папке pages/. 
         // Если targetPath = 'pages/production.html', нам нужно просто 'production.html'
         // Если targetPath = 'pages/operations/2.1.1.html', нам нужно 'operations/2.1.1.html'
+    //    finalUrl = targetPath.replace(/^pages\//, '');
+    //} else {
+        // Мы в корне (например, dashboard.html)
+    //    finalUrl = targetPath;
+    //}
+
+    // 4. Добавляем якорь, если он есть
+    //if (result.anchor) {
+    //    finalUrl += '#' + result.anchor;
+    //}
+
+
+
+    //console.log('🔗 Итоговый URL для клика:', finalUrl);
+    //return finalUrl;
+//}
+
+function buildUrl(result, query) {
+    // ... существующая логика формирования finalUrl ...
+    let targetPath = result.url.replace(/^..?\//, '');
+    const currentPath = window.location.pathname;
+    let finalUrl = '';
+
+    if (currentPath.includes('/pages/operations/')) {
+        finalUrl = '../' + targetPath;
+    } else if (currentPath.includes('/pages/')) {
         finalUrl = targetPath.replace(/^pages\//, '');
     } else {
-        // Мы в корне (например, dashboard.html)
         finalUrl = targetPath;
     }
 
-    // 4. Добавляем якорь, если он есть
     if (result.anchor) {
         finalUrl += '#' + result.anchor;
     }
 
-    console.log('🔗 Итоговый URL для клика:', finalUrl);
+    // === ДОБАВЛЯЕМ ПАРАМЕТР ПОДСВЕТКИ ===
+    if (query && query.trim().length > 0) {
+        const separator = finalUrl.includes('?') ? '&' : '?';
+        // Кодируем запрос для URL
+        finalUrl += separator + 'highlight=' + encodeURIComponent(query.trim());
+    }
+    // ====================================
+
     return finalUrl;
 }
 
@@ -274,7 +305,7 @@ function buildUrl(result) {
     const typeInfo = TYPE_LABELS[result.type] || TYPE_LABELS.operation;
     const highlightedTitle = searchEngine.highlightText(result.title, query);
     
-    const url = buildUrl(result);
+    const url = buildUrl(result, query);
     
     return `
         <a href="${url}" class="search-result-item">
