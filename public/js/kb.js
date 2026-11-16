@@ -157,7 +157,7 @@ const KB_OPERATIONS = [
     { id: '3.3.15',  section: 'module', title: 'Монтаж отделочной доски в санузле',
     version: 1, status: 'draft',   url: 'pages/operations/3.3.15.html' },
     { id: '3.3.16',  section: 'module', title: 'Монтаж сантехники',
-    version: 1, status: 'draft',   url: 'pages/operations/3.3.16.html' },
+    version: 1, status: 'ready',   url: 'pages/operations/3.3.16.html' },
     { id: '3.3.17',  section: 'module', title: 'Монтаж душевого поддона',
     version: 1, status: 'draft',   url: 'pages/operations/3.3.17.html' },
     { id: '3.3.18',  section: 'module', title: 'Монтаж душевой перегородки',
