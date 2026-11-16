@@ -175,9 +175,9 @@ const KB_OPERATIONS = [
     { id: '3.3.24',  section: 'module', title: 'Монтаж раздвижной системы технического шкафа',
     version: 1, status: 'ready',   url: 'pages/operations/3.3.24.html' },
     { id: '3.3.25',  section: 'module', title: 'Монтаж печного листа на потолок',
-    version: 1, status: 'draft',   url: 'pages/operations/3.3.25.html' },
+    version: 1, status: 'ready',   url: 'pages/operations/3.3.25.html' },
     { id: '3.3.26',  section: 'module', title: 'Монтаж печного листа на стену и пол',
-    version: 1, status: 'draft',   url: 'pages/operations/3.3.26.html' },
+    version: 1, status: 'ready',   url: 'pages/operations/3.3.26.html' },
     // Подраздел 3.4
     { id: '3.4.1',  section: 'module', title: 'Прокладка кабельных трасс',
     version: 1, status: 'draft',   url: 'pages/operations/3.4.1.html' },
