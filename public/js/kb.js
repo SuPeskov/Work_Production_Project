@@ -149,7 +149,7 @@ const KB_OPERATIONS = [
     { id: '3.3.11',  section: 'module', title: 'Укладка напольного покрытия',
     version: 1, status: 'ready',   url: 'pages/operations/3.3.11.html' },
     { id: '3.3.12',  section: 'module', title: 'Устройство пола в санузле, до наливного пола',
-    version: 1, status: 'draft',   url: 'pages/operations/3.3.12.html' },
+    version: 1, status: 'ready',   url: 'pages/operations/3.3.12.html' },
     { id: '3.3.13',  section: 'module', title: 'Устройство наливного пола',
     version: 1, status: 'draft',   url: 'pages/operations/3.3.13.html' },
     { id: '3.3.14',  section: 'module', title: 'Монтаж отделочной плитки:',
