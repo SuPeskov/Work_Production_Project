@@ -99,7 +99,7 @@ const KB_OPERATIONS = [
     { id: '3.1.11',  section: 'module', title: 'Монтаж внешних оконных обкладов',
     version: 1, status: 'draft',   url: 'pages/operations/3.1.11.html' },
     { id: '3.1.12',  section: 'module', title: 'Монтаж фанеры на стыке модулей',
-    version: 1, status: 'draft',   url: 'pages/operations/3.1.12.html' },
+    version: 1, status: 'ready',   url: 'pages/operations/3.1.12.html' },
     // Подраздел 3.2
     { id: '3.2.1',  section: 'module', title: 'Монтаж кровельного контрбруса',
     version: 1, status: 'draft',   url: 'pages/operations/3.2.1.html' },
