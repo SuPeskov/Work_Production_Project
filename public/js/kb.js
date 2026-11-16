@@ -91,7 +91,7 @@ const KB_OPERATIONS = [
     { id: '3.1.7',  section: 'module', title: 'Монтаж уплотнительных манжет / проклейка гильз пароизоляционным скотчем',
     version: 1, status: 'draft',   url: 'pages/operations/3.1.7.html' },
     { id: '3.1.8',  section: 'module', title: 'Монтаж стенового контрбруса',
-    version: 1, status: 'draft',   url: 'pages/operations/3.1.8.html' },
+    version: 1, status: 'ready',   url: 'pages/operations/3.1.8.html' },
     { id: '3.1.9',  section: 'module', title: 'Монтаж внешней отделки',
     version: 1, status: 'draft',   url: 'pages/operations/3.1.9.html' },
     { id: '3.1.10',  section: 'module', title: 'Монтаж внешних оконных обкладов',
