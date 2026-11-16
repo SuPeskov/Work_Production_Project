@@ -116,7 +116,7 @@ const KB_OPERATIONS = [
     { id: '3.2.7',  section: 'module', title: 'Монтаж системы обогрева воронок',
     version: 1, status: 'ready',   url: 'pages/operations/3.2.7.html' },
     { id: '3.2.8',  section: 'module', title: 'Монтаж ПВХ-мембраны',
-    version: 1, status: 'draft',   url: 'pages/operations/3.2.8.html' },
+    version: 1, status: 'ready',   url: 'pages/operations/3.2.8.html' },
     { id: '3.2.9',  section: 'module', title: 'Монтаж аэраторов фановой трубы',
     version: 1, status: 'draft',   url: 'pages/operations/3.2.9.html' },
     { id: '3.2.10',  section: 'module', title: 'Монаж аэратора вентиляции подкровельного пространства',
