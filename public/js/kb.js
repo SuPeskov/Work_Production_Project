@@ -122,9 +122,9 @@ const KB_OPERATIONS = [
     { id: '3.2.10',  section: 'module', title: 'Монаж аэратора вентиляции подкровельного пространства',
     version: 1, status: 'ready',   url: 'pages/operations/3.2.10.html' },
     { id: '3.2.11',  section: 'module', title: 'Устройство проходки вентиляционной трубы через крышу',
-    version: 1, status: 'draft',   url: 'pages/operations/3.2.11.html' },
+    version: 1, status: 'ready',   url: 'pages/operations/3.2.11.html' },
     { id: '3.2.12',  section: 'module', title: 'Устройство проходки печной трубы',
-    version: 1, status: 'draft',   url: 'pages/operations/3.2.12.html' },
+    version: 1, status: 'ready',   url: 'pages/operations/3.2.12.html' },
     // Подраздел 3.3
     { id: '3.3.1',  section: 'module', title: 'Укладка минеральной ваты внутри перегородок',
     version: 1, status: 'draft',   url: 'pages/operations/3.3.1.html' },
