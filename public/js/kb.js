@@ -143,7 +143,7 @@ const KB_OPERATIONS = [
     { id: '3.3.8',  section: 'module', title: 'Монтаж внутренних оконных обкладов',
     version: 1, status: 'ready',   url: 'pages/operations/3.3.8.html' },
     { id: '3.3.9',  section: 'module', title: 'Монтаж межкомнатных дверей',
-    version: 1, status: 'draft',   url: 'pages/operations/3.3.9.html' },
+    version: 1, status: 'ready',   url: 'pages/operations/3.3.9.html' },
     { id: '3.3.10',  section: 'module', title: 'Монтаж обкладов межкомнатных дверей и проемов-порталов',
     version: 1, status: 'draft',   url: 'pages/operations/3.3.10.html' },
     { id: '3.3.11',  section: 'module', title: 'Укладка напольного покрытия',
