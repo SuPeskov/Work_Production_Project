@@ -173,7 +173,7 @@ const KB_OPERATIONS = [
     { id: '3.3.23',  section: 'module', title: 'Монтаж технического шкафа',
     version: 1, status: 'draft',   url: 'pages/operations/3.3.23.html' },
     { id: '3.3.24',  section: 'module', title: 'Монтаж раздвижной системы технического шкафа',
-    version: 1, status: 'draft',   url: 'pages/operations/3.3.24.html' },
+    version: 1, status: 'ready',   url: 'pages/operations/3.3.24.html' },
     { id: '3.3.25',  section: 'module', title: 'Монтаж печного листа на потолок',
     version: 1, status: 'draft',   url: 'pages/operations/3.3.25.html' },
     { id: '3.3.26',  section: 'module', title: 'Монтаж печного листа на стену и пол',
