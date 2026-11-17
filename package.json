@@ -2,7 +2,9 @@
   "name": "scout-house-kb",
   "version": "1.0.0",
   "scripts": {
-    "build-index": "node build-search-index.js"
+    "build-index": "node server/scripts/build-search-index.js",
+    "audit": "node scripts/kb-audit.js",
+    "check": "npm run audit"
   },
   "dependencies": {
     "lunr": "^2.3.9",
