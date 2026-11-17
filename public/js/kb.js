@@ -180,7 +180,7 @@ const KB_OPERATIONS = [
     version: 1, status: 'ready',   url: 'pages/operations/3.3.26.html' },
     // Подраздел 3.4
     { id: '3.4.1',  section: 'module', title: 'Прокладка кабельных трасс',
-    version: 1, status: 'draft',   url: 'pages/operations/3.4.1.html' },
+    version: 1, status: 'ready',   url: 'pages/operations/3.4.1.html' },
     { id: '3.4.2',  section: 'module', title: 'Подготовка розеток для телевизора',
     version: 1, status: 'draft',   url: 'pages/operations/3.4.2.html' },
     { id: '3.4.3',  section: 'module', title: 'Монтаж РК для расключения и для электроточек внутри внешних стен',
