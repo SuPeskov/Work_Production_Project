@@ -76,16 +76,13 @@
 
         <!-- Фильтры по типу -->
         <div class="search-filters">
-            <button class="filter-btn active" data-filter="all">
+            <button class="filter-btn active" data-filter="all" aria-pressed="true">
                 Все <span class="filter-count" id="countAll">0</span>
             </button>
-            <button class="filter-btn" data-filter="section">
+            <button class="filter-btn" data-filter="section" aria-pressed="false">
                 📂 Разделы <span class="filter-count" id="countSection">0</span>
             </button>
-            <button class="filter-btn" data-filter="subsection">
-                📁 Подразделы <span class="filter-count" id="countSubsection">0</span>
-            </button>
-            <button class="filter-btn" data-filter="operation">
+            <button class="filter-btn" data-filter="operation" aria-pressed="false">
                 📄 Операции <span class="filter-count" id="countOperation">0</span>
             </button>
         </div>
