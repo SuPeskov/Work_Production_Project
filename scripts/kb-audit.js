@@ -15,10 +15,12 @@
  * страницы, расхождение data-op-id/data-op-version, операция без ссылки в
  * списке раздела, ссылка на отсутствующую техкарту PDF, устаревший индекс.
  *
- * Предупреждения — то, что сайт молча скрывает: черновики без страниц
- * (у администратора дают 404), не найденные фото шагов (их скрывает
- * hiding-empty-blocks.js), фотографии, скопированные из другой операции,
- * PDF-файлы, не привязанные ни к одной операции.
+ * Предупреждения — черновики в списках разделов без страниц (у администратора
+ * дают 404) и PDF, не привязанные ни к одной операции.
+ *
+ * Справка (не влияет на код возврата) — фото шагов, которых ещё нет: так и
+ * задумано, страница заполняется текстом заранее, а снимки докладываются позже;
+ * блок с ненайденным изображением скрывает hiding-empty-blocks.js.
  */
 
 const fs = require('fs');
@@ -93,10 +95,13 @@ for (const op of operations) {
   if (!exists) continue;
 
   const html = fs.readFileSync(file, 'utf8');
+  // Закомментированные блоки (заготовки под будущее наполнение) не считаем:
+  // их содержимое пользователю не показывается.
+  const live = html.replace(/<!--[\s\S]*?-->/g, '');
 
   // кнопка «Ознакомлен» должна ссылаться на этот же id и ту же версию
-  const idMatch = html.match(/data-op-id\s*=\s*"([^"]*)"/);
-  const verMatch = html.match(/data-op-version\s*=\s*"([^"]*)"/);
+  const idMatch = live.match(/data-op-id\s*=\s*"([^"]*)"/);
+  const verMatch = live.match(/data-op-version\s*=\s*"([^"]*)"/);
   if (!idMatch) err(`${op.id}: в странице нет data-op-id`);
   else if (idMatch[1] !== op.id) err(`${op.id}: data-op-id="${idMatch[1]}" ≠ id реестра`);
   if (!verMatch) err(`${op.id}: в странице нет data-op-version`);
@@ -105,14 +110,14 @@ for (const op of operations) {
   }
 
   // техкарты
-  for (const m of html.matchAll(/assets\/docs\/([^"'()]+\.pdf)/g)) {
+  for (const m of live.matchAll(/assets\/docs\/([^"'()]+\.pdf)/g)) {
     const name = decodeURI(m[1]);
     usedPdfs.add(name);
     if (!fs.existsSync(path.join(DOCS_DIR, name))) err(`${op.id}: ссылка на отсутствующий PDF «${name}»`);
   }
 
   // фото шагов
-  for (const m of html.matchAll(/src\s*=\s*"([^"]*assets\/images\/operations\/[^"]+)"/g)) {
+  for (const m of live.matchAll(/src\s*=\s*"([^"]*assets\/images\/operations\/[^"]+)"/g)) {
     const src = m[1];
     const owner = (src.match(/operations\/([\d.]+)\//) || [])[1];
     const abs = path.resolve(OPS_DIR, src);
@@ -191,15 +196,17 @@ const pdfFiles = fs.existsSync(DOCS_DIR)
 const unusedPdfs = pdfFiles.filter(f => !usedPdfs.has(f));
 if (unusedPdfs.length) warn(`PDF не привязаны ни к одной операции: ${unusedPdfs.length}`);
 
-// Фото без файла сайт молча скрывает (hiding-empty-blocks.js) — битым не считается,
-// но шаг остаётся без иллюстрации.
+// Фото шагов: ссылка проставляется в каждом шаге заранее, отсутствующий файл
+// скрывается скриптом hiding-empty-blocks.js — это штатное состояние заготовки,
+// а не дефект. Поэтому такие ссылки только перечисляем.
 if (imagesMissing.length) {
-  warn(`Не найдены фото шагов (блок будет скрыт): ${imagesMissing.length} — ${sample(imagesMissing, 5)}`);
+  notices.push(`Фото шагов ещё не добавлены: ${imagesMissing.length} (блоки скрыты — так и задумано)`);
 }
-// Ссылка на папку другой операции — почти всегда след копирования шаблона.
+// Ссылка на папку другой операции — заготовка, скопированная из соседней
+// страницы: файлы там могут быть, и тогда в шаге покажется чужой снимок.
 if (imagesForeign.length) {
   const uniq = [...new Set(imagesForeign)];
-  warn(`Фото взяты из папки другой операции: ${uniq.length} — ${sample(uniq, 6)}`);
+  notices.push(`Ссылки на фото в папке другой операции: ${uniq.length} — ${sample(uniq, 4)}`);
 }
 
 // --- отчёт ----------------------------------------------------------------

@@ -112,7 +112,7 @@ const KB_OPERATIONS = [
     { id: '3.2.5',  section: 'module', title: 'Монтаж ПВХ-воронки',
     version: 1, status: 'draft',   url: 'pages/operations/3.2.5.html' },
     { id: '3.2.6',  section: 'module', title: 'Монтаж водосточной системы',
-    version: 1, status: 'draft',   url: 'pages/operations/3.2.6.html' },
+    version: 1, status: 'ready',   url: 'pages/operations/3.2.6.html' },
     { id: '3.2.7',  section: 'module', title: 'Монтаж системы обогрева воронок',
     version: 1, status: 'ready',   url: 'pages/operations/3.2.7.html' },
     { id: '3.2.8',  section: 'module', title: 'Монтаж ПВХ-мембраны',
