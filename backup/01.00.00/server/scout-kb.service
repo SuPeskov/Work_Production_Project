@@ -1,0 +1,18 @@
+# /etc/systemd/system/scout-kb.service
+[Unit]
+Description=Scout House Knowledge Base (PPR)
+After=network.target
+
+[Service]
+Type=simple
+User=kbapp
+WorkingDirectory=/opt/scout-kb/server
+EnvironmentFile=/etc/scout-kb.env
+ExecStart=/usr/bin/node app.js
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

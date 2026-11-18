@@ -1,0 +1,491 @@
+/**
+ * app.js — Backend базы знаний Скаут Хаус (PPR)
+ * ИСПРАВЛЕНО: 
+ * 1. Убрано дублирование const app = express()
+ * 2. Исправлена ошибка trust proxy для express-rate-limit
+ * 3. Реализована уникальная сессия + блокировка повторного входа
+ */
+require('dotenv').config();
+const path = require('path');
+const fs = require('fs');
+const crypto = require('crypto');
+const express = require('express');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const { db } = require('./db');
+
+const PORT = process.env.PORT || 3000;
+const JWT_SECRET = process.env.KB_JWT_SECRET;
+if (!JWT_SECRET) { console.error('ОБЯЗАТЕЛЬНО задайте переменную окружения KB_JWT_SECRET'); process.exit(1); }
+
+const PUBLIC_DIR = path.join(__dirname, '..', 'public');
+const ROLE_LABELS = { admin: 'Администратор', worker: 'Сотрудник производства', guest: 'Гость' };
+
+// === Парсинг реестра операций из kb.js ===
+function extractLiteral(src, name) {
+    const start = src.indexOf(`const ${name} = [`);
+    if (start === -1) return [];
+    const from = src.indexOf('[', start);
+    let depth = 0, end = -1;
+    for (let i = from; i < src.length; i++) {
+        const c = src[i];
+        if (c === '[') depth++;
+        else if (c === ']') { depth--; if (depth === 0) { end = i; break; } }
+    }
+    if (end === -1) return [];
+    try { return Function(`"use strict"; return (${src.slice(from, end + 1)});`)(); }
+    catch (e) { console.warn(`Не удалось разобрать ${name}:`, e.message); return []; }
+}
+
+// Функция для извлечения версии из HTML-файла операции
+function getOpVersionFromHtml(opUrl) {
+    try {
+        // opUrl выглядит как 'pages/operations/2.1.1.html'
+        const htmlPath = path.join(PUBLIC_DIR, opUrl);
+        const htmlContent = fs.readFileSync(htmlPath, 'utf8');
+        
+        // Ищем атрибут data-op-version="X" в кнопке "Ознакомлен"
+        const match = htmlContent.match(/data-op-version=["'](\d+)["']/i);
+        if (match && match[1]) {
+            return parseInt(match[1], 10);
+        }
+    } catch (e) {
+        console.warn(`Не удалось прочитать версию из ${opUrl}:`, e.message);
+    }
+    return null; // Версия не найдена
+}
+
+let OPERATIONS = [], SECTIONS = [];
+try {
+    const src = fs.readFileSync(path.join(PUBLIC_DIR, 'js', 'kb.js'), 'utf8');
+    OPERATIONS = extractLiteral(src, 'KB_OPERATIONS');
+    SECTIONS = extractLiteral(src, 'KB_SECTIONS').map(s => s.id);
+    
+    //  КЛЮЧЕВОЙ ШАГ: Обновляем версии из HTML-файлов
+    OPERATIONS.forEach(op => {
+        if (op.url) {
+            const htmlVersion = getOpVersionFromHtml(op.url);
+            if (htmlVersion !== null) {
+                op.version = htmlVersion; // Перезаписываем версию из kb.js на версию из HTML
+            }
+        }
+    });
+    
+} catch (e) { console.warn('Не удалось загрузить реестр операций:', e.message); }
+
+if (!OPERATIONS.length) console.warn('ВНИМАНИЕ: реестр операций пуст — проверьте public/js/kb.js');
+const OP_MAP = Object.fromEntries(OPERATIONS.map(o => [o.id, o]));
+
+// ЕДИНСТВЕННОЕ объявление приложения Express
+const app = express();
+// ИСПРАВЛЕНИЕ RATE-LIMIT: Доверяем прокси, но отключаем проверку безопасности, 
+// так как мы находимся за Nginx и знаем, что X-Forwarded-For корректен
+app.set('trust proxy', true); 
+app.disable('x-powered-by');
+app.use(helmet({ contentSecurityPolicy: false }));
+app.use(express.json());
+app.use(cookieParser());
+
+// === Middleware: Аутентификация с проверкой уникальной сессии ===
+function auth(required = true, roles = null) {
+    return (req, res, next) => {
+        const token = req.cookies.kb_token;
+        let user = null;
+        
+        if (token) {
+            try {
+                const payload = jwt.verify(token, JWT_SECRET);
+                user = db.prepare('SELECT id, username, name, role, active, session_token, is_active_session FROM users WHERE id=? AND active=1').get(payload.uid);
+                
+                // КЛЮЧЕВАЯ ПРОВЕРКА: Токен должен совпадать + сессия должна быть активна
+                if (!user || user.session_token !== payload.st || !user.is_active_session) {
+                    user = null; 
+                    // Защита от зависания: сбрасываем флаг, если токен невалиден
+                    if (payload && payload.uid) {
+                        try { db.prepare('UPDATE users SET is_active_session=0 WHERE id=?').run(payload.uid); } catch(e) {}
+                    }
+                }
+            } catch (_) { 
+                // Попытка сбросить зависшую сессию при битом токене
+                try {
+                    const badPayload = jwt.decode(token);
+                    if(badPayload && badPayload.uid) {
+                        db.prepare('UPDATE users SET is_active_session=0 WHERE id=?').run(badPayload.uid);
+                    }
+                } catch(e) {}
+            }
+        }
+        
+        if (!user && required) return res.status(401).json({ error: 'Требуется вход' });
+        if (user && roles && !roles.includes(user.role)) return res.status(403).json({ error: 'Нет прав' });
+        
+        req.user = user;
+        next();
+    };
+}
+
+function sectionsOf(userId) {
+    return db.prepare('SELECT section_id FROM user_sections WHERE user_id=?').all(userId).map(r => r.section_id);
+}
+
+function canAccess(user, sectionId) {
+    if (!user) return false;
+    if (user.role === 'admin' || user.role === 'guest') return true;
+    return sectionsOf(user.id).includes(sectionId);
+}
+
+// === Auth API ===
+const loginLimiter = rateLimit({ 
+    windowMs: 15 * 60 * 1000, 
+    max: 20, 
+    standardHeaders: true,
+    // ИСПРАВЛЕНИЕ: Отключаем строгую проверку trustProxy для rate-limit
+    validate: { xForwardedForHeader: false } 
+});
+
+app.post('/api/login', loginLimiter, (req, res) => {
+    const { username, password } = req.body || {};
+    if (!username || !password) return res.status(400).json({ error: 'Укажите логин и пароль' });
+    
+    const user = db.prepare('SELECT * FROM users WHERE username=? AND active=1').get(String(username).trim().toLowerCase());
+    
+    if (!user || !bcrypt.compareSync(String(password), user.pass_hash)) {
+        return res.status(401).json({ error: 'Неверный логин или пароль' });
+    }
+    
+    // РЕШЕНИЕ ПРОБЛЕМЫ "ВЕЧНОЙ БЛОКИРОВКИ":
+    // Мы НЕ блокируем вход ошибкой 409. Вместо этого мы всегда создаем новую сессию.
+    // Если пользователь уже был где-то авторизован, его старый токен автоматически 
+    // станет недействительным, так как session_token в базе данных изменится.
+    // При следующем запросе старый браузер получит 401 и будет перенаправлен на вход.
+    // Это гарантирует "одну активную сессию" без риска, что пользователь не сможет 
+    // войти после закрытия вкладки (когда запрос /api/logout не отправляется).
+    
+    // const newSessionToken = crypto.randomBytes(32).toString('hex');
+    
+    // Перезаписываем токен и активируем сессию
+    //db.prepare('UPDATE users SET session_token=?, is_active_session=1 WHERE id=?').run(newSessionToken, user.id);
+    
+    //const token = jwt.sign({ uid: user.id, st: newSessionToken }, JWT_SECRET, { expiresIn: '12h' });
+    
+    //res.cookie('kb_token', token, {
+    //    httpOnly: true, sameSite: 'lax', secure: process.env.KB_SECURE_COOKIE === '1', maxAge: 12 * 3600 * 1000,
+    //});
+    //res.json({ ok: true, user: publicUser(user) });
+// === ЖЕСТКАЯ ПРОВЕРКА ДУБЛИРОВАННОГО ВХОДА ===
+if (user.is_active_session === 1 && user.session_token) {
+    return res.status(409).json({ 
+        error: '⚠️ Этот сотрудник уже работает в системе!\nПовторный вход под одним логином запрещен.' 
+    });
+}
+// ==========================================
+
+const newSessionToken = crypto.randomBytes(32).toString('hex');
+db.prepare('UPDATE users SET session_token=?, is_active_session=1 WHERE id=?')
+  .run(newSessionToken, user.id);
+
+const token = jwt.sign({ uid: user.id, st: newSessionToken }, JWT_SECRET, { expiresIn: '12h' });
+res.cookie('kb_token', token, {
+    httpOnly: true, sameSite: 'lax', secure: process.env.KB_SECURE_COOKIE === '1', maxAge: 12 * 3600 * 1000,
+});
+res.json({ ok: true, user: publicUser(user) });
+
+});
+
+// СБРОС ФЛАГА ПРИ ВЫХОДЕ
+// ИСПРАВЛЕНО: Добавлен middleware auth(), чтобы req.user был доступен
+app.post('/api/logout', auth(false), (req, res) => {
+    if (req.user) {
+        db.prepare('UPDATE users SET session_token=NULL, is_active_session=0 WHERE id=?').run(req.user.id);
+    }
+    res.clearCookie('kb_token');
+    res.json({ ok: true });
+});
+
+app.get('/api/me', auth(false), (req, res) => {
+    if (!req.user) return res.json({ user: null });
+    // Для worker — конкретный список из БД, для admin и guest — все разделы (массив ID)
+    const accessList = (req.user.role === 'worker') ? sectionsOf(req.user.id) : SECTIONS;
+    res.json({ user: publicUser(req.user), sections: accessList });
+});
+
+function publicUser(u) {
+    return { username: u.username, name: u.name, role: u.role, roleLabel: ROLE_LABELS[u.role] };
+}
+
+// === Права на чтение контента ===
+app.get('/api/access/:sectionId', auth(), (req, res) => {
+    res.json({ allowed: canAccess(req.user, req.params.sectionId) });
+});
+
+const SECTION_BY_PATH = {
+    preparation: 'preparation', 
+    panels: 'panels', 
+    module: 'module',
+    options: 'options', 
+    installation: 'installation', 
+    service: 'service',
+    standards: 'standards'
+};
+
+app.use((req, res, next) => {
+    if (req.path === '/dashboard.html' || req.path === '/') return next();
+    
+    let sectionId = null;
+    const opMatch = req.path.match(/(\d+\.\d+\.\d+)\.html$/);
+    if (opMatch && OP_MAP[opMatch[1]]) {
+        sectionId = OP_MAP[opMatch[1]].section;
+    } else {
+        for (const key of Object.keys(SECTION_BY_PATH)) {
+            if (req.path.includes(key + '.html')) { sectionId = key; break; }
+        }
+    }
+    
+    if (!sectionId) return next();
+    
+    auth(false)(req, res, () => {
+        if (!req.user) return res.redirect('/index.html?need_login=1');
+        if (!canAccess(req.user, sectionId)) {
+            return res.status(403).sendFile(path.join(PUBLIC_DIR, 'no-access.html'));
+        }
+        next();
+    });
+});
+
+// Очистка демо-аккаунтов
+const DEMO_ACCOUNTS = ['builder', 'engineer', 'guest'];
+let demoCleaned = false;
+function cleanupDemoAccounts() {
+    if (demoCleaned) return;
+    demoCleaned = true;
+    try {
+        const placeholders = DEMO_ACCOUNTS.map(() => '?').join(',');
+        const rows = db.prepare(`SELECT id, username FROM users WHERE username IN (${placeholders}) AND active=1`).all(...DEMO_ACCOUNTS);
+        if (!rows.length) return;
+        const delU = db.prepare("UPDATE users SET active=0, deleted_at=datetime('now') WHERE id=?");
+        const delS = db.prepare('DELETE FROM user_sections WHERE user_id=?');
+        rows.forEach(r => { delU.run(r.id); delS.run(r.id); console.log(`DEMO-аккаунт удалён: ${r.username}`); });
+    } catch (e) { console.warn('Не удалось убрать демо-аккаунты:', e.message); }
+}
+
+// === Журнал ознакомлений ===
+app.post('/api/read/:opId', auth(true, ['worker']), (req, res) => {
+    const op = OP_MAP[req.params.opId];
+    if (!op) return res.status(404).json({ error: 'Неизвестная операция' });
+    if (!canAccess(req.user, op.section)) return res.status(403).json({ error: 'Нет доступа к разделу' });
+
+    // Версию берем из реестра операций (или из HTML, если нужно)
+    const version = String(op.version != null ? op.version : "1");
+
+    // Проверяем, не ставил ли пользователь уже эту отметку
+    const exists = db.prepare('SELECT id FROM read_log WHERE user_id=? AND op_id=? AND version=?').get(req.user.id, op.id, version);
+    
+    if (!exists) {
+        // ИСПРАВЛЕНО: Используем datetime('now') для получения времени СЕРВЕРА
+        db.prepare(`INSERT INTO read_log (user_id, username, full_name, role, op_id, op_title, section_id, version, read_at) 
+                    VALUES (?,?,?,?,?,?,?, ?, datetime('now'))`)
+            .run(req.user.id, req.user.username, req.user.name, req.user.role, op.id, op.title, op.section, version);
+    }
+
+    res.json({ ok: true, already: !!exists });
+});
+
+// === НОВЫЙ ENDPOINT ДЛЯ МАТРИЦЫ (только активные сотрудники) ===
+// Для матрицы
+app.get('/api/matrix', auth(true, ['admin', 'guest']), (req, res) => {
+    const rows = db.prepare(`
+        SELECT rl.*, rl.read_at 
+        FROM read_log rl 
+        INNER JOIN users u ON rl.user_id = u.id 
+        WHERE u.active = 1 
+        ORDER BY rl.read_at DESC
+    `).all();
+    res.json(rows);
+});
+// === Журнал ознакомлений (ОБНОВЛЕНО: добавлена дата read_at для тултипов) ===
+// Для журнала
+app.get('/api/reads', auth(), (req, res) => {
+    const query = req.user.role === 'worker' 
+        ? 'SELECT *, read_at FROM read_log WHERE user_id=? ORDER BY read_at DESC'
+        : 'SELECT *, read_at FROM read_log ORDER BY read_at DESC';
+        
+    const rows = req.user.role === 'worker' 
+        ? db.prepare(query).all(req.user.id)
+        : db.prepare(query).all();
+        
+    res.json(rows);
+});
+
+// === Админ API ===
+const ROLES = ['admin', 'worker', 'guest'];
+
+app.get('/api/admin/users', auth(true, ['admin']), (req, res) => {
+    cleanupDemoAccounts();
+    const users = db.prepare("SELECT id, username, name, role, active, is_active_session FROM users WHERE active=1 ORDER BY username").all();
+    users.forEach(u => u.sections = sectionsOf(u.id));
+    res.json(users);
+});
+
+app.post('/api/admin/users', auth(true, ['admin']), (req, res) => {
+    const { username, name, role, password, sections } = req.body || {};
+    if (!username || !name || !ROLES.includes(role) || !password || String(password).length < 6) {
+        return res.status(400).json({ error: 'Логин, ФИО, роль и пароль (мин. 6 символов) обязательны' });
+    }
+    const uname = String(username).trim().toLowerCase();
+    if (db.prepare('SELECT id FROM users WHERE username=?').get(uname)) {
+        return res.status(409).json({ error: 'Такой логин уже занят' });
+    }
+    const info = db.prepare('INSERT INTO users (username, name, role, pass_hash) VALUES (?,?,?,?)')
+        .run(uname, String(name).trim(), role, bcrypt.hashSync(String(password), 10));
+    setSections(info.lastInsertRowid, sections);
+    res.json({ ok: true, id: info.lastInsertRowid });
+});
+
+app.post('/api/admin/users/:id/password', auth(true, ['admin']), (req, res) => {
+    const { password } = req.body || {};
+    if (!password || String(password).length < 6) return res.status(400).json({ error: 'Пароль минимум 6 символов' });
+    const u = db.prepare('SELECT * FROM users WHERE id=? AND active=1').get(req.params.id);
+    if (!u) return res.status(404).json({ error: 'Пользователь не найден' });
+    db.prepare('UPDATE users SET pass_hash=? WHERE id=?').run(bcrypt.hashSync(String(password), 10), u.id);
+    res.json({ ok: true });
+});
+
+app.post('/api/admin/users/:id/access', auth(true, ['admin']), (req, res) => {
+    const u = db.prepare('SELECT * FROM users WHERE id=? AND active=1').get(req.params.id);
+    if (!u) return res.status(404).json({ error: 'Пользователь не найден' });
+    setSections(u.id, req.body?.sections || []);
+    res.json({ ok: true });
+});
+
+// Принудительный сброс сессии администратором
+app.post('/api/admin/users/:id/kick', auth(true, ['admin']), (req, res) => {
+    const userId = parseInt(req.params.id);
+    const targetUser = db.prepare('SELECT id, username, role FROM users WHERE id=? AND active=1').get(userId);
+    
+    if (!targetUser) return res.status(404).json({ error: 'Пользователь не найден' });
+    if (targetUser.role === 'admin') return res.status(403).json({ error: 'Нельзя выкинуть администратора' });
+
+    // Обнуляем токен и флаг активности
+    db.prepare('UPDATE users SET session_token=NULL, is_active_session=0 WHERE id=?').run(userId);
+    
+    console.log(`[ADMIN KICK] Админ ${req.user.username} завершил сессию пользователя ${targetUser.username}`);
+    res.json({ ok: true, message: `Сессия "${targetUser.username}" завершена` });
+});
+app.delete('/api/admin/users/:id', auth(true, ['admin']), (req, res) => {
+    const u = db.prepare('SELECT * FROM users WHERE id=? AND active=1').get(req.params.id);
+    if (!u) return res.status(404).json({ error: 'Пользователь не найден' });
+    if (u.role === 'admin' && db.prepare("SELECT COUNT(*) c FROM users WHERE role='admin' AND active=1").get().c <= 1) {
+        return res.status(400).json({ error: 'Нельзя удалить последнего администратора' });
+    }
+    db.prepare("UPDATE users SET active=0, deleted_at=datetime('now') WHERE id=?").run(u.id);
+    db.prepare('DELETE FROM user_sections WHERE user_id=?').run(u.id);
+    res.json({ ok: true });
+});
+
+function setSections(userId, list) {
+    db.prepare('DELETE FROM user_sections WHERE user_id=?').run(userId);
+    const ins = db.prepare('INSERT OR IGNORE INTO user_sections (user_id, section_id) VALUES (?,?)');
+    (Array.isArray(list) ? list : []).forEach(s => {
+        try { ins.run(userId, s); } catch (e) { console.error(`Ошибка сохранения раздела ${s}:`, e.message); }
+    });
+}
+
+// === Проверка статуса ознакомления для списка операций ===
+app.post('/api/read-status', auth(), (req, res) => {
+    const { opIds } = req.body || {}; // Ожидаем массив ID операций ['2.1.1', '2.1.2', ...]
+    if (!Array.isArray(opIds)) return res.json({});
+
+    // Получаем данные о текущих версиях операций из реестра
+    const opsData = opIds.map(id => {
+        const op = OP_MAP[id];
+        return {
+            id,
+            version: op ? String(op.version != null ? op.version : "1") : "1"
+        };
+    });
+
+    // Массовый запрос к БД для проверки прочитанных версий
+    // Используем транзакцию или batch query для производительности
+    const stmt = db.prepare(`
+        SELECT op_id, version 
+        FROM read_log 
+        WHERE user_id = ? AND (op_id, version) IN (VALUES ${opsData.map(() => '(?,?)').join(', ')})
+    `);
+    
+    // Формируем плоский массив параметров [userId, opId1, ver1, opId2, ver2, ...]
+    const params = [req.user.id, ...opsData.flatMap(o => [o.id, o.version])];
+    const rows = stmt.all(...params);
+
+    // Преобразуем результат в Set для быстрого поиска
+    const readSet = new Set(rows.map(r => `${r.op_id}|${r.version}`));
+
+    // Формируем ответ: { '2.1.1': true, '2.1.2': false, ... }
+    const statusMap = {};
+    opsData.forEach(op => {
+        // Вместо: statusMap[op.id] = readSet.has(`${op.id}|${op.version}`);
+statusMap[op.id] = { 
+    isRead: readSet.has(`${op.id}|${op.version}`),
+    currentVersion: op.version 
+};
+    });
+
+    res.json(statusMap);
+});
+
+// Маршрут должен быть ДО статических файлов, но ПОСЛЕ middleware auth
+app.get('/api/heartbeat', auth(false), (req, res) => {
+    if (!req.user) return res.json({ active: false });
+
+    const token = req.cookies.kb_token;
+    let isValid = false;
+    
+    try {
+        const payload = jwt.verify(token, JWT_SECRET);
+        isValid = (payload.st === req.user.session_token);
+    } catch (e) { isValid = false; }
+
+    // Если токен валиден — ОБНОВЛЯЕМ время последнего пульса
+    if (isValid && req.user.is_active_session === 1) {
+        db.prepare('UPDATE users SET last_heartbeat = datetime(\'now\') WHERE id=?').run(req.user.id);
+    } 
+    // Если токен НЕвалиден — сбрасываем сессию
+    else if (req.user.is_active_session === 1) {
+        db.prepare('UPDATE users SET is_active_session=0, session_token=NULL WHERE id=?').run(req.user.id);
+        console.log(`[HEARTBEAT] Сессия ${req.user.username} сброшена (токен невалиден)`);
+    }
+
+    res.json({ 
+        active: isValid && req.user.is_active_session === 1,
+        timestamp: new Date().toISOString()
+    });
+});
+
+// === Статика ===
+app.use(express.static(PUBLIC_DIR, { extensions: ['html'] }));
+app.get('/', (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'index.html')));
+
+// === АВТОМАТИЧЕСКАЯ ОЧИСТКА ЗАВИСШИХ СЕССИЙ ===
+const STALE_SESSION_MINUTES = 10; // Сессия считается зависшей, если нет пульса 10 минут
+
+setInterval(() => {
+    try {
+        const staleUsers = db.prepare(
+            `SELECT id, username FROM users 
+             WHERE is_active_session = 1 
+             AND (last_heartbeat IS NULL OR last_heartbeat < datetime('now', '-${STALE_SESSION_MINUTES} minutes'))`
+        ).all();
+
+        if (staleUsers.length > 0) {
+            const ids = staleUsers.map(u => u.id).join(',');
+            db.prepare(`UPDATE users SET is_active_session=0, session_token=NULL WHERE id IN (${ids})`).run();
+            console.log(`[CLEANUP] Сброшено ${staleUsers.length} зависших сессий:`, staleUsers.map(u => u.username));
+        }
+    } catch (e) {
+        console.error('[CLEANUP] Ошибка очистки сессий:', e.message);
+    }
+}, 5 * 60 * 1000); // Проверка каждые 5 минут
+
+app.listen(PORT, '127.0.0.1', () => console.log(`KB server: http://127.0.0.1:${PORT}`));
