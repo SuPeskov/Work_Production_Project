@@ -93,10 +93,13 @@ for (const op of operations) {
   if (!exists) continue;
 
   const html = fs.readFileSync(file, 'utf8');
+  // Закомментированные блоки (заготовки под будущее наполнение) не считаем:
+  // их содержимое пользователю не показывается.
+  const live = html.replace(/<!--[\s\S]*?-->/g, '');
 
   // кнопка «Ознакомлен» должна ссылаться на этот же id и ту же версию
-  const idMatch = html.match(/data-op-id\s*=\s*"([^"]*)"/);
-  const verMatch = html.match(/data-op-version\s*=\s*"([^"]*)"/);
+  const idMatch = live.match(/data-op-id\s*=\s*"([^"]*)"/);
+  const verMatch = live.match(/data-op-version\s*=\s*"([^"]*)"/);
   if (!idMatch) err(`${op.id}: в странице нет data-op-id`);
   else if (idMatch[1] !== op.id) err(`${op.id}: data-op-id="${idMatch[1]}" ≠ id реестра`);
   if (!verMatch) err(`${op.id}: в странице нет data-op-version`);
@@ -105,14 +108,14 @@ for (const op of operations) {
   }
 
   // техкарты
-  for (const m of html.matchAll(/assets\/docs\/([^"'()]+\.pdf)/g)) {
+  for (const m of live.matchAll(/assets\/docs\/([^"'()]+\.pdf)/g)) {
     const name = decodeURI(m[1]);
     usedPdfs.add(name);
     if (!fs.existsSync(path.join(DOCS_DIR, name))) err(`${op.id}: ссылка на отсутствующий PDF «${name}»`);
   }
 
   // фото шагов
-  for (const m of html.matchAll(/src\s*=\s*"([^"]*assets\/images\/operations\/[^"]+)"/g)) {
+  for (const m of live.matchAll(/src\s*=\s*"([^"]*assets\/images\/operations\/[^"]+)"/g)) {
     const src = m[1];
     const owner = (src.match(/operations\/([\d.]+)\//) || [])[1];
     const abs = path.resolve(OPS_DIR, src);
