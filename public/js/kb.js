@@ -186,7 +186,7 @@ const KB_OPERATIONS = [
     { id: '3.4.3',  section: 'module', title: 'Монтаж РК для расключения и для электроточек внутри стен',
     version: 1, status: 'ready',   url: 'pages/operations/3.4.3.html' },
     { id: '3.4.4',  section: 'module', title: 'Монтаж электроточек',
-    version: 1, status: 'draft',   url: 'pages/operations/3.4.4.html' },
+    version: 1, status: 'ready',   url: 'pages/operations/3.4.4.html' },
     { id: '3.4.5',  section: 'module', title: 'Монтаж светильников',
     version: 1, status: 'draft',   url: 'pages/operations/3.4.5.html' },
     { id: '3.4.6',  section: 'module', title: 'Сборка, монтаж и расключение электрощита',
