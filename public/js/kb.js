@@ -259,7 +259,7 @@ const KB_OPERATIONS = [
     { id: '5.1.4',  section: 'installation', title: 'Монтаж веранд и террас',
     version: 1, status: 'draft',   url: 'pages/operations/5.1.4.html' },
     { id: '5.1.5',  section: 'installation', title: 'Монтаж лестниц',
-    version: 1, status: 'draft',   url: 'pages/operations/5.1.5.html' },
+    version: 1, status: 'ready',   url: 'pages/operations/5.1.5.html' },
     { id: '5.1.6',  section: 'installation', title: 'Монтаж отделки цоколя',
     version: 1, status: 'draft',   url: 'pages/operations/5.1.6.html' },
     { id: '5.1.7',  section: 'installation', title: 'Монтаж перил',
