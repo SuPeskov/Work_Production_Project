@@ -7,6 +7,7 @@
 const fs = require('fs');
 const path = require('path');
 const lunr = require('lunr');
+const cheerio = require('cheerio');
 
 // Настройки путей
 const PUBLIC_DIR = path.join(__dirname, '..', '..', 'public');
@@ -29,9 +30,28 @@ function extractLiteral(src, name) {
     catch (e) { console.error(`Ошибка парсинга ${name}:`, e.message); return []; }
 }
 
-// Очистка HTML от тегов для индексации контента
-function stripHtml(html) {
-    return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+// Извлекаем только содержательный текст страницы (без шапки, меню, скриптов и модалок).
+// Переводы строк сохраняем как границы блоков — по ним поиск строит фразы.
+function extractPageContent(html) {
+    const $ = cheerio.load(html);
+
+    $('script, style, noscript, template, header, .top-bar, .pdf-modal, .operation-navigation, .operation-header, .read-status-section, .breadcrumb').remove();
+
+    const $main = $('main').first();
+    const $root = $main.length ? $main : $('body');
+
+    $root.find('br').replaceWith('\n');
+    $root.find('h1, h2, h3, h4, p, li, div, section, label, tr, td, th').each((_, el) => {
+        $(el).append('\n');
+    });
+
+    return $root.text()
+        .replace(/\r/g, '')
+        .replace(/\u00a0/g, ' ')
+        .replace(/[ \t]+/g, ' ')
+        .replace(/ *\n */g, '\n')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
 }
 
 console.log(' Генерация поискового индекса...');
@@ -54,7 +74,7 @@ try {
             type: 'section',
             number: sec.num || '',
             title: sec.title,
-            content: `${sec.title} ${sec.desc}`,
+            content: `${sec.num || ''}\n${sec.title}\n${sec.desc || ''}`,
             url: sec.page,
             anchor: ''
         });
@@ -70,12 +90,12 @@ try {
             const htmlPath = path.join(PUBLIC_DIR, op.url);
             if (fs.existsSync(htmlPath)) {
                 const html = fs.readFileSync(htmlPath, 'utf8');
-                content = stripHtml(html);
+                content = extractPageContent(html);
             } else {
                 console.warn(`⚠️  HTML файл не найден: ${op.url}`);
             }
         } catch (e) {
-            console.warn(`️  Ошибка чтения ${op.url}:`, e.message);
+            console.warn(`⚠️  Ошибка чтения ${op.url}:`, e.message);
         }
 
         documents.push({
@@ -83,7 +103,9 @@ try {
             type: 'operation',
             number: op.id,
             title: op.title,
-            content: `${op.title} ${content}`,
+            section: op.section,
+            subsection: op.id.split('.').slice(0, 2).join('.'),
+            content: `${op.id}\n${op.title}\n${content}`,
             url: op.url,
             anchor: ''
         });

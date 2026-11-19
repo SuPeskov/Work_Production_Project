@@ -9,6 +9,11 @@ node_modules/
 # База данных и логи
 *.sqlite
 *.sqlite-journal
+*.sqlite-shm
+*.sqlite-wal
+*.db
+*.db-shm
+*.db-wal
 *.log
 logs/
 .pm2/

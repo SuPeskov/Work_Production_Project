@@ -1918,6 +1918,330 @@ h1, h2, h3, h4, h5, h6 {
     flex-direction: column;
 }
 
+/* === РЕЗУЛЬТАТЫ ПОИСКА: РАЗДЕЛ → ОПЕРАЦИЯ → ФРАЗЫ === */
+
+.search-results-summary {
+    padding: 18px 24px;
+    background: #f0f7f3;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-size: 0.92rem;
+    line-height: 1.55;
+}
+
+.search-results-summary strong {
+    color: var(--primary);
+}
+
+.search-filter-empty {
+    padding: 18px 24px;
+    color: var(--text-secondary);
+    background: #fffbf0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.9rem;
+}
+
+.search-filter-empty.hidden {
+    display: none;
+}
+
+.search-accordion-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.search-acc {
+    border-bottom: 1px solid var(--border);
+    background: #fff;
+}
+
+.search-acc:last-child {
+    border-bottom: none;
+}
+
+.search-acc-header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 22px;
+    border: 0;
+    background: #fff;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: background var(--transition);
+}
+
+.search-acc-header:hover {
+    background: #f8faf9;
+}
+
+.search-acc-header:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: -2px;
+}
+
+.search-acc-section > .search-acc-header {
+    background: #f8fbf9;
+    border-top: 1px solid var(--border);
+}
+
+.search-acc-section.open > .search-acc-header {
+    background: #eef7f1;
+}
+
+.search-acc-chevron {
+    flex-shrink: 0;
+    color: var(--primary);
+    font-size: 1.45rem;
+    line-height: 1;
+    transition: transform var(--transition);
+}
+
+.search-acc.open > .search-acc-header .search-acc-chevron {
+    transform: rotate(90deg);
+}
+
+.search-acc-number {
+    flex-shrink: 0;
+    color: var(--primary);
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+.search-acc-heading {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.search-acc-kicker {
+    color: var(--text-light);
+    font-size: 0.66rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.search-acc-title {
+    color: var(--text-primary);
+    font-size: 0.98rem;
+    font-weight: 600;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+
+.search-acc-section > .search-acc-header .search-acc-title {
+    font-size: 1.08rem;
+    font-weight: 700;
+}
+
+.search-acc-meta {
+    flex-shrink: 0;
+    padding: 3px 9px;
+    border-radius: 12px;
+    background: #eef3ef;
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.search-acc-body {
+    display: none;
+    padding: 4px 22px 18px 54px;
+    background: #fff;
+}
+
+.search-acc.open > .search-acc-body {
+    display: block;
+}
+
+.search-acc-section > .search-acc-body {
+    padding: 2px 22px 18px;
+    background: #fbfdfc;
+}
+
+.search-accordion-list-nested {
+    gap: 10px;
+}
+
+.search-acc-operation {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    background: #fff;
+}
+
+.search-acc-operation:last-child {
+    border-bottom: 1px solid var(--border);
+}
+
+.search-acc-operation > .search-acc-header {
+    padding: 13px 16px;
+    background: #fff;
+}
+
+.search-acc-operation.open > .search-acc-header {
+    background: #f7faf8;
+}
+
+.search-acc-operation > .search-acc-body {
+    padding: 2px 16px 15px 45px;
+    background: #fff;
+}
+
+.search-acc-subheading {
+    margin: 14px 0 8px;
+    color: var(--text-light);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+}
+
+.search-direct-block {
+    margin: 10px 0 4px;
+    padding: 2px 0 6px;
+    border-bottom: 1px dashed var(--border);
+}
+
+.search-phrase-list {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.search-phrase {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--text-primary);
+    text-decoration: none;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
+    line-height: 1.55;
+    transition: border-color var(--transition), background var(--transition), box-shadow var(--transition);
+}
+
+.search-phrase:hover {
+    border-color: var(--primary-light);
+    background: #f7fbf8;
+    box-shadow: var(--shadow-sm);
+}
+
+.search-phrase-text {
+    flex: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.search-phrase-arrow {
+    flex-shrink: 0;
+    color: var(--primary);
+    opacity: 0.55;
+    transition: transform var(--transition), opacity var(--transition);
+}
+
+.search-phrase:hover .search-phrase-arrow {
+    opacity: 1;
+    transform: translateX(3px);
+}
+
+.search-phrase.is-hidden {
+    display: none;
+}
+
+.search-phrase-more {
+    margin-top: 10px;
+    padding: 7px 13px;
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--primary);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background var(--transition), border-color var(--transition);
+}
+
+.search-phrase-more:hover {
+    background: #eef7f1;
+    border-color: var(--primary-light);
+}
+
+.search-acc-empty {
+    padding: 8px 0;
+    color: var(--text-secondary);
+    font-size: 0.87rem;
+    line-height: 1.5;
+}
+
+/* Подсветка слова, совпавшего с поиском */
+.search-mark {
+    padding: 1px 4px;
+    border-radius: 3px;
+    background: #fde68a;
+    color: #1a1a2e;
+    font-weight: 600;
+    box-shadow: 0 0 0 1px rgba(250, 188, 27, 0.35);
+}
+
+.search-acc-title .search-mark {
+    background: #fef3c7;
+}
+
+.search-result-excerpt .search-mark {
+    background: #fef3c7;
+}
+
+/* Фильтр «Разделы»: только страницы разделов, где совпало название/описание */
+.search-results-container.filter-section .search-acc-section:not(.has-direct) {
+    display: none;
+}
+
+.search-results-container.filter-section .search-acc-section > .search-acc-body {
+    display: block;
+}
+
+.search-results-container.filter-section .search-acc-subheading-operations,
+.search-results-container.filter-section .search-accordion-list-nested,
+.search-results-container.filter-section .search-acc-empty {
+    display: none;
+}
+
+/* Фильтр «Операции»: плоский список операций без обёрток разделов */
+.search-results-container.filter-operation .search-acc-section {
+    border-bottom: 0;
+}
+
+.search-results-container.filter-operation .search-acc-section > .search-acc-header,
+.search-results-container.filter-operation .search-acc-section > .search-acc-body > .search-acc-subheading,
+.search-results-container.filter-operation .search-direct-block,
+.search-results-container.filter-operation .search-acc-section > .search-acc-body > .search-acc-empty {
+    display: none;
+}
+
+.search-results-container.filter-operation .search-acc-section > .search-acc-body {
+    display: block;
+    padding: 0;
+    background: transparent;
+}
+
+.search-results-container.filter-operation .search-accordion-list-nested {
+    gap: 8px;
+}
+
 /* === RESPONSIVE === */
 @media (max-width: 768px) {
     .search-main {
@@ -1941,6 +2265,41 @@ h1, h2, h3, h4, h5, h6 {
     
     .search-result-card {
         padding: 16px 18px;
+    }
+
+    .search-results-summary,
+    .search-filter-empty {
+        padding: 14px 16px;
+        font-size: 0.86rem;
+    }
+
+    .search-acc-header {
+        padding: 13px 14px;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .search-acc-meta {
+        order: 5;
+        margin-left: 22px;
+        white-space: normal;
+    }
+
+    .search-acc-body {
+        padding: 2px 14px 14px 38px;
+    }
+
+    .search-acc-section > .search-acc-body {
+        padding: 2px 14px 14px;
+    }
+
+    .search-acc-operation > .search-acc-body {
+        padding: 2px 12px 13px 34px;
+    }
+
+    .search-phrase {
+        padding: 8px 10px;
+        font-size: 0.85rem;
     }
     
     .search-empty-state {

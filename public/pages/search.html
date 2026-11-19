@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Результаты поиска — Скаут Хаус</title>
+    <title>Результаты поиска — СкаутХаус</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,8 +18,8 @@
         <div class="top-bar-left">
             <div class="logo-small">
                 <a href="../dashboard.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 10px;">
-                    <img src="../assets/images/logo.svg" alt="Скаут Хаус" class="logo-small-img">
-                    <span>Скаут Хаус</span>
+                    <img src="../assets/images/logo.svg" alt="СкаутХаус" class="logo-small-img">
+                    <span>СкаутХаус</span>
                 </a>
             </div>
             <div class="top-bar-divider"></div>
@@ -76,16 +76,13 @@
 
         <!-- Фильтры по типу -->
         <div class="search-filters">
-            <button class="filter-btn active" data-filter="all">
+            <button class="filter-btn active" data-filter="all" aria-pressed="true">
                 Все <span class="filter-count" id="countAll">0</span>
             </button>
-            <button class="filter-btn" data-filter="section">
+            <button class="filter-btn" data-filter="section" aria-pressed="false">
                 📂 Разделы <span class="filter-count" id="countSection">0</span>
             </button>
-            <button class="filter-btn" data-filter="subsection">
-                📁 Подразделы <span class="filter-count" id="countSubsection">0</span>
-            </button>
-            <button class="filter-btn" data-filter="operation">
+            <button class="filter-btn" data-filter="operation" aria-pressed="false">
                 📄 Операции <span class="filter-count" id="countOperation">0</span>
             </button>
         </div>
