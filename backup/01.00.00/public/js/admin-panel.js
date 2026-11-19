@@ -1,0 +1,390 @@
+/**
+ * admin-panel.js — Управление пользователями через реальный API сервера
+ * Исправленная версия: все функции доступны в нужной области видимости
+ */
+
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('addUserForm');
+    const tableBody = document.getElementById('usersTableBody');
+    const errorDiv = document.getElementById('formError');
+
+    if (!form || !tableBody) {
+        console.error('❌ Форма или таблица не найдены');
+        return;
+    }
+
+    console.log('✅ admin-panel.js загружен, форма найдена');
+
+    // --- Функции действий (объявлены здесь, чтобы быть доступными для renderUsers) ---
+
+    async function deleteUser(userId, username) {
+        if (!confirm(`Вы уверены, что хотите удалить пользователя "${username}"?`)) return;
+        
+        try {
+            const response = await fetch(`/api/admin/users/${userId}`, {
+                method: 'DELETE',
+                credentials: 'include'
+            });
+            const data = await response.json();
+            
+            if (response.ok && data.ok) {
+                // alert('Пользователь удален');
+                await loadUsers(); // Перезагружаем список
+            } else {
+                alert('Ошибка: ' + (data.error || 'Не удалось удалить'));
+            }
+        } catch (error) {
+            console.error('Ошибка удаления:', error);
+            alert('Ошибка соединения с сервером');
+        }
+    }
+
+    async function changePassword(userId, username) {
+        const newPassword = prompt(`Введите новый пароль для "${username}":`);
+        if (!newPassword) return;
+        if (newPassword.length < 6) {
+            alert('Пароль должен быть минимум 6 символов');
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/admin/users/${userId}/password`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ password: newPassword })
+            });
+            const data = await response.json();
+            if (response.ok && data.ok) {
+                alert('Пароль изменен');
+            } else {
+                alert('Ошибка: ' + (data.error || 'Не удалось изменить пароль'));
+            }
+        } catch (error) {
+            console.error('Ошибка смены пароля:', error);
+            alert('Ошибка соединения');
+        }
+    }
+
+     // --- Логика Модального Окна Доступа ---
+    const accessModal = document.getElementById('accessModal');
+    const closeAccessModalBtn = document.getElementById('closeAccessModal');
+    const cancelAccessModalBtn = document.getElementById('cancelAccessModal');
+    const saveAccessModalBtn = document.getElementById('saveAccessModal');
+    const modalUserName = document.getElementById('modalUserName');
+    const modalCheckboxes = document.querySelectorAll('input[name="modal_sections"]');
+    
+    let currentEditingUserId = null;
+
+    // Открытие модалки
+    function openAccessModal(userId, username, currentSections) {
+        currentEditingUserId = userId;
+        modalUserName.textContent = username;
+        
+        // Сбрасываем и устанавливаем галочки
+        modalCheckboxes.forEach(cb => {
+            cb.checked = currentSections && currentSections.includes(cb.value);
+        });
+
+        accessModal.style.display = 'flex';
+    }
+
+    // Закрытие модалки
+    function closeAccessModal() {
+        accessModal.style.display = 'none';
+        currentEditingUserId = null;
+    }
+
+    // Сохранение изменений
+    async function saveAccessChanges() {
+        if (!currentEditingUserId) return;
+
+        const selectedSections = Array.from(modalCheckboxes)
+            .filter(cb => cb.checked)
+            .map(cb => cb.value);
+
+        try {
+            const response = await fetch(`/api/admin/users/${currentEditingUserId}/access`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ sections: selectedSections })
+            });
+
+            const data = await response.json();
+            if (response.ok && data.ok) {
+                closeAccessModal();
+                await loadUsers(); // Обновляем таблицу
+            } else {
+                alert('Ошибка: ' + (data.error || 'Не удалось сохранить'));
+            }
+        } catch (error) {
+            console.error('Ошибка сохранения доступа:', error);
+            alert('Ошибка соединения с сервером');
+        }
+    }
+
+    // Обработчики событий для модалки
+    if (closeAccessModalBtn) closeAccessModalBtn.onclick = closeAccessModal;
+    if (cancelAccessModalBtn) cancelAccessModalBtn.onclick = closeAccessModal;
+    if (saveAccessModalBtn) saveAccessModalBtn.onclick = saveAccessChanges;
+    
+    // Закрытие по клику вне окна
+    window.onclick = function(event) {
+        if (event.target == accessModal) {
+            closeAccessModal();
+        }
+    }
+
+    // --- ЗАМЕНА СТАРОЙ ФУНКЦИИ changeAccess ---
+    // Теперь она просто открывает модалку
+    async function changeAccess(userId, username, currentSections) {
+        openAccessModal(userId, username, currentSections);
+    }
+// --- Отрисовка таблицы ---
+function renderUsers(users) {
+    tableBody.innerHTML = '';
+    const sectionNames = {
+        'preparation': 'Заготовка', 
+        'panels': 'Сборка панелей', 
+        'module': 'Сборка модуля',
+        'options': 'Сборка опций', 
+        'installation': 'Монтаж', 
+        'service': 'Сервис',
+        'standards': 'Стандарты'
+    };
+    const sectionOrder = ['preparation', 'panels', 'module', 'options', 'installation', 'service', 'standards'];
+
+    users.forEach(user => {
+        const tr = document.createElement('tr');
+        
+        // ФИО
+        const tdName = document.createElement('td');
+        tdName.textContent = user.name;
+        tr.appendChild(tdName);
+        
+        // Логин
+        const tdLogin = document.createElement('td');
+        tdLogin.textContent = user.username;
+        tr.appendChild(tdLogin);
+        
+        // Роль
+        const tdRole = document.createElement('td');
+        const roleLabels = { admin: 'Администратор', worker: 'Сотрудник производства', guest: 'Гость' };
+        tdRole.textContent = roleLabels[user.role] || user.role;
+        tr.appendChild(tdRole);
+
+                // === НОВЫЙ СТОЛБЕЦ: СТАТУС В СИСТЕМЕ ===
+        const tdOnline = document.createElement('td');
+        tdOnline.style.textAlign = 'center';
+        tdOnline.style.verticalAlign = 'middle';
+        
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.checked = user.is_active_session === 1;
+        checkbox.disabled = true; // Только просмотр
+        
+        if (user.is_active_session === 1) {
+            checkbox.title = 'Сотрудник сейчас в системе';
+            checkbox.style.accentColor = '#16a34a';
+            
+            // Кнопка "Выкинуть" рядом с чекбоксом
+            const kickBtn = document.createElement('button');
+            kickBtn.textContent = '🚪';
+            kickBtn.title = 'Завершить сессию';
+            kickBtn.className = 'btn-sm btn-danger';
+            kickBtn.style.marginLeft = '8px';
+            kickBtn.style.padding = '2px 6px';
+            kickBtn.onclick = async () => {
+                if (!confirm(`Завершить сессию "${user.name}"?\nПользователь будет автоматически выведен из системы.`)) return;
+                
+                try {
+                    const res = await fetch(`/api/admin/users/${user.id}/kick`, { 
+                        method: 'POST', credentials: 'include' 
+                    });
+                    const data = await res.json();
+                    if (res.ok) {
+                        await loadUsers(); // Обновляем таблицу
+                    } else {
+                        alert(data.error || 'Ошибка');
+                    }
+                } catch (e) {
+                    alert('Ошибка соединения');
+                }
+            };
+            
+            tdOnline.appendChild(checkbox);
+            tdOnline.appendChild(kickBtn);
+        } else {
+            checkbox.title = 'Не в сети';
+            checkbox.style.opacity = '0.3';
+            tdOnline.appendChild(checkbox);
+        }
+        
+        // Вставляем перед столбцом "Доступ к разделам" (индекс 3)
+        tr.insertBefore(tdOnline, tr.children[3]); 
+        // ==========================================
+
+        // Доступ
+        const tdAccess = document.createElement('td');
+        if (user.role === 'admin' || user.role === 'guest') {
+            tdAccess.textContent = 'все разделы';
+        } else if (user.sections && user.sections.length > 0) {
+            const sortedSections = user.sections.sort((a, b) => sectionOrder.indexOf(a) - sectionOrder.indexOf(b));
+            const translatedSections = sortedSections.map(id => sectionNames[id] || id);
+            tdAccess.textContent = translatedSections.join(', ');
+        } else {
+            tdAccess.textContent = '—';
+        }
+        tr.appendChild(tdAccess);
+        
+        // Действия
+        const tdActions = document.createElement('td');
+        tdActions.style.whiteSpace = 'nowrap'; // Чтобы кнопки не переносились
+        
+        // Кнопка Пароль
+        const btnPass = document.createElement('button');
+        btnPass.textContent = 'Пароль';
+        btnPass.className = 'btn-primary btn-sm'; // <--- НОВЫЕ КЛАССЫ
+        btnPass.onclick = () => changePassword(user.id, user.username);
+        tdActions.appendChild(btnPass);
+        
+        // Кнопка Доступ — ТОЛЬКО для Сотрудника производства
+        if (user.role === 'worker') {
+            const btnAccess = document.createElement('button');
+            btnAccess.textContent = 'Доступ';
+            btnAccess.className = 'btn-primary btn-sm'; // <--- НОВЫЕ КЛАССЫ
+            btnAccess.onclick = () => changeAccess(user.id, user.username, user.sections);
+            tdActions.appendChild(btnAccess);
+        }
+        
+        // Кнопка Удалить (нельзя удалить последнего админа, но это проверяется на сервере)
+        if (user.role !== 'admin') {
+            const btnDel = document.createElement('button');
+            btnDel.textContent = 'Удалить';
+            btnDel.className = 'btn-primary btn-sm btn-danger'; // <--- НОВЫЕ КЛАССЫ + btn-danger для красного оттенка (опционально)
+            btnDel.onclick = () => deleteUser(user.id, user.username);
+            tdActions.appendChild(btnDel);
+        }
+        
+        tr.appendChild(tdActions);
+        tableBody.appendChild(tr);
+    });
+}
+
+    // --- Загрузка пользователей ---
+
+    async function loadUsers() {
+        try {
+            const response = await fetch('/api/admin/users', { credentials: 'include' });
+            if (!response.ok) throw new Error('Ошибка загрузки');
+            const users = await response.json();
+            renderUsers(users);
+        } catch (error) {
+            console.error('Ошибка загрузки пользователей:', error);
+            showError('Не удалось загрузить список пользователей');
+        }
+    }
+
+// --- Обработка формы создания ---
+form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    hideError();
+    
+    const nameInput = document.getElementById('userNameInput');
+    const loginInput = document.getElementById('userLoginInput');
+    const passInput = document.getElementById('userPasswordInput');
+    const roleInput = document.getElementById('userRoleSelect');
+    
+    if (!nameInput || !loginInput || !passInput || !roleInput) {
+        showError('Поля формы не найдены');
+        return;
+    }
+    
+    const name = nameInput.value.trim();
+    const username = loginInput.value.trim().toLowerCase();
+    const password = passInput.value;
+    const role = roleInput.value;
+    
+    // ИСПРАВЛЕНО: Для Гостя и Админа автоматически проставляем все разделы
+    // (хотя сервер все равно их проигнорирует для guest, но для чистоты)
+    let sections = [];
+    if (role === 'worker') {
+        sections = Array.from(document.querySelectorAll('input[name="sections"]:checked')).map(cb => cb.value);
+    } else if (role === 'guest' || role === 'admin') {
+        sections = ['preparation', 'panels', 'module', 'options', 'installation', 'service', 'standards'];
+    }
+    
+    if (!name || !username || !password || !role) {
+        showError('Заполните все обязательные поля');
+        return;
+    }
+    if (password.length < 6) {
+        showError('Пароль минимум 6 символов');
+        return;
+    }
+    
+    const btn = form.querySelector('button[type="submit"]');
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Добавление...';
+    
+    try {
+        const response = await fetch('/api/admin/users', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ username, name, role, password, sections })
+        });
+        const data = await response.json();
+        if (response.ok && data.ok) {
+            form.reset();
+            await loadUsers();
+           // alert('Пользователь создан!');
+        } else {
+            showError(data.error || 'Ошибка создания');
+        }
+    } catch (error) {
+        console.error('Ошибка создания:', error);
+        showError('Ошибка соединения с сервером');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
+    }
+});
+
+// ... (вспомогательные функции UI без изменений) ...
+
+    // --- Вспомогательные функции UI ---
+
+    function showError(msg) {
+        if (errorDiv) {
+            errorDiv.textContent = msg;
+            errorDiv.style.display = 'block';
+        }
+    }
+
+    function hideError() {
+        if (errorDiv) errorDiv.style.display = 'none';
+    }
+
+    // Запуск при загрузке
+    loadUsers();
+});
+
+// --- Логика скрытия блока разделов при выборе роли ---
+const roleSelect = document.getElementById('userRoleSelect');
+const sectionsBlock = document.getElementById('sectionsBlock');
+
+if (roleSelect && sectionsBlock) {
+    roleSelect.addEventListener('change', function() {
+        // Показываем блок разделов только для Сотрудника производства
+        if (this.value === 'worker') {
+            sectionsBlock.style.display = 'block';
+        } else {
+            sectionsBlock.style.display = 'none';
+        }
+    });
+    // Вызываем сразу при загрузке, чтобы скрыть блок, если по умолчанию выбрана не worker
+    roleSelect.dispatchEvent(new Event('change'));
+}

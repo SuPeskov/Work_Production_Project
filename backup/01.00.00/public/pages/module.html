@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Раздел 3. Сборка модуля — Скаут Хаус</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body class="section-page">
+    <header class="top-bar">
+        <div class="top-bar-left">
+            <div class="logo-small">
+                <a href="../dashboard.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 10px;">
+                    <img src="../assets/images/logo.svg" alt="Скаут Хаус" class="logo-small-img">
+                    <span>Скаут Хаус</span>
+                </a>
+            </div>
+            <div class="top-bar-divider"></div>
+            <nav class="breadcrumb">
+                <a href="../dashboard.html">Главная</a>
+                <span class="separator">/</span>
+                <span class="current">3. Сборка модуля</span>
+            </nav>
+        </div>
+
+        <!-- Поисковая строка -->
+        <div class="search-container">
+            <div class="search-input-wrapper">
+                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"/>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                <input type="text" id="searchInput" placeholder="Поиск по базе знаний..." autocomplete="off">
+            </div>
+            <div id="searchResults" class="search-overlay hidden"></div>
+        </div>
+
+        <div class="top-bar-right">
+            <div class="user-info">
+                <div class="user-avatar" id="userAvatar">А</div>
+                <div class="user-details">
+                    <span class="user-name" id="userName">Пользователь</span>
+                    <span class="user-role" id="userRole">Роль</span>
+                </div>
+            </div>
+            <button class="btn-logout" id="logoutBtn" title="Выйти">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                    <polyline points="16 17 21 12 16 7"/>
+                    <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+                <span>Выйти</span>
+            </button>
+        </div>
+    </header>
+    <main class="section-main">
+        <div class="section-header">
+            <div class="section-header-top">
+                <span class="section-number-badge">03</span>
+                <div class="card-icon"><img src="../assets/images/icons/section-3-module.svg" alt=""></div>
+                <h1>Сборка модуля</h1>
+            </div>
+            <p>Сборка модуля, кровельные работы, внутренний и наружный контур, инженерные системы.</p>
+            <p>Операции, требующие отметки "ОЗНАКОМЛЕН", отмечены оранжевым фоном</p>
+        </div>
+<!-- Блок спсика разделов-->
+        <div class="accordion-container">
+            <!-- Блок операций 3.1-->
+            <div class="accordion-section" data-section="3.1" id="section-3.1">
+                <div class="accordion-header">
+                    <div class="section-number">3.1</div>
+                    <div class="section-info">
+                        <h2>Каркас и внешний контур модуля</h2>
+                        <span class="subsection-count"></span>
+                    </div>
+                    <div class="accordion-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="accordion-content">
+                    <ul class="operations-list">
+                        <li><a href="operations/3.1.1.html">3.1.1 — Подготовка панелей к сборке модуля</a></li>
+                        <li><a href="operations/3.1.2.html">3.1.2 — Сборка модуля из панелей</a></li>
+                        <li><a href="operations/3.1.3.html">3.1.3 — Утепление модуля ППУ</a></li>
+                        <li><a href="operations/3.1.4.html">3.1.4 — Утепление модуля минеральной ватой</a></li>
+                        <li><a href="operations/3.1.5.html">3.1.5 — Установка оконных конструкций</a></li>
+                        <li><a href="operations/3.1.6.html">3.1.6 — Монтаж ветрозащиты</a></li>
+                        <li><a href="operations/3.1.7.html">3.1.7 — Монтаж уплотнительных манжет / проклейка гильз пароизоляционным скотчем</a></li>
+                        <li><a href="operations/3.1.8.html">3.1.8 — Монтаж стенового контрбруса</a></li>
+                        <li><a href="operations/3.1.9.html">3.1.9 — Монтаж внешней отделки</a></li>
+                        <li><a href="operations/3.1.10.html">3.1.10 — Монтаж отливов</a></li>
+                        <li><a href="operations/3.1.11.html">3.1.11 — Монтаж внешних оконных обкладов</a></li>
+                        <li><a href="operations/3.1.12.html">3.1.12 — Монтаж фанеры на стыке модулей</a></li>
+                    </ul>
+                </div>
+            </div>
+            <!-- Блок операций 3.2-->
+            <div class="accordion-section" data-section="3.2" id="section-3.2">
+                <div class="accordion-header">
+                    <div class="section-number">3.2</div>
+                    <div class="section-info">
+                        <h2>Кровельные работы</h2>
+                        <span class="subsection-count"></span>
+                    </div>
+                    <div class="accordion-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="accordion-content">
+                    <ul class="operations-list">
+                        <li><a href="operations/3.2.1.html">3.2.1 — Монтаж кровельного контрбруса</a></li>
+                        <li><a href="operations/3.2.2.html">3.2.2 — Монтаж парапетных рам</a></li>
+                        <li><a href="operations/3.2.3.html">3.2.3 — Монтаж обрешетки</a></li>
+                        <li><a href="operations/3.2.4.html">3.2.4 — Монтаж листового материала</a></li>
+                        <li><a href="operations/3.2.5.html">3.2.5 — Монтаж ПВХ-воронки</a></li>
+                        <li><a href="operations/3.2.6.html">3.2.6 — Монтаж водосточной системы</a></li>
+                        <li><a href="operations/3.2.7.html">3.2.7 — Монтаж системы обогрева воронок</a></li>
+                        <li><a href="operations/3.2.8.html">3.2.8 — Монтаж ПВХ-мембраны</a></li>
+                        <li><a href="operations/3.2.9.html">3.2.9 — Монтаж аэраторов фановой трубы</a></li>
+                        <li><a href="operations/3.2.10.html">3.2.10 — Монаж аэратора вентиляции подкровельного пространства</a></li>
+                        <li><a href="operations/3.2.11.html">3.2.11 — Устройство проходки вентиляционной трубы через крышу</a></li>
+                        <li><a href="operations/3.2.12.html">3.2.12 — Устройство проходки печной трубы</a></li>
+                    </ul>
+                </div>
+            </div>
+            <!-- Блок операций 3.3-->
+            <div class="accordion-section" data-section="3.3" id="section-3.3">
+                <div class="accordion-header">
+                    <div class="section-number">3.3</div>
+                    <div class="section-info">
+                        <h2>Работы во внутреннем контуре модуля</h2>
+                        <span class="subsection-count"></span>
+                    </div>
+                    <div class="accordion-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="accordion-content">
+                    <ul class="operations-list">
+                        <li><a href="operations/3.3.1.html">3.3.1 — Укладка минеральной ваты внутри перегородок</a></li>
+                        <li><a href="operations/3.3.2.html">3.3.2 — Устройство ниш под оборудование и коллекторы</a></li>
+                        <li><a href="operations/3.3.3.html">3.3.3 — Монтаж контрбруса на стены</a></li>
+                        <li><a href="operations/3.3.4.html">3.3.4 — Монтаж листового материала на стены</a></li>
+                        <li><a href="operations/3.3.5.html">3.3.5 — Монтаж отделочной доски на стены</a></li>
+                        <li><a href="operations/3.3.6.html">3.3.6 — Монтаж контрбруса на потолок</a></li>
+                        <li><a href="operations/3.3.7.html">3.3.7 — Монтаж отделочной доски на потолок</a></li>
+                        <li><a href="operations/3.3.8.html">3.3.8 — Монтаж внутренних оконных обкладов</a></li>
+                        <li><a href="operations/3.3.9.html">3.3.9 — Монтаж межкомнатных дверей</a></li>
+                        <li><a href="operations/3.3.10.html">3.3.10 — Монтаж обкладов межкомнатных дверей и проемов-порталов</a></li>
+                        <li><a href="operations/3.3.11.html">3.3.11 — Укладка напольного покрытия</a></li>
+                        <li><a href="operations/3.3.12.html">3.3.12 — Устройство пола в санузле, до наливного пола</a></li>
+                        <li><a href="operations/3.3.13.html">3.3.13 — Устройство наливного пола</a></li>
+                        <li><a href="operations/3.3.14.html">3.3.14 — Монтаж отделочной плитки</a></li>
+                        <li><a href="operations/3.3.15.html">3.3.15 — Монтаж отделочной доски в санузле</a></li>
+                        <li><a href="operations/3.3.16.html">3.3.16 — Монтаж сантехники</a></li>
+                        <li><a href="operations/3.3.17.html">3.3.17 — Монтаж душевого поддона</a></li>
+                        <li><a href="operations/3.3.18.html">3.3.18 — Монтаж душевой перегородки</a></li>
+                        <li><a href="operations/3.3.19.html">3.3.19 — Монтаж мебели в санузле</a></li>
+                        <li><a href="operations/3.3.20.html">3.3.20 — Устройство поддона технического шкафа</a></li>
+                        <li><a href="operations/3.3.21.html">3.3.21 — Гидроизоляция технического шкафа</a></li>
+                        <li><a href="operations/3.3.22.html">3.3.22 — Монтаж плитки в техническом шкафу</a></li>
+                        <li><a href="operations/3.3.23.html">3.3.23 — Монтаж технического шкафа</a></li>
+                        <li><a href="operations/3.3.24.html">3.3.24 — Монтаж раздвижной системы технического шкафа</a></li>
+                        <li><a href="operations/3.3.25.html">3.3.25 — Монтаж печного листа на потолок</a></li>
+                        <li><a href="operations/3.3.26.html">3.3.26 — Монтаж печного листа на стену и пол</a></li>
+                    </ul>
+                </div>
+            </div>
+            <!-- Блок операций 3.4-->
+            <div class="accordion-section" data-section="3.4" id="section-3.4">
+                <div class="accordion-header">
+                    <div class="section-number">3.4</div>
+                    <div class="section-info">
+                        <h2>Инженерная часть: электрика</h2>
+                        <span class="subsection-count"></span>
+                    </div>
+                    <div class="accordion-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="accordion-content">
+                    <ul class="operations-list">
+                        <li><a href="operations/3.4.1.html">3.4.1 — Прокладка кабельных трасс</a></li>
+                        <li><a href="operations/3.4.2.html">3.4.2 — Подготовка розеток для телевизора</a></li>
+                        <li><a href="operations/3.4.3.html">3.4.3 — Монтаж РК для расключения и для электроточек внутри стен</a></li>
+                        <li><a href="operations/3.4.4.html">3.4.4 — Монтаж электроточек</a></li>
+                        <li><a href="operations/3.4.5.html">3.4.5 — Монтаж светильников</a></li>
+                        <li><a href="operations/3.4.6.html">3.4.6 — Сборка, монтаж и расключение электрощита</a></li>
+                        <li><a href="operations/3.4.7.html">3.4.7 — Монтаж и расключение РК</a></li>
+                        <li><a href="operations/3.4.8.html">3.4.8 — Укладка греющего кабеля в наливном полу</a></li>
+                        <li><a href="operations/3.4.9.html">3.4.9 — Монтаж терморегулятора</a></li>
+                        <li><a href="operations/3.4.10.html">3.4.10 — Укладка теплого пола в жилом помещении</a></li>
+                        <li><a href="operations/3.4.11.html">3.4.11 — Монтаж бризера</a></li>
+                        <li><a href="operations/3.4.12.html">3.4.12 — Монтаж системы защиты от протечек</a></li>
+                        <li><a href="operations/3.4.13.html">3.4.13 — Требования для наклеек, схем расключения РК и схемы электрощита</a></li>
+                    </ul>
+                </div>
+            </div>
+            <!-- Блок операций 3.5-->
+            <div class="accordion-section" data-section="3.5" id="section-3.5">
+                <div class="accordion-header">
+                    <div class="section-number">3.5</div>
+                    <div class="section-info">
+                        <h2>Инженерная часть: водоснабжение</h2>
+                        <span class="subsection-count"></span>
+                    </div>
+                    <div class="accordion-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="accordion-content">
+                    <ul class="operations-list">
+                        <li><a href="operations/3.5.1.html">3.5.1 — Прокладка трасс водопровода</a></li>
+                        <li><a href="operations/3.5.2.html">3.5.2 — Монтаж водорозеток</a></li>
+                        <li><a href="operations/3.5.3.html">3.5.3 — Монтаж узла гигиенического душа</a></li>
+                        <li><a href="operations/3.5.4.html">3.5.4 — Монтаж бойлера</a></li>
+                        <li><a href="operations/3.5.5.html">3.5.5 — Сборка коллектора водоснабжения</a></li>
+                        <li><a href="operations/3.5.6.html">3.5.6 — Монтаж коллектора и подключение</a></li>
+                        <li><a href="operations/3.5.7.html">3.5.7 — Опрессовка коллектора и системы водоснабжения</a></li>
+                        <li><a href="operations/3.5.8.html">3.5.8 — Требования для наклеек и схемы коллектора</a></li>
+                    </ul>
+                </div>
+            </div>
+            <!-- Блок операций 3.6-->
+            <div class="accordion-section" data-section="3.6" id="section-3.6">
+                <div class="accordion-header">
+                    <div class="section-number">3.6</div>
+                    <div class="section-info">
+                        <h2>Инженерная часть: канализация</h2>
+                        <span class="subsection-count"></span>
+                    </div>
+                    <div class="accordion-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="accordion-content">
+                    <ul class="operations-list">
+                        <li><a href="operations/3.6.1.html">3.6.1 — Прокладка трасс канализации в стенах</a></li>
+                        <li><a href="operations/3.6.2.html">3.6.2 — Монтаж трапов</a></li>
+                    </ul>
+                </div>
+            </div>
+            <!-- Блок операций 3.7-->
+            <div class="accordion-section" data-section="3.7" id="section-3.6">
+                <div class="accordion-header">
+                    <div class="section-number">3.7</div>
+                    <div class="section-info">
+                        <h2>Инженерная часть: вентиляция</h2>
+                        <span class="subsection-count"></span>
+                    </div>
+                    <div class="accordion-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="accordion-content">
+                    <ul class="operations-list">
+                        <li><a href="operations/3.7.1.html">3.7.1 — Монтаж вентканалов</a></li>
+                        <li><a href="operations/3.7.2.html">3.7.2 — Монтаж приточных каналов</a></li>
+                        <li><a href="operations/3.7.3.html">3.7.3 — Монтаж вент.установки</a></li>
+                        <li><a href="operations/3.7.4.html">3.7.4 — Подключение вент.установки</a></li>
+                    </ul>
+                </div>
+            </div>
+            <!-- Блок операций 3.8-->
+            <div class="accordion-section" data-section="3.8" id="section-3.6">
+                <div class="accordion-header">
+                    <div class="section-number">3.8</div>
+                    <div class="section-info">
+                        <h2>Инженерная часть: отопление</h2>
+                        <span class="subsection-count"></span>
+                    </div>
+                    <div class="accordion-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="accordion-content">
+                    <ul class="operations-list">
+                        <li><a href="operations/3.8.1.html">3.8.1 — Монтаж контрбруса для прокладки труб водяного отопления</a></li>
+                        <li><a href="operations/3.8.2.html">3.8.2 — Монтаж труб водяного отопления</a></li>
+                        <li><a href="operations/3.8.3.html">3.8.3 — Монтаж коллектора водяного отопления</a></li>
+                    </ul>
+                </div>
+            </div>
+            <!-- Блок операций 3.9-->
+            <div class="accordion-section" data-section="3.9" id="section-3.6">
+                <div class="accordion-header">
+                    <div class="section-number">3.9</div>
+                    <div class="section-info">
+                        <h2>Подготовка к отгрузке</h2>
+                        <span class="subsection-count"></span>
+                    </div>
+                    <div class="accordion-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="accordion-content">
+                    <ul class="operations-list">
+                        <li><a href="operations/3.9.1.html">3.9.1 — Укладка комплектовки в модуль</a></li>
+                        <li><a href="operations/3.9.2.html">3.9.2 — Упаковка модуля в тент</a></li>
+                        <li><a href="operations/3.9.3.html">3.9.3 — Правила укладки пирогов</a></li>
+                    </ul>
+                </div>
+            </div>            
+        </div>
+    </main>
+
+    <!-- Lunr.js для поиска -->
+    <script src="https://unpkg.com/lunr@2.3.9/lunr.min.js"></script>
+    <script src="https://unpkg.com/lunr-languages@1.14.0/lunr.stemmer.support.js"></script>
+    <script src="https://unpkg.com/lunr-languages@1.14.0/lunr.ru.js"></script>
+
+    <script src="../js/users.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/accordion.js"></script>
+    <script src="../js/search.js"></script>
+    <script src="../js/countOperations.js"></script>
+    <script src="../js/kb.js"></script>
+    <script src="../js/access-guard.js"></script>
+</body>
+</html>

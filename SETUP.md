@@ -41,6 +41,11 @@ git clone git@github.com:SuPeskov/Work_Production_Project.git /opt/scout-kb
 
 Если клонирован репозиторий без папки server/public — скопируйте структуру из этой ветки (server/, public/) в /opt/scout-kb.
 
+> ⚠️ `/opt/scout-kb` — только приёмник кода. Правки вносятся в GitHub, сервер
+> обновляется workflow деплоя (`git reset --hard origin/main`). Если править
+> файлы на сервере руками, деплой будет молча их откатывать (а до появления
+> `reset --hard` — молча не применяться вовсе).
+
 ## Шаг 4. Настройка приложения
 ```bash
 mkdir -p /opt/scout-kb/public

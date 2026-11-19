@@ -16,9 +16,28 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
+            set -e
             echo "🔄 Начало деплоя..."
             cd /opt/scout-kb
-            git pull origin main
+
+            # Каталог на сервере — только приёмник кода: правки делаются в GitHub.
+            # reset --hard вместо pull: npm переписывает package.json и
+            # package-lock.json, индекс пересобирается запуском локально — из-за
+            # этих артефактов git pull отказывается сливать и деплой молча не
+            # применяется (ловушка, стоившая 9 неприменённых коммитов).
+            git fetch --prune origin main
+
+            # Если на сервере что-то правили руками, не теряем это молча:
+            # складываем diff в патч рядом с каталогом (untracked-файлы, в том
+            # числе база kb.db, reset --hard не удаляет).
+            if ! git diff --quiet; then
+              BACKUP="/opt/scout-kb-discarded-$(date +%Y%m%d-%H%M%S).patch"
+              git diff > "$BACKUP"
+              echo "⚠️  локальные правки на сервере сохранены в $BACKUP"
+            fi
+
+            git reset --hard origin/main
+
             npm install --omit=dev
             pm2 restart scout-kb
-            echo "✅ Деплой успешно завершён в $(date)"
+            echo "✅ Задеплоен коммит $(git rev-parse --short HEAD) в $(date)"
