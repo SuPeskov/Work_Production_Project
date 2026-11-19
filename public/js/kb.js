@@ -250,7 +250,6 @@ const KB_OPERATIONS = [
     version: 1, status: 'ready',   url: 'pages/operations/3.9.2.html' },
     { id: '3.9.3',  section: 'module', title: 'Правила укладки пирогов',
     version: 1, status: 'draft',   url: 'pages/operations/3.9.3.html' },
-    // Подраздел 5.1
     { id: '5.1.1',  section: 'installation', title: 'Работы с фундаментом',
     version: 1, status: 'draft',   url: 'pages/operations/5.1.1.html' },
     { id: '5.1.2',  section: 'installation', title: 'Силовой монтаж',
