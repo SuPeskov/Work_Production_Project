@@ -207,11 +207,11 @@ const KB_OPERATIONS = [
     version: 1, status: 'draft',   url: 'pages/operations/3.4.13.html' },
     // Подраздел 3.5
     { id: '3.5.1',  section: 'module', title: 'Прокладка трасс водопровода',
-    version: 1, status: 'draft',   url: 'pages/operations/3.5.1.html' },
+    version: 1, status: 'ready',   url: 'pages/operations/3.5.1.html' },
     { id: '3.5.2',  section: 'module', title: 'Монтаж водорозеток',
     version: 1, status: 'draft',   url: 'pages/operations/3.5.2.html' },
     { id: '3.5.3',  section: 'module', title: 'Монтаж узла гигиенического душа',
-    version: 1, status: 'draft',   url: 'pages/operations/3.5.3.html' },
+    version: 1, status: 'ready',   url: 'pages/operations/3.5.3.html' },
     { id: '3.5.4',  section: 'module', title: 'Монтаж бойлера',
     version: 1, status: 'draft',   url: 'pages/operations/3.5.4.html' },
     { id: '3.5.5',  section: 'module', title: 'Сборка коллектора водоснабжения',
@@ -229,7 +229,7 @@ const KB_OPERATIONS = [
     version: 1, status: 'draft',   url: 'pages/operations/3.6.2.html' },
     // Подраздел 3.7
     { id: '3.7.1',  section: 'module', title: 'Монтаж вентканалов',
-    version: 1, status: 'draft',   url: 'pages/operations/3.7.1.html' },
+    version: 1, status: 'ready',   url: 'pages/operations/3.7.1.html' },
     { id: '3.7.2',  section: 'module', title: 'Монтаж приточных каналов',
     version: 1, status: 'draft',   url: 'pages/operations/3.7.2.html' },
     { id: '3.7.3',  section: 'module', title: 'Монтаж вент.установки',
@@ -245,9 +245,9 @@ const KB_OPERATIONS = [
     version: 1, status: 'draft',   url: 'pages/operations/3.8.3.html' },
     // Подраздел 3.9
     { id: '3.9.1',  section: 'module', title: 'Укладка комплектовки в модуль',
-    version: 1, status: 'draft',   url: 'pages/operations/3.9.1.html' },
+    version: 1, status: 'ready',   url: 'pages/operations/3.9.1.html' },
     { id: '3.9.2',  section: 'module', title: 'Упаковка модуля в тент',
-    version: 1, status: 'draft',   url: 'pages/operations/3.9.2.html' },
+    version: 1, status: 'ready',   url: 'pages/operations/3.9.2.html' },
     { id: '3.9.3',  section: 'module', title: 'Правила укладки пирогов',
     version: 1, status: 'draft',   url: 'pages/operations/3.9.3.html' },
     // Подраздел 7.2
