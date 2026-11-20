@@ -1,0 +1,810 @@
+/**
+ * kb.js — Реестр разделов и операций базы знаний + клиентская логика
+ * ИСПРАВЛЕНО: 
+ * 1. Добавлена кнопка "Мониторинг" для ролей Гость и Сотрудник производства.
+ * 2. Убраны пробелы в URL операций.
+ * 3. Исправлен редирект при блокировке доступа (абсолютный путь).
+ */
+
+// === Роли ===
+const ROLE_ADMIN   = 'Администратор';
+const ROLE_WORKER  = 'Сотрудник производства';
+const ROLE_GUEST   = 'Гость';
+
+// === Ключи хранилища (используются для отметок ознакомления) ===
+const KB_READ_KEY  = 'kb_reads_v1'; 
+const KB_ARCHIVE_KEY = 'kb_reads_archive_v1';
+
+
+// === Разделы базы знаний ===
+const KB_SECTIONS = [
+    { id: 'preparation', num: '01', title: 'Заготовка',        img: 'assets/images/icons/section-1-zagotovka.svg', desc: 'Напил элементов каркаса, листового материала, отделочной доски и заготовка для сборки модуля', page: 'pages/preparation.html' },
+    { id: 'panels',      num: '02', title: 'Сборка панелей',   img: 'assets/images/icons/section-2-panels.svg', desc: 'Изготовление панелей пола, крыши, внешних и внутренних стен модуля', page: 'pages/panels.html' },
+    { id: 'module',      num: '03', title: 'Сборка модуля',    img: 'assets/images/icons/section-3-module.svg', desc: 'Сборка каркаса, кровельные работы, внутренний контур, инженерные системы', page: 'pages/module.html' },
+    { id: 'options',     num: '04', title: 'Сборка опций',     img: 'assets/images/icons/section-4-options.svg', desc: 'Террасы, веранды, навесы и крыльца — дополнительные конструкции к модулю', page: 'pages/options.html' },
+    { id: 'installation',num: '05', title: 'Монтаж',           img: 'assets/images/icons/section-5-installation.svg', desc: 'Доставка, установка и стыковка модулей на фундаменте заказчика', page: 'pages/installation.html' },
+    { id: 'service',     num: '06', title: 'Сервис',           img: 'assets/images/icons/section-6-service.svg', desc: 'Сезонное обслуживание, гарантийный ремонт и диагностика систем', page: 'pages/service.html' },
+    { id: 'standards',   num: '07', title: 'Стандарты',        img: 'assets/images/icons/section-7-standards.svg', desc: 'Стандарты, регламенты, руководства', page: 'pages/standards.html' }
+];
+
+// === Реестр операций (ИСПРАВЛЕНО: убраны лишние пробелы в url и title) ===
+const KB_OPERATIONS = [
+    // Подраздел 2.1
+    { id: '2.1.1',  section: 'panels', title: 'Сборка каркаса панели',            
+        version: 1, status: 'ready',   url: 'pages/operations/2.1.1.html' },
+    { id: '2.1.2',  section: 'panels', title: 'Монтаж листового материала на каркас',              
+        version: 1, status: 'ready',   url: 'pages/operations/2.1.2.html' },
+    { id: '2.1.3',  section: 'panels', title: 'Монтаж второго слоя листового материала',                         
+        version: 1, status: 'ready',   url: 'pages/operations/2.1.3.html' },
+    { id: '2.1.4',  section: 'panels', title: 'Монтаж трассы канализации',                          
+        version: 1, status: 'ready',   url: 'pages/operations/2.1.4.html' },
+    { id: '2.1.5',  section: 'panels', title: 'Прокладка электролиний',                          
+        version: 1, status: 'ready',   url: 'pages/operations/2.1.5.html' },
+    { id: '2.1.6',  section: 'panels', title: 'Монтаж гильз под коммуникации',                     
+        version: 1, status: 'ready',   url: 'pages/operations/2.1.6.html' },
+    { id: '2.1.7',  section: 'panels', title: 'Утепление панели ППУ',                        
+        version: 1, status: 'ready',   url: 'pages/operations/2.1.7.html' },
+    { id: '2.1.8',  section: 'panels', title: 'Утепление панели мин.ватой',                 
+        version: 1, status: 'ready',   url: 'pages/operations/2.1.8.html' },
+    { id: '2.1.9',  section: 'panels', title: 'Монтаж ветрозащиты, монтаж уплотнительных манжет / проклейка гильз пароизоляционным скотчем',      
+        version: 1, status: 'ready',   url: 'pages/operations/2.1.9.html' },
+    { id: '2.1.10', section: 'panels', title: 'Монтаж защитной сетки',      
+        version: 1, status: 'ready',   url: 'pages/operations/2.1.10.html' },
+    { id: '2.1.11', section: 'panels', title: 'Монтаж лежней',       
+        version: 1, status: 'ready',   url: 'pages/operations/2.1.11.html' },
+    { id: '2.1.12', section: 'panels', title: 'Контроль качества панели. Маркировка',       
+        version: 1, status: 'ready',   url: 'pages/operations/2.1.12.html' },
+    // Подраздел 2.2
+    { id: '2.2.1',  section: 'panels', title: 'Сборка каркаса кровельной панели',             
+        version: 1, status: 'ready',   url: 'pages/operations/2.2.1.html' },
+    { id: '2.2.2',  section: 'panels', title: 'Укладка листового материала на каркас панели', 
+        version: 1, status: 'ready',   url: 'pages/operations/2.2.2.html' },
+    { id: '2.2.3',  section: 'panels', title: 'Монтаж финишной отделки',                      
+        version: 1, status: 'ready',   url: 'pages/operations/2.2.3.html' },
+    // Подраздел 2.3
+    { id: '2.3.1',  section: 'panels', title: 'Сборка сдвоенных элементов каркаса',          
+        version: 1, status: 'ready',   url: 'pages/operations/2.3.1.html' },
+    { id: '2.3.2',  section: 'panels', title: 'Сборка каркаса панели',                       
+        version: 1, status: 'ready',   url: 'pages/operations/2.3.2.html' },
+    { id: '2.3.3',  section: 'panels', title: 'Монтаж листового материала',                  
+        version: 1, status: 'ready',   url: 'pages/operations/2.3.3.html' },
+    // Подраздел 2.4
+    { id: '2.4.1',  section: 'panels', title: 'Сборка сдвоенных элементов каркаса',          
+        version: 1, status: 'ready',   url: 'pages/operations/2.4.1.html' },
+    { id: '2.4.2',  section: 'panels', title: 'Сборка каркаса панели',                       
+        version: 1, status: 'ready',   url: 'pages/operations/2.4.2.html' },
+    { id: '2.4.3',  section: 'panels', title: 'Монтаж листового материала',                  
+        version: 1, status: 'ready',   url: 'pages/operations/2.4.3.html' },
+    // Подраздел 3.1
+    { id: '3.1.1',  section: 'module', title: 'Подготовка панелей к сборке модуля',
+    version: 1, status: 'draft',   url: 'pages/operations/3.1.1.html' },
+    { id: '3.1.2',  section: 'module', title: 'Сборка модуля из панелей',
+    version: 1, status: 'draft',   url: 'pages/operations/3.1.2.html' },
+    { id: '3.1.3',  section: 'module', title: 'Утепление модуля ППУ',
+    version: 1, status: 'draft',   url: 'pages/operations/3.1.3.html' },
+    { id: '3.1.4',  section: 'module', title: 'Утепление модуля минеральной ватой',
+    version: 1, status: 'draft',   url: 'pages/operations/3.1.4.html' },
+    { id: '3.1.5',  section: 'module', title: 'Установка оконных конструкций',
+    version: 1, status: 'ready',   url: 'pages/operations/3.1.5.html' },
+    { id: '3.1.6',  section: 'module', title: 'Монтаж ветрозащиты',
+    version: 1, status: 'draft',   url: 'pages/operations/3.1.6.html' },
+    { id: '3.1.7',  section: 'module', title: 'Монтаж уплотнительных манжет / проклейка гильз пароизоляционным скотчем',
+    version: 1, status: 'draft',   url: 'pages/operations/3.1.7.html' },
+    { id: '3.1.8',  section: 'module', title: 'Монтаж стенового контрбруса',
+    version: 1, status: 'ready',   url: 'pages/operations/3.1.8.html' },
+    { id: '3.1.9',  section: 'module', title: 'Монтаж водосточной системы',
+    version: 1, status: 'ready',   url: 'pages/operations/3.1.9.html' },
+    { id: '3.1.10',  section: 'module', title: 'Монтаж внешней отделки',
+    version: 1, status: 'draft',   url: 'pages/operations/3.1.10.html' },
+    { id: '3.1.11',  section: 'module', title: 'Монтаж отливов',
+    version: 1, status: 'ready',   url: 'pages/operations/3.1.11.html' },
+    { id: '3.1.12',  section: 'module', title: 'Монтаж внешних оконных обкладов',
+    version: 1, status: 'draft',   url: 'pages/operations/3.1.12.html' },
+    { id: '3.1.13',  section: 'module', title: 'Монтаж фанеры на стыке модулей',
+    version: 1, status: 'ready',   url: 'pages/operations/3.1.13.html' },
+    // Подраздел 3.2
+    { id: '3.2.1',  section: 'module', title: 'Монтаж кровельного контрбруса',
+    version: 1, status: 'draft',   url: 'pages/operations/3.2.1.html' },
+    { id: '3.2.2',  section: 'module', title: 'Монтаж парапетных рам',
+    version: 1, status: 'draft',   url: 'pages/operations/3.2.2.html' },
+    { id: '3.2.3',  section: 'module', title: 'Монтаж обрешетки',
+    version: 1, status: 'draft',   url: 'pages/operations/3.2.3.html' },
+    { id: '3.2.4',  section: 'module', title: 'Монтаж листового материала',
+    version: 1, status: 'draft',   url: 'pages/operations/3.2.4.html' },
+    { id: '3.2.5',  section: 'module', title: 'Монтаж ПВХ-воронки',
+    version: 1, status: 'draft',   url: 'pages/operations/3.2.5.html' },
+    { id: '3.2.6',  section: 'module', title: 'Монтаж системы обогрева воронок',
+    version: 1, status: 'ready',   url: 'pages/operations/3.2.6.html' },
+    { id: '3.2.7',  section: 'module', title: 'Монтаж ПВХ-мембраны',
+    version: 1, status: 'ready',   url: 'pages/operations/3.2.7.html' },
+    { id: '3.2.8',  section: 'module', title: 'Монтаж аэраторов фановой трубы',
+    version: 1, status: 'ready',   url: 'pages/operations/3.2.8.html' },
+    { id: '3.2.9',  section: 'module', title: 'Монаж аэратора вентиляции подкровельного пространства',
+    version: 1, status: 'ready',   url: 'pages/operations/3.2.9.html' },
+    { id: '3.2.10',  section: 'module', title: 'Устройство проходки вентиляционной трубы через крышу',
+    version: 1, status: 'ready',   url: 'pages/operations/3.2.10.html' },
+    { id: '3.2.11',  section: 'module', title: 'Устройство проходки печной трубы',
+    version: 1, status: 'ready',   url: 'pages/operations/3.2.11.html' },
+    // Подраздел 3.3
+    { id: '3.3.1',  section: 'module', title: 'Укладка минеральной ваты внутри перегородок',
+    version: 1, status: 'draft',   url: 'pages/operations/3.3.1.html' },
+    { id: '3.3.2',  section: 'module', title: 'Устройство ниш под оборудование и коллекторы',
+    version: 1, status: 'draft',   url: 'pages/operations/3.3.2.html' },
+    { id: '3.3.3',  section: 'module', title: 'Монтаж контрбруса на стены',
+    version: 1, status: 'draft',   url: 'pages/operations/3.3.3.html' },
+    { id: '3.3.4',  section: 'module', title: 'Монтаж листового материала на стены',
+    version: 1, status: 'draft',   url: 'pages/operations/3.3.4.html' },
+    { id: '3.3.5',  section: 'module', title: 'Монтаж отделочной доски на стены',
+    version: 1, status: 'draft',   url: 'pages/operations/3.3.5.html' },
+    { id: '3.3.6',  section: 'module', title: 'Монтаж контрбруса на потолок',
+    version: 1, status: 'draft',   url: 'pages/operations/3.3.6.html' },
+    { id: '3.3.7',  section: 'module', title: 'Монтаж отделочной доски на потолок',
+    version: 1, status: 'draft',   url: 'pages/operations/3.3.7.html' },
+    { id: '3.3.8',  section: 'module', title: 'Монтаж внутренних оконных обкладов',
+    version: 1, status: 'ready',   url: 'pages/operations/3.3.8.html' },
+    { id: '3.3.9',  section: 'module', title: 'Монтаж межкомнатных дверей',
+    version: 1, status: 'ready',   url: 'pages/operations/3.3.9.html' },
+    { id: '3.3.10',  section: 'module', title: 'Монтаж обкладов межкомнатных дверей и проемов-порталов',
+    version: 1, status: 'draft',   url: 'pages/operations/3.3.10.html' },
+    { id: '3.3.11',  section: 'module', title: 'Укладка напольного покрытия',
+    version: 1, status: 'ready',   url: 'pages/operations/3.3.11.html' },
+    { id: '3.3.12',  section: 'module', title: 'Устройство пола в санузле, до наливного пола',
+    version: 1, status: 'ready',   url: 'pages/operations/3.3.12.html' },
+    { id: '3.3.13',  section: 'module', title: 'Устройство наливного пола',
+    version: 1, status: 'draft',   url: 'pages/operations/3.3.13.html' },
+    { id: '3.3.14',  section: 'module', title: 'Монтаж отделочной плитки:',
+    version: 1, status: 'ready',   url: 'pages/operations/3.3.14.html' },
+    { id: '3.3.15',  section: 'module', title: 'Монтаж отделочной доски в санузле',
+    version: 1, status: 'draft',   url: 'pages/operations/3.3.15.html' },
+    { id: '3.3.16',  section: 'module', title: 'Монтаж сантехники',
+    version: 1, status: 'ready',   url: 'pages/operations/3.3.16.html' },
+    { id: '3.3.17',  section: 'module', title: 'Монтаж душевого поддона',
+    version: 1, status: 'draft',   url: 'pages/operations/3.3.17.html' },
+    { id: '3.3.18',  section: 'module', title: 'Монтаж душевой перегородки',
+    version: 1, status: 'draft',   url: 'pages/operations/3.3.18.html' },
+    { id: '3.3.19',  section: 'module', title: 'Монтаж мебели в санузле',
+    version: 1, status: 'draft',   url: 'pages/operations/3.3.19.html' },
+    { id: '3.3.20',  section: 'module', title: 'Устройство поддона технического шкафа',
+    version: 1, status: 'draft',   url: 'pages/operations/3.3.20.html' },
+    { id: '3.3.21',  section: 'module', title: 'Гидроизоляция технического шкафа',
+    version: 1, status: 'draft',   url: 'pages/operations/3.3.21.html' },
+    { id: '3.3.22',  section: 'module', title: 'Монтаж плитки в техническом шкафу',
+    version: 1, status: 'draft',   url: 'pages/operations/3.3.22.html' },
+    { id: '3.3.23',  section: 'module', title: 'Монтаж технического шкафа',
+    version: 1, status: 'draft',   url: 'pages/operations/3.3.23.html' },
+    { id: '3.3.24',  section: 'module', title: 'Монтаж раздвижной системы технического шкафа',
+    version: 1, status: 'ready',   url: 'pages/operations/3.3.24.html' },
+    { id: '3.3.25',  section: 'module', title: 'Монтаж печного листа на потолок',
+    version: 1, status: 'ready',   url: 'pages/operations/3.3.25.html' },
+    { id: '3.3.26',  section: 'module', title: 'Монтаж печного листа на стену и пол',
+    version: 1, status: 'ready',   url: 'pages/operations/3.3.26.html' },
+    // Подраздел 3.4
+    { id: '3.4.1',  section: 'module', title: 'Прокладка кабельных трасс',
+    version: 1, status: 'ready',   url: 'pages/operations/3.4.1.html' },
+    { id: '3.4.2',  section: 'module', title: 'Подготовка розеток для телевизора',
+    version: 1, status: 'ready',   url: 'pages/operations/3.4.2.html' },
+    { id: '3.4.3',  section: 'module', title: 'Монтаж РК для расключения и для электроточек внутри стен',
+    version: 1, status: 'ready',   url: 'pages/operations/3.4.3.html' },
+    { id: '3.4.4',  section: 'module', title: 'Монтаж электроточек',
+    version: 1, status: 'ready',   url: 'pages/operations/3.4.4.html' },
+    { id: '3.4.5',  section: 'module', title: 'Монтаж светильников',
+    version: 1, status: 'draft',   url: 'pages/operations/3.4.5.html' },
+    { id: '3.4.6',  section: 'module', title: 'Сборка, монтаж и расключение электрощита',
+    version: 1, status: 'draft',   url: 'pages/operations/3.4.6.html' },
+    { id: '3.4.7',  section: 'module', title: 'Монтаж и расключение РК',
+    version: 1, status: 'draft',   url: 'pages/operations/3.4.7.html' },
+    { id: '3.4.8',  section: 'module', title: 'Укладка греющего кабеля в наливном полу',
+    version: 1, status: 'ready',   url: 'pages/operations/3.4.8.html' },
+    { id: '3.4.9',  section: 'module', title: 'Монтаж терморегулятора',
+    version: 1, status: 'ready',   url: 'pages/operations/3.4.9.html' },
+    { id: '3.4.10',  section: 'module', title: 'Укладка теплого пола в жилом помещении',
+    version: 1, status: 'ready',   url: 'pages/operations/3.4.10.html' },
+    { id: '3.4.11',  section: 'module', title: 'Монтаж бризера',
+    version: 1, status: 'ready',   url: 'pages/operations/3.4.11.html' },
+    { id: '3.4.12',  section: 'module', title: 'Монтаж системы защиты от протечек',
+    version: 1, status: 'draft',   url: 'pages/operations/3.4.12.html' },
+    { id: '3.4.13',  section: 'module', title: 'Требования для наклеек, схем расключения РК и схемы электрощита',
+    version: 1, status: 'draft',   url: 'pages/operations/3.4.13.html' },
+    // Подраздел 3.5
+    { id: '3.5.1',  section: 'module', title: 'Прокладка трасс водопровода',
+    version: 1, status: 'ready',   url: 'pages/operations/3.5.1.html' },
+    { id: '3.5.2',  section: 'module', title: 'Монтаж водорозеток',
+    version: 1, status: 'draft',   url: 'pages/operations/3.5.2.html' },
+    { id: '3.5.3',  section: 'module', title: 'Монтаж узла гигиенического душа',
+    version: 1, status: 'ready',   url: 'pages/operations/3.5.3.html' },
+    { id: '3.5.4',  section: 'module', title: 'Монтаж бойлера',
+    version: 1, status: 'draft',   url: 'pages/operations/3.5.4.html' },
+    { id: '3.5.5',  section: 'module', title: 'Сборка коллектора водоснабжения',
+    version: 1, status: 'draft',   url: 'pages/operations/3.5.5.html' },
+    { id: '3.5.6',  section: 'module', title: 'Монтаж коллектора и подключение',
+    version: 1, status: 'draft',   url: 'pages/operations/3.5.6.html' },
+    { id: '3.5.7',  section: 'module', title: 'Опрессовка коллектора и системы водоснабжения',
+    version: 1, status: 'draft',   url: 'pages/operations/3.5.7.html' },
+    { id: '3.5.8',  section: 'module', title: 'Требования для наклеек и схемы коллектора',
+    version: 1, status: 'draft',   url: 'pages/operations/3.5.8.html' },
+    // Подраздел 3.6
+    { id: '3.6.1',  section: 'module', title: 'Прокладка трасс канализации в стенах',
+    version: 1, status: 'draft',   url: 'pages/operations/3.6.1.html' },
+    { id: '3.6.2',  section: 'module', title: 'Монтаж трапов',
+    version: 1, status: 'draft',   url: 'pages/operations/3.6.2.html' },
+    // Подраздел 3.7
+    { id: '3.7.1',  section: 'module', title: 'Монтаж вентканалов',
+    version: 1, status: 'ready',   url: 'pages/operations/3.7.1.html' },
+    { id: '3.7.2',  section: 'module', title: 'Монтаж приточных каналов',
+    version: 1, status: 'draft',   url: 'pages/operations/3.7.2.html' },
+    { id: '3.7.3',  section: 'module', title: 'Монтаж вент.установки',
+    version: 1, status: 'draft',   url: 'pages/operations/3.7.3.html' },
+    { id: '3.7.4',  section: 'module', title: 'Подключение вент.установки',
+    version: 1, status: 'draft',   url: 'pages/operations/3.7.4.html' },
+    // Подраздел 3.8
+    { id: '3.8.1',  section: 'module', title: 'Монтаж контрбруса для прокладки труб водяного отопления',
+    version: 1, status: 'draft',   url: 'pages/operations/3.8.1.html' },
+    { id: '3.8.2',  section: 'module', title: 'Монтаж труб водяного отопления',
+    version: 1, status: 'draft',   url: 'pages/operations/3.8.2.html' },
+    { id: '3.8.3',  section: 'module', title: 'Монтаж коллектора водяного отопления',
+    version: 1, status: 'draft',   url: 'pages/operations/3.8.3.html' },
+    // Подраздел 3.9
+    { id: '3.9.1',  section: 'module', title: 'Укладка комплектовки в модуль',
+    version: 1, status: 'ready',   url: 'pages/operations/3.9.1.html' },
+    { id: '3.9.2',  section: 'module', title: 'Упаковка модуля в тент',
+    version: 1, status: 'ready',   url: 'pages/operations/3.9.2.html' },
+    { id: '3.9.3',  section: 'module', title: 'Правила укладки пирогов',
+    version: 1, status: 'draft',   url: 'pages/operations/3.9.3.html' },
+    { id: '5.1.1',  section: 'installation', title: 'Работы с фундаментом',
+    version: 1, status: 'draft',   url: 'pages/operations/5.1.1.html' },
+    { id: '5.1.2',  section: 'installation', title: 'Силовой монтаж',
+    version: 1, status: 'draft',   url: 'pages/operations/5.1.2.html' },
+    { id: '5.1.3',  section: 'installation', title: 'Герметизация стыков модулей',
+    version: 1, status: 'draft',   url: 'pages/operations/5.1.3.html' },
+    { id: '5.1.4',  section: 'installation', title: 'Монтаж веранд и террас',
+    version: 1, status: 'draft',   url: 'pages/operations/5.1.4.html' },
+    { id: '5.1.5',  section: 'installation', title: 'Монтаж лестниц',
+    version: 1, status: 'ready',   url: 'pages/operations/5.1.5.html' },
+    { id: '5.1.6',  section: 'installation', title: 'Монтаж отделки цоколя',
+    version: 1, status: 'draft',   url: 'pages/operations/5.1.6.html' },
+    { id: '5.1.7',  section: 'installation', title: 'Монтаж перил',
+    version: 1, status: 'draft',   url: 'pages/operations/5.1.7.html' },
+    { id: '5.1.8',  section: 'installation', title: 'Кровля и водосточная система',
+    version: 1, status: 'draft',   url: 'pages/operations/5.1.8.html' },
+    { id: '5.1.9',  section: 'installation', title: 'Внутренние отделочные работы',
+    version: 1, status: 'draft',   url: 'pages/operations/5.1.9.html' },
+    { id: '5.1.10', section: 'installation', title: 'Наружные отделочные работы',
+    version: 1, status: 'draft',   url: 'pages/operations/5.1.10.html' },
+    { id: '5.1.11', section: 'installation', title: 'ИР. Электрика',
+    version: 1, status: 'draft',   url: 'pages/operations/5.1.11.html' },
+    { id: '5.1.12', section: 'installation', title: 'ИР. Водоснабжение',
+    version: 1, status: 'draft',   url: 'pages/operations/5.1.12.html' },
+    { id: '5.1.13', section: 'installation', title: 'ИР. Вентиляция',
+    version: 1, status: 'draft',   url: 'pages/operations/5.1.13.html' },
+    { id: '5.1.14', section: 'installation', title: 'ИР. Канализация',
+    version: 1, status: 'draft',   url: 'pages/operations/5.1.14.html' },
+    { id: '5.1.15', section: 'installation', title: 'ИР. Отопление',
+    version: 1, status: 'draft',   url: 'pages/operations/5.1.15.html' },
+    // Подраздел 7.2
+    { id: '7.2.1',  section: 'standards', title: 'Правила фотоактирования',
+    version: 1, status: 'ready',   url: 'pages/operations/7.2.1.html' }
+];
+
+
+const PUBLIC_OP_IDS = undefined;
+
+/** Может ли пользователь подтверждать ознакомление */
+function kbUserCanConfirmRead(user) {
+    return !!user && user.role === ROLE_WORKER;
+}
+
+/**
+ Актуальный профиль текущего пользователя.
+ Читает ТОЛЬКО из sessionStorage.
+ */
+function kbGetCurrentUser() {
+    try {
+        const data = sessionStorage.getItem('modular_house_session');
+        if (!data) return null;
+        
+        let user = JSON.parse(data);
+        if (!user || !user.role) return null;
+
+        // Нормализация роли (на случай, если в хранилище лежит технический код)
+        if (user.role === 'admin') user.role = 'Администратор';
+        else if (user.role === 'worker') user.role = 'Сотрудник производства';
+        else if (user.role === 'guest') user.role = 'Гость';
+        
+        return user;
+    } catch (e) {
+        console.error('Ошибка чтения сессии:', e);
+        return null;
+    }
+}
+
+// ============================================================
+// Отметки «Ознакомлен» (локальный реестр для совместимости)
+// ============================================================
+function kbGetReads() {
+    try {
+        const arr = JSON.parse(localStorage.getItem(KB_READ_KEY));
+        return Array.isArray(arr) ? arr : [];
+    } catch (e) { return []; }
+}
+
+function kbHasRead(userId, opId, version) {
+    return kbGetReads().some(r => r.userId === userId && r.opId === opId && r.version === version);
+}
+
+function kbAddRead(userId, opId, version) {
+    if (kbHasRead(userId, opId, version)) return false;
+    const reads = kbGetReads();
+    reads.push({ userId, opId, version, timestamp: new Date().toISOString() });
+    localStorage.setItem(KB_READ_KEY, JSON.stringify(reads));
+    return true;
+}
+
+// ============================================================
+// Права доступа
+// ============================================================
+/**
+ * Проверяет, имеет ли пользователь доступ к разделу.
+ * ИСПРАВЛЕНО: Админ и Гость всегда имеют доступ ко всем разделам.
+ */
+function kbUserCanViewSection(user, sectionId) {
+    if (!user) return false;
+    
+    // Администратор и Гость имеют ДОСТУП КО ВСЕМ РАЗДЕЛАМ БЕЗ ПРОВЕРКИ МАССИВА ACCESS
+    if (user.role === 'Администратор' || user.role === 'Гость') {
+        return true;
+    }
+    
+    // Для Сотрудника производства проверяем массив access
+    if (!Array.isArray(user.access) || user.access.length === 0) return false;
+    return user.access.includes(sectionId);
+}
+
+function kbUserCanViewOperation(user, op) {
+    if (!user) return false;
+    if (user.role === ROLE_ADMIN) return true;
+    if (!kbUserCanViewSection(user, op.section)) return false;
+    
+    if (user.role === ROLE_GUEST && Array.isArray(PUBLIC_OP_IDS)) {
+        return PUBLIC_OP_IDS.includes(op.id);
+    }
+    return true;
+}
+
+function kbCanViewPageByFile(user, fileName) {
+    const opMatch = fileName.match(/^(\d+\.\d+\.\d+)\.html$/);
+    if (opMatch) {
+        const op = kbGetOperationById(opMatch[1]);
+        if (op && op.status === 'draft' && user.role !== ROLE_ADMIN) return false;
+    }
+    const sec = KB_SECTIONS.find(s => s.page.endsWith(fileName));
+    if (!sec) return true; 
+    return kbUserCanViewSection(user, sec.id);
+}
+
+function kbGetSectionById(id) {
+    return KB_SECTIONS.find(s => s.id === id) || null;
+}
+
+function kbGetOperationById(id) {
+    return KB_OPERATIONS.find(o => o.id === id) || null;
+}
+
+// ============================================================
+// Служебное
+// ============================================================
+function kbRootPrefix() {
+    return window.location.pathname.includes('/pages/') ? '../' : './';
+}
+
+// ============================================================
+// Guard — защита страниц и навигации
+// ============================================================
+document.addEventListener('DOMContentLoaded', function () {
+    const prefix = kbRootPrefix();
+
+    // --- Защита контентных страниц ---
+    const isContentPage = window.location.pathname.includes('/pages/');
+    const isPublicPage  = /search\.html$/.test(window.location.pathname);
+
+    if (isContentPage && !isPublicPage) {
+        const user = (typeof kbGetCurrentUser === 'function') ? kbGetCurrentUser() : null;
+        
+        if (!user) {
+            if (typeof isAuthenticated === 'function' && !isAuthenticated()) {
+                 window.location.href = prefix + 'index.html';
+                 return;
+            }
+        }
+
+        if (user) {
+            const file = window.location.pathname.split('/').pop();
+            if (file !== 'dashboard.html' && !kbCanViewPageByFile(user, file)) {
+                blockPage(user);
+                return;
+            }
+            
+            const opMatch = window.location.pathname.match(/operations\/(\d+\.\d+\.\d+)\.html$/);
+            if (opMatch) {
+                const op = kbGetOperationById(opMatch[1]);
+                if (op && !kbUserCanViewOperation(user, op)) { blockPage(user); return; }
+            }
+        }
+    }
+
+    function blockPage(user) {
+        const main = document.querySelector('main') || document.body;
+        // ИСПРАВЛЕНО: Абсолютный путь /dashboard.html
+        main.innerHTML = `
+            <div style="max-width:560px;margin:120px auto;text-align:center;font-family:Inter,sans-serif;padding:0 20px;">
+                <div style="font-size:56px;">🔒</div>
+                <h1 style="font-size:24px;margin:16px 0 8px;">Нет доступа к разделу</h1>
+                <p style="color:#64748b;line-height:1.6;">Пользователю «${user.name}» (${user.role}) не назначен доступ к этому разделу базы знаний. Обратитесь к администратору.</p>
+                <a href="/dashboard.html" style="display:inline-block;margin-top:24px;background:#2563eb;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Вернуться в базу знаний</a>
+            </div>`;
+    }
+
+    // --- Панель пользователя в шапке + выход ---
+    if (typeof isAuthenticated === 'function' && isAuthenticated()) {
+        const user = kbGetCurrentUser();
+        console.log('[KB.JS] Текущий пользователь:', user); // ДИАГНОСТИКА
+        
+        if (user) {
+            // Обновляем имя и роль (ищем по разным ID для совместимости)
+            const nameEl = document.getElementById('currentUserName') || document.getElementById('userName');
+            const roleEl = document.getElementById('currentUserRole') || document.getElementById('userRole');
+            const avatarEl = document.getElementById('userAvatar');
+            
+            if (nameEl) nameEl.textContent = user.name || user.username;
+                // === ИСПРАВЛЕНО: Обновляем имя также в блоке приветствия ===
+                const welcomeNameEl = document.getElementById('welcomeNameDisplay');
+                if (welcomeNameEl) welcomeNameEl.textContent = user.name || user.username;
+                // ============================================================
+            if (roleEl) roleEl.textContent = user.role || 'Пользователь';
+            if (avatarEl) avatarEl.textContent = (user.name || user.username || '?').charAt(0).toUpperCase();
+
+            // КНОПКА ВЫХОДА (ИСПРАВЛЕНО: надежный поиск)
+            const logoutBtn = document.getElementById('logoutBtn') || 
+                              document.querySelector('button[class*="logout"]') ||
+                              document.querySelector('a[href*="logout"]');
+                              
+            if (logoutBtn) {
+                logoutBtn.onclick = function (e) {
+                    e.preventDefault();
+                    console.log('[KB.JS] Нажата кнопка выхода');
+                    if (typeof logout === 'function') {
+                        logout();
+                    } else {
+                        sessionStorage.removeItem('modular_house_session');
+                        window.location.href = '/index.html';
+                    }
+                };
+            } else {
+                console.warn('[KB.JS] Кнопка выхода не найдена в DOM!');
+            }
+        }
+    }
+
+ // --- Кнопки в шапке по ролям ---
+ if (typeof isAuthenticated === 'function' && isAuthenticated()) {
+     const user = kbGetCurrentUser();
+     const right = document.querySelector('.top-bar-right');
+     
+     // Определяем тип страницы
+     const path = window.location.pathname;
+     const isMainPage = path.endsWith('dashboard.html') || 
+                        path.endsWith('monitoring.html') || 
+                        path.endsWith('admin-panel.html') || 
+                        path === '/';
+     
+     // Если мы НЕ на главной странице (т.е. внутри раздела), скрываем навигационные кнопки
+     if (!isMainPage) return; 
+
+     if (right && user) {
+         const ICON_BACK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>';
+         const ICON_GEAR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06-.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l-.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
+         const ICON_CHART = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>';
+         
+         const mkBtn = (cls, href, title, html) => {
+             // Удаляем старую кнопку если она есть, чтобы не дублировать при перезагрузке
+             const old = right.querySelector('.' + cls.split(' ')[0]);
+             if (old) old.remove();
+
+             const a = document.createElement('a');
+             a.className = cls;
+             a.href = prefix + href;
+             a.title = title;
+             a.innerHTML = html;
+             right.insertBefore(a, right.firstChild);
+             return a;
+         };
+
+         // 1. Логика для АДМИНИСТРАТОРА и ГОСТЯ
+         if (user.role === ROLE_ADMIN || user.role === ROLE_GUEST) {
+             // Кнопка "Мониторинг" (ВСЕГДА видна на главных страницах)
+             mkBtn('btn-admin btn-monitoring', 'monitoring.html', 'Мониторинг ознакомления', ICON_CHART + '<span>Мониторинг</span>');
+             
+             // Кнопка "Управление" (ТОЛЬКО для Админа)
+             if (user.role === ROLE_ADMIN) {
+                 mkBtn('btn-admin btn-manage', 'admin-panel.html', 'Панель управления', ICON_GEAR + '<span>Управление</span>');
+             }
+             
+             // Кнопка "В базу знаний" (если мы не на самом дашборде)
+             if (!path.endsWith('dashboard.html') && path !== '/') {
+                 mkBtn('btn-admin btn-back-kb', 'dashboard.html', 'Вернуться к разделам базы знаний', ICON_BACK + '<span>В базу знаний</span>');
+             }
+         } 
+         // 2. Логика ТОЛЬКО для СОТРУДНИКА производства
+         else if (user.role === ROLE_WORKER) {
+             // Сотруднику показываем ТОЛЬКО кнопку "В базу знаний" (если он не на дашборде)
+             if (!path.endsWith('dashboard.html') && path !== '/') {
+                 mkBtn('btn-admin btn-back-kb', 'dashboard.html', 'Вернуться к разделам базы знаний', ICON_BACK + '<span>В базу знаний</span>');
+             }
+         }
+     }
+ }
+    // --- Dashboard: карточки разделов ---
+    const grid = document.getElementById('cardsGrid');
+    if (grid && typeof isAuthenticated === 'function' && isAuthenticated()) {
+        const user = kbGetCurrentUser();
+        if (user) {
+            grid.innerHTML = '';
+            let visible = 0;
+            KB_SECTIONS.forEach(sec => {
+                const allowed = kbUserCanViewSection(user, sec.id);
+                if (allowed) visible++;
+                
+                const card = document.createElement(allowed ? 'a' : 'div');
+                card.className = 'card card-section' + (allowed ? '' : ' card-disabled');
+                if (allowed) card.href = prefix + sec.page;
+                
+                const opsTotal = KB_OPERATIONS.filter(o => o.section === sec.id).length;
+                card.innerHTML = `
+                    <div class="card-number">${sec.num}</div>
+                    <div class="card-icon"><img src="${sec.img}" alt=""></div>
+                    <h3>${sec.title}</h3>
+                    <p>${sec.desc}</p>
+                    <div class="card-stats">
+                        <span class="card-badge">${opsTotal ? opsTotal + ' операций' : 'в разработке'}</span>
+                        ${!allowed ? '<span class="card-badge card-badge-lock">🔒 Нет доступа</span>' : ''}
+                    </div>`;
+                grid.appendChild(card);
+            });
+            
+            const statSec = document.getElementById('stat-sections');
+            if (statSec) statSec.textContent = String(visible);
+            const statOps = document.getElementById('stat-operations');
+            if (statOps) {
+                const n = KB_OPERATIONS.filter(o => o.status === 'ready' && kbUserCanViewOperation(user, o)).length;
+                statOps.textContent = String(n);
+            }
+        }
+    }
+
+    // --- Страницы раздела: скрыть ссылки на операции без права ---
+    if (isContentPage && typeof isAuthenticated === 'function' && isAuthenticated()) {
+        const user = kbGetCurrentUser();
+        if (user) {
+            document.querySelectorAll('a[href*="operations/"]').forEach(link => {
+                const m = link.getAttribute('href').match(/(\d+\.\d+\.\d+)\.html/);
+                if (!m) return;
+                const op = kbGetOperationById(m[1]);
+                if (op && !kbUserCanViewOperation(user, op)) {
+                    const li = link.closest('li');
+                    if (li) li.remove(); else link.remove();
+                    return;
+                }
+                if (op && op.status === 'draft' && user.role !== ROLE_ADMIN) {
+                    const li = link.closest('li');
+                    if (li) li.remove(); else link.remove();
+                    return;
+                }
+                if (op && op.status === 'draft' && user.role === ROLE_ADMIN && !link.querySelector('.op-draft-badge')) {
+                    const b = document.createElement('span');
+                    b.className = 'op-draft-badge';
+                    b.textContent = ' ✎ черновик';
+                    b.style.cssText = 'font-size:11px;color:#b45309;background:#fef3c7;padding:2px 6px;border-radius:6px;margin-left:6px;white-space:nowrap;';
+                    link.appendChild(b);
+                }
+            });
+        }
+    }
+});
+
+/**
+ * operation-status.js — Визуальная индикация статуса ознакомления
+ * ИСПРАВЛЕНО: 
+ * 1. Поддержка относительных путей (operations/X.X.X.html)
+ * 2. Добавлены необходимые CSS стили прямо в JS (чтобы не править style.css)
+ * 3. Экранирование точек в регулярном выражении
+ */
+document.addEventListener('DOMContentLoaded', async () => {
+    // Проверяем авторизацию
+    if (typeof isAuthenticated === 'function' && !isAuthenticated()) return;
+    
+    // Находим все ссылки на операции на странице
+    // Ищем как абсолютные (/pages/operations/...), так и относительные (operations/...) пути
+    const opLinks = document.querySelectorAll('a[href*="operations/"]');
+    if (opLinks.length === 0) return;
+
+    // Собираем ID операций из ссылок
+    const opIds = [];
+    const linkMap = {}; 
+    
+    opLinks.forEach(link => {
+        // Исправленное регулярное выражение с экранированными точками
+        const match = link.getAttribute('href').match(/(\d+\.\d+\.\d+)\.html/);
+        if (match) {
+            const id = match[1];
+            opIds.push(id);
+            linkMap[id] = link;
+        }
+    });
+
+    if (opIds.length === 0) return;
+
+    try {
+        // Запрашиваем статусы у сервера
+        const response = await fetch('/api/read-status', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ opIds })
+        });
+        
+        if (!response.ok) throw new Error('Ошибка загрузки статусов');
+        const statuses = await response.json();
+
+        // Динамически добавляем стили, если их нет на странице
+        if (!document.getElementById('dynamic-op-status-styles')) {
+            const style = document.createElement('style');
+            style.id = 'dynamic-op-status-styles';
+            style.textContent = `
+                /* НЕ ознакомленная операция — привлекает внимание */
+                .unread-operation {
+                    background-color: #fff7ed !important; /* Светло-оранжевый фон */
+                    border-left: 4px solid #f97316 !important; /* Оранжевая полоса слева */
+                }
+                .unread-operation a {
+                    color: #c2410c !important; /* Темно-оранжевый текст */
+                    font-weight: 600;
+                }
+                
+                /* Ознакомленная операция — спокойный вид */
+                .read-operation {
+                    background-color: #ffffff !important; /* Белый/светлый фон */
+                    border-left: 4px solid transparent !important;
+                }
+                
+                /* Плавный переход при изменении статуса */
+                li, .operation-item {
+                    transition: background-color 0.3s ease, border-color 0.3s ease;
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        // Применяем стили
+Object.entries(statuses).forEach(([id, statusObj]) => {
+    const link = linkMap[id];
+    if (!link) return;
+    const parentItem = link.closest('li');
+    
+    // Теперь мы точно знаем, актуальна ли прочитанная версия
+    const isCurrent = statusObj.isRead; 
+    
+    if (isCurrent) {
+        parentItem.classList.remove('unread-operation');
+        parentItem.classList.add('read-operation');
+    } else {
+        parentItem.classList.remove('read-operation');
+        parentItem.classList.add('unread-operation');
+    }
+});
+    } catch (error) {
+        console.error('Не удалось загрузить статусы ознакомления:', error);
+    }
+});
+
+/**
+ * heartbeat.js — Автоматическая проверка активности сессии
+ */
+let heartbeatInterval = null;
+
+function startHeartbeat() {
+    if (heartbeatInterval) clearInterval(heartbeatInterval);
+    
+    // Первая проверка сразу, затем каждые 3 минуты (180000 мс)
+    checkSessionStatus();
+    heartbeatInterval = setInterval(checkSessionStatus, 3 * 60 * 1000);
+    
+    console.log('[HEARTBEAT] Мониторинг сессии запущен (интервал: 3 мин, TTL: 10 мин)');
+}
+
+async function checkSessionStatus() {
+    // Не проверяем, если пользователь не авторизован
+    if (typeof isAuthenticated !== 'function' || !isAuthenticated()) {
+        if (heartbeatInterval) clearInterval(heartbeatInterval);
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/heartbeat', { credentials: 'include' });
+        const data = await response.json();
+        
+        if (!data.active) {
+            console.warn('[HEARTBEAT] Сессия неактивна! Выполняется выход...');
+            if (typeof logout === 'function') {
+                await logout();
+            } else {
+                sessionStorage.removeItem('modular_house_session');
+                window.location.href = '/index.html?session_expired=1';
+            }
+        }
+    } catch (error) {
+        console.error('[HEARTBEAT] Ошибка проверки:', error);
+        // При сетевой ошибке не выбрасываем, ждем следующего цикла
+    }
+}
+
+// Запускаем heartbeat после загрузки DOM, если пользователь авторизован
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+        if (typeof isAuthenticated === 'function' && isAuthenticated()) {
+            startHeartbeat();
+        }
+    }, 2000);
+});
+
+/**
+ * auto-check-read-btn.js — Автоматическая синхронизация кнопки "Ознакомлен"
+ * Добавляется в конец kb.js
+ */
+document.addEventListener('DOMContentLoaded', async () => {
+    // Проверяем, находимся ли мы на странице операции и есть ли кнопка
+    const readBtn = document.getElementById('readBtn');
+    if (!readBtn || !window.location.pathname.includes('/operations/')) return;
+
+    // Проверяем авторизацию
+    if (typeof isAuthenticated !== 'function' || !isAuthenticated()) return;
+
+    const opId = readBtn.dataset.opId;
+    const opVersion = readBtn.dataset.opVersion;
+    
+    if (!opId || !opVersion) return;
+
+    try {
+        // Запрашиваем статус именно для этой операции у сервера
+        const response = await fetch('/api/read-status', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ opIds: [opId] })
+        });
+
+        if (!response.ok) throw new Error('Ошибка загрузки статуса');
+        
+        const statuses = await response.json();
+        const statusObj = statuses[opId];
+
+        // Если сервер подтверждает, что версия прочитана — переключаем кнопку
+        if (statusObj && statusObj.isRead) {
+            readBtn.classList.add('read');
+            
+            // Меняем иконки и текст (предполагая стандартную структуру кнопки из вашего HTML)
+            const iconUnread = readBtn.querySelector('.icon-unread');
+            const iconRead = readBtn.querySelector('.icon-read');
+            const btnText = readBtn.querySelector('.btn-text');
+            
+            if (iconUnread) iconUnread.style.display = 'none';
+            if (iconRead) iconRead.style.display = 'inline-block';
+            if (btnText) btnText.textContent = 'Ознакомлен';
+            
+            // Блокируем повторное нажатие (опционально)
+            readBtn.disabled = true;
+            readBtn.style.opacity = '0.7';
+            readBtn.style.cursor = 'default';
+        }
+    } catch (error) {
+        console.error('Не удалось проверить статус кнопки:', error);
+    }
+});

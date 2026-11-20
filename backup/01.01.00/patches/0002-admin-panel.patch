@@ -1,0 +1,40 @@
+diff --git a/public/admin-panel.html b/public/admin-panel.html
+index d571ddc..5176421 100644
+--- a/public/admin-panel.html
++++ b/public/admin-panel.html
+@@ -4,12 +4,18 @@
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <title>Панель управления — Скаут Хаус | ППР</title>
++    <link rel="preconnect" href="https://fonts.googleapis.com">
++    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
++    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+     <link rel="stylesheet" href="css/style.css">
+ </head>
+ <body>
+     <header class="top-bar">
+         <div class="top-bar-left">
+-            <h1> Админ-панель Скаут Хаус</h1>
++            <div class="logo-small">
++                <img src="assets/images/logo.svg" alt="Скаут Хаус" class="logo-small-img">
++                <span>Скаут Хаус · Админ-панель</span>
++            </div>
+         </div>
+         <div class="top-bar-right">
+             <!-- Индикатор текущего пользователя (id не должны совпадать с полями формы добавления) -->
+diff --git a/public/css/style.css b/public/css/style.css
+index 2945ccb..0e302a4 100644
+--- a/public/css/style.css
++++ b/public/css/style.css
+@@ -3264,6 +3264,11 @@ h1, h2, h3, h4, h5, h6 {
+ .admin-table .btn-sm:hover { background: #f3f4f6; }
+ .admin-table .btn-danger { border-color: #fecaca; color: #b91c1c; }
+ .admin-table .btn-danger:hover { background: #fef2f2; }
++/* Кнопки действий в таблице пользователей (генерируются admin-panel.js) */
++.btn-action { padding: 6px 10px; font: 500 12px 'Inter', sans-serif; border-radius: 6px; border: 1px solid #d1d5db; background: #fff; cursor: pointer; margin-right: 6px; white-space: nowrap; }
++.btn-action:hover { background: #f3f4f6; }
++.btn-action.btn-delete { border-color: #fecaca; color: #b91c1c; }
++.btn-action.btn-delete:hover { background: #fef2f2; }
+ .section-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+ .section-tag { display: inline-block; background: #ede9fe; color: #5b21b6; border-radius: 6px; padding: 2px 8px; font-size: 12px; font-weight: 600; }
+ @media (max-width: 768px) { .admin-form .form-row { flex-direction: column; } .admin-table { font-size: 12px; } }

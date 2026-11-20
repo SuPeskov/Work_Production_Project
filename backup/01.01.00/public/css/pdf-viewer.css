@@ -1,0 +1,267 @@
+/* pdf-viewer.css — Стили модального окна просмотра PDF */
+.pdf-modal {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+.pdf-modal.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.pdf-modal-content {
+    background: #fff;
+    width: 90%; max-width: 1000px;
+    height: 90vh;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    overflow: hidden;
+}
+
+.pdf-toolbar {
+    padding: 16px 24px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.pdf-title {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    color: #1e293b;
+    font-size: 16px;
+}
+
+.btn-close, .btn-fullscreen {
+    background: none; border: none;
+    font-size: 24px; line-height: 1;
+    cursor: pointer; color: #64748b;
+    transition: color 0.2s;
+    margin-left: 8px;
+}
+
+.btn-close:hover, .btn-fullscreen:hover { color: #ef4444; }
+
+.pdf-container {
+    flex: 1;
+    overflow: auto;
+    background: #f1f5f9;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+}
+
+/* Обычный режим: canvas адаптируется под экран */
+canvas {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.pdf-controls {
+    padding: 12px 24px;
+    background: #fff;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: center;
+}
+
+.pdf-controls button {
+    padding: 8px 16px;
+    border: 1px solid #cbd5e1;
+    background: #fff;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    color: #475569;
+    transition: all 0.2s;
+}
+
+.pdf-controls button:hover:not(:disabled) {
+    background: #6d28d9;
+    color: #fff;
+    border-color: #6d28d9;
+}
+
+.pdf-controls button:disabled {
+    opacity: 0.5; cursor: not-allowed;
+}
+
+#pageInfo {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: #64748b;
+    min-width: 60px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Кнопки навигации круглые */
+.pdf-controls button#prevPage,
+.pdf-controls button#nextPage {
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    padding: 0 !important;
+    min-width: auto;
+}
+
+/* === ПОЛНОЭКРАННЫЙ РЕЖИМ === */
+.pdf-modal:fullscreen,
+.pdf-modal:-webkit-full-screen {
+    background: #000 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important; /* Важно: скрываем вылезающие части при перемещении */
+}
+
+.pdf-modal:fullscreen .pdf-modal-content,
+.pdf-modal:-webkit-full-screen .pdf-modal-content {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: none !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    overflow: visible !important;
+}
+
+.pdf-modal:fullscreen .pdf-container,
+.pdf-modal:-webkit-full-screen .pdf-container {
+    width: 100% !important;
+    height: 100% !important;
+    padding: 0 !important;
+    overflow: hidden !important; /* Скрываем края canvas при панорамировании */
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    touch-action: none !important; /* Отключаем нативный скролл */
+    cursor: grab; /* Курсор-рука для десктопа */
+}
+
+.pdf-modal:fullscreen .pdf-container:active {
+    cursor: grabbing;
+}
+
+/* Canvas в полном экране */
+.pdf-modal:fullscreen canvas,
+.pdf-modal:-webkit-full-screen canvas {
+    max-width: none !important; 
+    height: auto !important;
+    transform-origin: center center !important;
+    box-shadow: none !important;
+    /* Оптимизация производительности при перемещении */
+    will-change: transform; 
+    transition: transform 0.1s linear; /* Небольшая плавность */
+}
+
+/* === ПЛАВАЮЩИЕ КНОПКИ В ПОЛНОМ ЭКРАНЕ === */
+#pdf-floating-controls {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 20px;
+    z-index: 10001;
+    pointer-events: auto;
+    /* Убедимся, что контейнер не растягивается */
+    width: max-content; 
+}
+
+.float-btn {
+    /* Явно задаем размеры круга */
+    width: 56px !important;
+    height: 56px !important;
+    min-width: 56px !important;
+    min-height: 56px !important;
+    
+    border-radius: 50% !important; /* Гарантируем круглую форму */
+    background: rgba(255, 255, 255, 0.95) !important;
+    border: none !important;
+    
+    font-size: 24px !important;
+    color: #1e293b !important;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4) !important;
+    
+    cursor: pointer;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    
+    backdrop-filter: blur(8px);
+    transition: all 0.2s ease;
+    
+    /* Сброс любых наследуемых отступов и паддингов */
+    padding: 0 !important;
+    margin: 0 !important;
+    line-height: 1 !important;
+}
+
+.float-btn:hover {
+    background: #ffffff !important;
+    transform: scale(1.05);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.5) !important;
+}
+
+.float-btn:active {
+    transform: scale(0.95) !important;
+    background: #f1f5f9 !important;
+}
+
+/* Специфичные стили для кнопки закрытия, чтобы она отличалась */
+#fs-close {
+    background: rgba(239, 68, 68, 0.9) !important;
+    color: white !important;
+}
+#fs-close:hover {
+    background: #ef4444 !important;
+}
+
+/* Делаем pdf-link похожим на doc-link */
+.pdf-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background-color: #f0fdf4; /* Светло-зеленый фон */
+    border: 1px solid #16a34a; /* Зеленая рамка */
+    border-radius: 8px;
+    color: #15803d; /* Темно-зеленый текст */
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    margin-bottom: 8px;
+}
+
+.pdf-link:hover {
+    background-color: #dcfce7;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(22, 163, 74, 0.1);
+}
+
+.pdf-link svg {
+    flex-shrink: 0; /* Чтобы иконка не сжималась */
+}
